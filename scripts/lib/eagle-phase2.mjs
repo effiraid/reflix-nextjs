@@ -255,65 +255,138 @@ function collectPhase2Targets(source) {
     .sort((left, right) => left.id.localeCompare(right.id));
 }
 
-function buildNameReviewEntries(items) {
-  const sourceItems = Array.isArray(items) ? items : [];
-  const entryMap = new Map();
-  const groupObservations = new Map();
-  const globalTokenCounts = new Map();
+function buildReviewObservation(item) {
+  const tokens = tokenizeName(item.name);
+  return {
+    item,
+    tokens,
+    currentName: String(item.name ?? "").trim(),
+    prefixKey: tokens.length >= REVIEW_PREFIX_WIDTH ? tokens.slice(0, REVIEW_PREFIX_WIDTH).join(" ") : "",
+  };
+}
 
-  for (const item of sourceItems) {
-    const tokens = tokenizeName(item.name);
-    const prefixKey = tokens.length >= REVIEW_PREFIX_WIDTH ? tokens.slice(0, REVIEW_PREFIX_WIDTH).join(" ") : "";
-    const observation = {
-      item,
-      tokens,
-    };
+function groupReviewObservationsByPrefix(items) {
+  const grouped = new Map();
 
-    if (prefixKey) {
-      const group = groupObservations.get(prefixKey) || [];
-      group.push(observation);
-      groupObservations.set(prefixKey, group);
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+    if (!observation.prefixKey) {
+      continue;
     }
 
-    for (const token of tokens) {
+    const group = grouped.get(observation.prefixKey) || [];
+    group.push(observation);
+    grouped.set(observation.prefixKey, group);
+  }
+
+  return grouped;
+}
+
+function countGlobalReviewTokens(items) {
+  const counts = new Map();
+
+  for (const item of items) {
+    for (const token of tokenizeName(item.name)) {
       if (isNumericReviewToken(token)) {
         continue;
       }
 
-      globalTokenCounts.set(token, (globalTokenCounts.get(token) || 0) + 1);
-    }
-
-    const hasRepeatedTokens = tokens.some((token, index) => {
-      if (isNumericReviewToken(token)) {
-        return false;
-      }
-
-      return tokens.indexOf(token) !== index;
-    });
-    const hasSuffixToken = tokens.some(isReviewSuffixToken);
-    const normalizedName = normalizeReviewProposal(item.name);
-
-    if ((hasRepeatedTokens || hasSuffixToken) && normalizedName && normalizedName !== String(item.name ?? "").trim()) {
-      addReviewEntry(entryMap, {
-        id: item.id,
-        currentName: String(item.name ?? "").trim(),
-        proposedName: normalizedName,
-        reason: [
-          hasRepeatedTokens ? "repeated words" : null,
-          hasSuffixToken ? "parenthesized sequence suffix" : null,
-        ]
-          .filter(Boolean)
-          .join(" and "),
-        confidence: hasRepeatedTokens && hasSuffixToken ? 0.98 : hasSuffixToken ? 0.97 : 0.94,
-      });
+      counts.set(token, (counts.get(token) || 0) + 1);
     }
   }
 
-  for (const [prefixKey, observations] of groupObservations.entries()) {
+  return counts;
+}
+
+function findRepeatedNameIssues(observation) {
+  const repeatedTokens = new Set();
+
+  for (let index = 0; index < observation.tokens.length; index += 1) {
+    const token = observation.tokens[index];
+    if (isNumericReviewToken(token)) {
+      continue;
+    }
+
+    if (observation.tokens.indexOf(token) !== index) {
+      repeatedTokens.add(token);
+    }
+  }
+
+  const hasSuffixToken = observation.tokens.some(isReviewSuffixToken);
+  const hasRepeatedTokens = repeatedTokens.size > 0;
+
+  if (!hasRepeatedTokens && !hasSuffixToken) {
+    return null;
+  }
+
+  return {
+    proposedName: normalizeReviewProposal(observation.item.name),
+    reason: [
+      hasRepeatedTokens ? "repeated words" : null,
+      hasSuffixToken ? "parenthesized sequence suffix" : null,
+    ]
+      .filter(Boolean)
+      .join(" and "),
+    confidence: hasRepeatedTokens && hasSuffixToken ? 0.98 : hasSuffixToken ? 0.97 : 0.94,
+  };
+}
+
+function buildRepeatedNameCandidates(items) {
+  const candidates = [];
+
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+    const issue = findRepeatedNameIssues(observation);
+
+    if (!issue) {
+      continue;
+    }
+
+    if (!issue.proposedName || issue.proposedName === observation.currentName) {
+      continue;
+    }
+
+    candidates.push({
+      id: observation.item.id,
+      currentName: observation.currentName,
+      ...issue,
+    });
+  }
+
+  return candidates;
+}
+
+function findSeriesConsistencyReplacementToken(variantToken, variantCount, candidateEntries) {
+  const eligibleCandidates = [...candidateEntries.entries()].filter(
+    ([candidateToken, candidateObservations]) =>
+      candidateToken !== variantToken &&
+      !isAllowlistedReviewToken(candidateToken) &&
+      candidateObservations.length >= variantCount * REVIEW_SERIES_FREQUENCY_MULTIPLIER &&
+      levenshteinDistance(variantToken, candidateToken) <= REVIEW_SERIES_MAX_EDIT_DISTANCE
+  );
+
+  if (eligibleCandidates.length === 0) {
+    return null;
+  }
+
+  return eligibleCandidates
+    .sort((left, right) => {
+      if (right[1].length !== left[1].length) {
+        return right[1].length - left[1].length;
+      }
+
+      return levenshteinDistance(variantToken, left[0]) - levenshteinDistance(variantToken, right[0]);
+    })[0][0];
+}
+
+function buildSeriesConsistencyCandidates(groupedObservations) {
+  const candidates = [];
+
+  for (const observations of groupedObservations.values()) {
     const maxLength = Math.max(...observations.map((observation) => observation.tokens.length));
 
     for (let tokenIndex = REVIEW_PREFIX_WIDTH; tokenIndex < maxLength; tokenIndex += 1) {
-      const counts = new Map();
+      const tokensAtIndex = new Map();
 
       for (const observation of observations) {
         const token = observation.tokens[tokenIndex];
@@ -321,49 +394,33 @@ function buildNameReviewEntries(items) {
           continue;
         }
 
-        const bucket = counts.get(token) || [];
+        const bucket = tokensAtIndex.get(token) || [];
         bucket.push(observation);
-        counts.set(token, bucket);
+        tokensAtIndex.set(token, bucket);
       }
 
-      for (const [variantToken, variantObservations] of counts.entries()) {
+      for (const [variantToken, variantObservations] of tokensAtIndex.entries()) {
         if (isAllowlistedReviewToken(variantToken)) {
           continue;
         }
 
-        const commonCandidates = [...counts.entries()].filter(([candidateToken, candidateObservations]) => {
-          if (candidateToken === variantToken || isAllowlistedReviewToken(candidateToken)) {
-            return false;
-          }
-
-          return (
-            candidateObservations.length >= variantObservations.length * REVIEW_SERIES_FREQUENCY_MULTIPLIER &&
-            levenshteinDistance(variantToken, candidateToken) <= REVIEW_SERIES_MAX_EDIT_DISTANCE
-          );
-        });
-
-        if (commonCandidates.length === 0) {
+        const replacementToken = findSeriesConsistencyReplacementToken(
+          variantToken,
+          variantObservations.length,
+          tokensAtIndex
+        );
+        if (!replacementToken) {
           continue;
         }
-
-        const [replacementToken] = commonCandidates.sort((left, right) => {
-          if (right[1].length !== left[1].length) {
-            return right[1].length - left[1].length;
-          }
-
-          return levenshteinDistance(variantToken, left[0]) - levenshteinDistance(variantToken, right[0]);
-        })[0];
 
         for (const observation of variantObservations) {
           const candidateTokens = [...observation.tokens];
           candidateTokens[tokenIndex] = replacementToken;
-          const proposedName = normalizeReviewProposal(candidateTokens.join(" "));
-
-          addReviewEntry(entryMap, {
+          candidates.push({
             id: observation.item.id,
-            currentName: String(observation.item.name ?? "").trim(),
-            proposedName,
-            reason: `series-consistency outlier`,
+            currentName: observation.currentName,
+            proposedName: normalizeReviewProposal(candidateTokens.join(" ")),
+            reason: "series-consistency outlier",
             confidence: 0.92,
           });
         }
@@ -371,11 +428,45 @@ function buildNameReviewEntries(items) {
     }
   }
 
-  for (const item of sourceItems) {
-    const tokens = tokenizeName(item.name);
+  return candidates;
+}
 
-    for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex += 1) {
-      const rareToken = tokens[tokenIndex];
+function findRareTokenReplacementToken(rareToken, globalTokenCounts) {
+  const eligibleCandidates = [...globalTokenCounts.entries()]
+    .filter(([token, frequency]) => {
+      if (
+        token === rareToken ||
+        isAllowlistedReviewToken(token) ||
+        frequency < REVIEW_RARE_MIN_FREQUENCY
+      ) {
+        return false;
+      }
+
+      const maxDistance =
+        rareToken.length <= REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH
+          ? REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE
+          : REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE;
+      return levenshteinDistance(rareToken, token) <= maxDistance;
+    })
+    .sort((left, right) => {
+      if (right[1] !== left[1]) {
+        return right[1] - left[1];
+      }
+
+      return levenshteinDistance(rareToken, left[0]) - levenshteinDistance(rareToken, right[0]);
+    });
+
+  return eligibleCandidates[0]?.[0] || null;
+}
+
+function buildRareTokenCandidates(items, globalTokenCounts) {
+  const candidates = [];
+
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+
+    for (let tokenIndex = 0; tokenIndex < observation.tokens.length; tokenIndex += 1) {
+      const rareToken = observation.tokens[tokenIndex];
       if (!rareToken || isNumericReviewToken(rareToken) || isAllowlistedReviewToken(rareToken)) {
         continue;
       }
@@ -384,47 +475,43 @@ function buildNameReviewEntries(items) {
         continue;
       }
 
-      const candidateToken = [...globalTokenCounts.entries()]
-        .filter(([token, frequency]) => {
-          if (
-            token === rareToken ||
-            isAllowlistedReviewToken(token) ||
-            frequency < REVIEW_RARE_MIN_FREQUENCY
-          ) {
-            return false;
-          }
-
-          const maxDistance =
-            rareToken.length <= REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH
-              ? REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE
-              : REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE;
-          return levenshteinDistance(rareToken, token) <= maxDistance;
-        })
-        .sort((left, right) => {
-          if (right[1] !== left[1]) {
-            return right[1] - left[1];
-          }
-
-          return levenshteinDistance(rareToken, left[0]) - levenshteinDistance(rareToken, right[0]);
-        })[0];
-
-      if (!candidateToken) {
+      const replacementToken = findRareTokenReplacementToken(rareToken, globalTokenCounts);
+      if (!replacementToken) {
         continue;
       }
 
-      const [replacementToken] = candidateToken;
-      const candidateTokens = [...tokens];
+      const candidateTokens = [...observation.tokens];
       candidateTokens[tokenIndex] = replacementToken;
-      const proposedName = normalizeReviewProposal(candidateTokens.join(" "));
-
-      addReviewEntry(entryMap, {
-        id: item.id,
-        currentName: String(item.name ?? "").trim(),
-        proposedName,
+      candidates.push({
+        id: observation.item.id,
+        currentName: observation.currentName,
+        proposedName: normalizeReviewProposal(candidateTokens.join(" ")),
         reason: "rare-token near-match",
         confidence: 0.88,
       });
     }
+  }
+
+  return candidates;
+}
+
+function buildNameReviewEntries(items) {
+  const sourceItems = Array.isArray(items) ? items : [];
+  const entryMap = new Map();
+
+  for (const candidate of buildRepeatedNameCandidates(sourceItems)) {
+    addReviewEntry(entryMap, candidate);
+  }
+
+  for (const candidate of buildSeriesConsistencyCandidates(
+    groupReviewObservationsByPrefix(sourceItems)
+  )) {
+    addReviewEntry(entryMap, candidate);
+  }
+
+  const globalTokenCounts = countGlobalReviewTokens(sourceItems);
+  for (const candidate of buildRareTokenCandidates(sourceItems, globalTokenCounts)) {
+    addReviewEntry(entryMap, candidate);
   }
 
   return sortReviewEntries([...entryMap.values()]);
@@ -467,7 +554,7 @@ function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
       name: item.name,
       tags: item.tags || [],
       folders: item.folders || [],
-      metadataPath: item.metadataPath || path.join(item._infoDir, "metadata.json"),
+      metadataPath: item.metadataPath,
     })),
   };
 }
@@ -599,6 +686,10 @@ export function parsePhase2CliArgs(
     throw new Error(`Unknown argument: ${arg}`);
   }
 
+  if (mode === "apply" && !options.reviewFile) {
+    throw new Error("apply mode requires --review-file <path>");
+  }
+
   const timestamp = normalizeTimestamp(options.timestamp);
   const artifacts = buildPhase2Artifacts(timestamp);
   const libraryPath = resolveLibraryPath({
@@ -616,10 +707,6 @@ export function parsePhase2CliArgs(
   }
 
   if (mode === "apply") {
-    if (!options.reviewFile) {
-      throw new Error("apply mode requires --review-file <path>");
-    }
-
     return {
       mode,
       libraryPath,

@@ -177,7 +177,15 @@ test("createNameReviewArtifact writes the review contract files", () => {
 });
 
 test("parsePhase2CliArgs requires a review file for apply mode", () => {
-  assert.throws(() => parsePhase2CliArgs(["apply"]), /--review-file/);
+  assert.throws(
+    () =>
+      parsePhase2CliArgs(["apply"], {
+        pathExists: () => {
+          throw new Error("library resolution should not run before review-file validation");
+        },
+      }),
+    /--review-file/
+  );
 });
 
 test("parsePhase2CliArgs returns help mode without side effects", () => {
