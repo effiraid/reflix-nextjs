@@ -113,15 +113,22 @@ test("buildNameReviewEntries flags series-consistency outliers in a shared prefi
   assert.match(outlier.reason, /series/i);
 });
 
-test("buildNameReviewEntries flags rare-token near-match outliers", () => {
+test("buildNameReviewEntries flags rare-token near-match outliers without series overlap", () => {
   const entries = buildNameReviewEntries([
     { id: "A", name: "게임 스타세일러 마법사 승리" },
     { id: "B", name: "게임 스타세일러 마법사 승리" },
     { id: "C", name: "게임 스타세일러 마법사 승리" },
-    { id: "D", name: "게임 스타세일러 마볍사 승리" },
+    { id: "D", name: "다른 유니크 마볍사 승리" },
   ]);
 
-  assert.equal(entries.some((entry) => entry.id === "D"), true);
+  assert.equal(entries.length, 1);
+
+  const entry = entries[0];
+
+  assert.equal(entry.id, "D");
+  assert.equal(entry.reason, "rare-token near-match");
+  assert.equal(entry.proposedName, "다른 유니크 마법사 승리");
+  assert.equal(entry.approved, false);
 });
 
 test("createNameReviewArtifact writes the review contract files", () => {

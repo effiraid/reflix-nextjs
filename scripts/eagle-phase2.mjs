@@ -9,7 +9,9 @@ import {
   runPhase2Review,
 } from "./lib/eagle-phase2.mjs";
 
-if (fileURLToPath(import.meta.url) === process.argv[1]) {
+const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
+
+if (isMainModule) {
   try {
     const parsed = parsePhase2CliArgs();
 

@@ -11,6 +11,13 @@ const DEFAULT_USAGE = `Usage:
   node scripts/eagle-phase2.mjs --help`;
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const REVIEW_ALLOWLIST_TOKENS = new Set(["33원정대", "2d", "pov", "pv", "오브", "손", "발"]);
+const REVIEW_PREFIX_WIDTH = 2;
+const REVIEW_SERIES_FREQUENCY_MULTIPLIER = 3;
+const REVIEW_SERIES_MAX_EDIT_DISTANCE = 2;
+const REVIEW_RARE_MIN_FREQUENCY = 3;
+const REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH = 4;
+const REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE = 1;
+const REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE = 2;
 
 function normalizeTimestamp(timestamp) {
   if (timestamp) {
@@ -258,11 +265,10 @@ function buildNameReviewEntries(items, options = {}) {
 
   for (const item of sourceItems) {
     const tokens = tokenizeName(item.name);
-    const prefixKey = tokens.length >= 2 ? tokens.slice(0, 2).join(" ") : "";
+    const prefixKey = tokens.length >= REVIEW_PREFIX_WIDTH ? tokens.slice(0, REVIEW_PREFIX_WIDTH).join(" ") : "";
     const observation = {
       item,
       tokens,
-      prefixKey,
     };
 
     if (prefixKey) {
@@ -308,7 +314,7 @@ function buildNameReviewEntries(items, options = {}) {
   for (const [prefixKey, observations] of groupObservations.entries()) {
     const maxLength = Math.max(...observations.map((observation) => observation.tokens.length));
 
-    for (let tokenIndex = 2; tokenIndex < maxLength; tokenIndex += 1) {
+    for (let tokenIndex = REVIEW_PREFIX_WIDTH; tokenIndex < maxLength; tokenIndex += 1) {
       const counts = new Map();
 
       for (const observation of observations) {
@@ -333,8 +339,8 @@ function buildNameReviewEntries(items, options = {}) {
           }
 
           return (
-            candidateObservations.length >= variantObservations.length * 3 &&
-            levenshteinDistance(variantToken, candidateToken) <= 2
+            candidateObservations.length >= variantObservations.length * REVIEW_SERIES_FREQUENCY_MULTIPLIER &&
+            levenshteinDistance(variantToken, candidateToken) <= REVIEW_SERIES_MAX_EDIT_DISTANCE
           );
         });
 
@@ -382,11 +388,18 @@ function buildNameReviewEntries(items, options = {}) {
 
       const candidateToken = [...globalTokenCounts.entries()]
         .filter(([token, frequency]) => {
-          if (token === rareToken || isAllowlistedReviewToken(token) || frequency < 3) {
+          if (
+            token === rareToken ||
+            isAllowlistedReviewToken(token) ||
+            frequency < REVIEW_RARE_MIN_FREQUENCY
+          ) {
             return false;
           }
 
-          const maxDistance = rareToken.length <= 4 ? 1 : 2;
+          const maxDistance =
+            rareToken.length <= REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH
+              ? REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE
+              : REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE;
           return levenshteinDistance(rareToken, token) <= maxDistance;
         })
         .sort((left, right) => {
