@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "eagle:thumbs:pilot": "node scripts/eagle-thumbnail-pilot.mjs",
-    "eagle:thumbs:remaining": "node scripts/eagle-thumbnail-pilot.mjs --remaining"
+    "eagle:thumbs:remaining": "node scripts/eagle-thumbnail-pilot.mjs --remaining",
+    "eagle:phase2:review": "node scripts/eagle-phase2.mjs review",
+    "eagle:phase2:apply": "node scripts/eagle-phase2.mjs apply"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.13.23",
