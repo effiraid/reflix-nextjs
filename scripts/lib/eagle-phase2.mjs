@@ -517,6 +517,153 @@ function buildNameReviewEntries(items) {
   return sortReviewEntries([...entryMap.values()]);
 }
 
+function loadApprovedNameReview(reviewFilePath) {
+  const raw = fs.readFileSync(reviewFilePath, "utf8");
+  const reviewData = JSON.parse(raw);
+  const entries = Array.isArray(reviewData.entries) ? reviewData.entries : [];
+  const approvedEntries = Array.isArray(reviewData.approvedEntries)
+    ? reviewData.approvedEntries
+    : entries.filter((entry) => entry && entry.approved === true);
+
+  return {
+    ...reviewData,
+    reviewFilePath,
+    entries,
+    approvedEntries,
+  };
+}
+
+function applyApprovedRenames(item, approvedEntries) {
+  const entries = Array.isArray(approvedEntries)
+    ? approvedEntries
+    : Array.isArray(approvedEntries?.approvedEntries)
+      ? approvedEntries.approvedEntries
+      : [];
+
+  const currentName = String(item?.name ?? "").trim();
+  const approvedRename = entries.find(
+    (entry) =>
+      entry &&
+      entry.id === item?.id &&
+      entry.approved === true &&
+      String(entry.proposedName ?? "").trim()
+  );
+
+  if (!approvedRename) {
+    return {
+      ...item,
+      name: currentName,
+      renameApplied: false,
+    };
+  }
+
+  const proposedName = String(approvedRename.proposedName).trim();
+
+  return {
+    ...item,
+    name: proposedName,
+    renameApplied: proposedName !== currentName,
+  };
+}
+
+function syncTagsFromName(name) {
+  const tokens = tokenizeName(name);
+  const tags = [];
+  const excludedNumericTokens = [];
+  const seenTags = new Set();
+
+  for (const token of tokens) {
+    if (isNumericReviewToken(token)) {
+      excludedNumericTokens.push(token);
+      continue;
+    }
+
+    if (seenTags.has(token)) {
+      continue;
+    }
+
+    seenTags.add(token);
+    tags.push(token);
+  }
+
+  return {
+    name: String(name ?? "").trim(),
+    tokens,
+    tags,
+    excludedNumericTokens,
+    lossyTagSync:
+      excludedNumericTokens.length > 0 || tags.length !== tokens.length - excludedNumericTokens.length,
+  };
+}
+
+function resolveFolderIds(tokens, rulesConfig = {}) {
+  const ignoredTokens = new Set(rulesConfig.ignoredTokens || []);
+  const rules = rulesConfig.rules || {};
+  const folderIds = [];
+  const matchedTokens = [];
+  const unresolvedTokens = [];
+  const seenFolderIds = new Set();
+  const seenUnresolvedTokens = new Set();
+  const seenMatchedTokens = new Set();
+
+  for (const rawToken of Array.isArray(tokens) ? tokens : []) {
+    const token = normalizePhase2Token(rawToken);
+
+    if (!token || isNumericReviewToken(token) || ignoredTokens.has(token)) {
+      continue;
+    }
+
+    const rule = rules[token];
+    const ruleFolderIds = Array.isArray(rule?.folderIds) ? rule.folderIds : [];
+
+    if (ruleFolderIds.length === 0) {
+      if (!seenUnresolvedTokens.has(token)) {
+        seenUnresolvedTokens.add(token);
+        unresolvedTokens.push(token);
+      }
+      continue;
+    }
+
+    if (!seenMatchedTokens.has(token)) {
+      seenMatchedTokens.add(token);
+      matchedTokens.push(token);
+    }
+
+    for (const folderId of ruleFolderIds) {
+      if (seenFolderIds.has(folderId)) {
+        continue;
+      }
+
+      seenFolderIds.add(folderId);
+      folderIds.push(folderId);
+    }
+  }
+
+  return {
+    folderIds,
+    matchedTokens,
+    unresolvedTokens,
+    lossyTagSync: unresolvedTokens.length > 0,
+  };
+}
+
+function buildApplyMutation(item, approvedEntries, rulesConfig = {}) {
+  const renamedItem = applyApprovedRenames(item, approvedEntries);
+  const tagSync = syncTagsFromName(renamedItem.name);
+  const folderSync = resolveFolderIds(tagSync.tags, rulesConfig);
+
+  return {
+    ...item,
+    ...renamedItem,
+    tags: tagSync.tags,
+    folders: folderSync.folderIds,
+    excludedNumericTokens: tagSync.excludedNumericTokens,
+    matchedTokens: folderSync.matchedTokens,
+    unresolvedTokens: folderSync.unresolvedTokens,
+    lossyTagSync: tagSync.lossyTagSync || folderSync.lossyTagSync,
+  };
+}
+
 function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir, generatedAt }) {
   const reviewEntries = sortReviewEntries(entries).map((entry) => ({
     ...entry,
@@ -764,9 +911,14 @@ export function runPhase2Apply(parsed) {
 }
 
 export {
+  applyApprovedRenames,
+  buildApplyMutation,
   buildNameReviewEntries,
   collectPhase2Targets,
   createNameReviewArtifact,
+  loadApprovedNameReview,
   normalizeReviewProposal,
   tokenizeName,
+  resolveFolderIds,
+  syncTagsFromName,
 };

@@ -8,11 +8,16 @@ import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import {
+  applyApprovedRenames,
   collectPhase2Targets,
   buildNameReviewEntries,
+  buildApplyMutation,
   createNameReviewArtifact,
+  loadApprovedNameReview,
   normalizeReviewProposal,
   parsePhase2CliArgs,
+  resolveFolderIds,
+  syncTagsFromName,
   tokenizeName,
 } from "./eagle-phase2.mjs";
 
@@ -83,6 +88,88 @@ test("tokenizeName preserves review-allowlist tokens", () => {
 
 test("normalizeReviewProposal strips repeat markers and parenthesized suffixes", () => {
   assert.equal(normalizeReviewProposal("게임 게임 승리 (2)"), "게임 승리");
+});
+
+test("loadApprovedNameReview returns only approved entries", () => {
+  const reviewFile = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-approved-")),
+    "name-review.json"
+  );
+
+  try {
+    fs.writeFileSync(
+      reviewFile,
+      JSON.stringify(
+        {
+          entries: [
+            { id: "A", approved: true, proposedName: "새 이름" },
+            { id: "B", approved: false, proposedName: "무시" },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    const result = loadApprovedNameReview(reviewFile);
+
+    assert.deepEqual(result.approvedEntries.map((entry) => entry.id), ["A"]);
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+  }
+});
+
+test("applyApprovedRenames only applies approved rename entries", () => {
+  const result = applyApprovedRenames(
+    { id: "A", name: "원래 이름" },
+    [
+      { id: "A", approved: false, proposedName: "무시" },
+      { id: "A", approved: true, proposedName: "적용 이름" },
+    ]
+  );
+
+  assert.equal(result.name, "적용 이름");
+  assert.equal(result.renameApplied, true);
+});
+
+test("syncTagsFromName excludes numeric-only tokens and keeps allowlisted tokens", () => {
+  const result = syncTagsFromName("33원정대 2d pov pv 오브 손 발 게임 스타세일러 스킬 2 (2)");
+
+  assert.deepEqual(result.tags, ["33원정대", "2d", "pov", "pv", "오브", "손", "발", "게임", "스타세일러", "스킬"]);
+  assert.deepEqual(result.excludedNumericTokens, ["2", "(2)"]);
+});
+
+test("resolveFolderIds returns only explicit rule ids and tracks unresolved tokens", () => {
+  const result = resolveFolderIds(["검", "미확인", "승리"], {
+    ignoredTokens: ["게임"],
+    rules: {
+      검: { folderIds: ["L951YJXMED230"] },
+      승리: { folderIds: ["LE51CIF3FN5KM"] },
+    },
+  });
+
+  assert.deepEqual(result.folderIds, ["L951YJXMED230", "LE51CIF3FN5KM"]);
+  assert.deepEqual(result.unresolvedTokens, ["미확인"]);
+  assert.equal(result.lossyTagSync, true);
+});
+
+test("buildApplyMutation combines approved renames, tag sync, and folder resolution", () => {
+  const result = buildApplyMutation(
+    { id: "A", name: "게임 검 미확인 2 (2)", tags: ["old"], folders: [] },
+    [{ id: "A", approved: true, proposedName: "검 미확인" }],
+    {
+      ignoredTokens: ["게임"],
+      rules: {
+        검: { folderIds: ["L951YJXMED230"] },
+      },
+    }
+  );
+
+  assert.equal(result.name, "검 미확인");
+  assert.deepEqual(result.tags, ["검", "미확인"]);
+  assert.deepEqual(result.folders, ["L951YJXMED230"]);
+  assert.deepEqual(result.unresolvedTokens, ["미확인"]);
+  assert.equal(result.lossyTagSync, true);
 });
 
 test("buildNameReviewEntries flags repeated words and parenthesized sequence suffixes", () => {
