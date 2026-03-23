@@ -19,10 +19,10 @@ export function RightPanelContent({
 }: RightPanelContentProps) {
   const { selectedClipId } = useClipStore();
   const [clip, setClip] = useState<Clip | null>(null);
+  const activeClip = clip?.id === selectedClipId ? clip : null;
 
   useEffect(() => {
     if (!selectedClipId) {
-      setClip(null);
       return;
     }
     const controller = new AbortController();
@@ -40,13 +40,13 @@ export function RightPanelContent({
     return () => controller.abort();
   }, [selectedClipId]);
 
-  if (!clip) {
+  if (!activeClip) {
     return null;
   }
 
   return (
     <RightPanelInspector
-      clip={clip}
+      clip={activeClip}
       categories={categories}
       lang={lang}
       dict={dict}
