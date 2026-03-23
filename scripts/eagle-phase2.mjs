@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEFAULT_LIBRARY_PATH =
-  "/Users/macbook/Desktop/라이브러리/레퍼런스 - 게임,연출.library";
 const DEFAULT_USAGE = `Usage:
   node scripts/eagle-phase2.mjs review [--library <path>] [--timestamp <value>]
   node scripts/eagle-phase2.mjs apply --review-file <path> [--library <path>] [--timestamp <value>]
@@ -53,7 +52,33 @@ function readOptionValue(args, index, flag) {
   return value;
 }
 
-export function parsePhase2CliArgs(argv = process.argv.slice(2)) {
+function resolveLibraryPath(options = {}) {
+  if (options.cliLibraryPath) {
+    return options.cliLibraryPath;
+  }
+
+  const envPath = options.env?.EAGLE_LIBRARY_PATH?.trim();
+  if (envPath) {
+    return envPath;
+  }
+
+  const discoveredPath = path.join(
+    (options.homedir || os.homedir)(),
+    "Desktop",
+    "라이브러리",
+    "레퍼런스 - 게임,연출.library"
+  );
+
+  if ((options.pathExists || fs.existsSync)(discoveredPath)) {
+    return discoveredPath;
+  }
+
+  throw new Error(
+    `Could not resolve Eagle library path. Pass --library <path> or set EAGLE_LIBRARY_PATH. Tried ${discoveredPath}`
+  );
+}
+
+export function parsePhase2CliArgs(argv = process.argv.slice(2), resolutionOptions = {}) {
   const args = [...argv];
 
   if (args.length === 0 || args.includes("--help")) {
@@ -65,7 +90,7 @@ export function parsePhase2CliArgs(argv = process.argv.slice(2)) {
 
   const mode = args[0];
   const options = {
-    libraryPath: DEFAULT_LIBRARY_PATH,
+    libraryPath: undefined,
     timestamp: undefined,
     reviewFile: undefined,
   };
@@ -96,11 +121,15 @@ export function parsePhase2CliArgs(argv = process.argv.slice(2)) {
 
   const timestamp = normalizeTimestamp(options.timestamp);
   const artifacts = buildPhase2Artifacts(timestamp);
+  const libraryPath = resolveLibraryPath({
+    ...resolutionOptions,
+    cliLibraryPath: options.libraryPath,
+  });
 
   if (mode === "review") {
     return {
       mode,
-      libraryPath: options.libraryPath,
+      libraryPath,
       timestamp,
       artifacts,
     };
@@ -113,7 +142,7 @@ export function parsePhase2CliArgs(argv = process.argv.slice(2)) {
 
     return {
       mode,
-      libraryPath: options.libraryPath,
+      libraryPath,
       timestamp,
       reviewFile: options.reviewFile,
       artifacts,

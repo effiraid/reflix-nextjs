@@ -39,14 +39,23 @@ test("parsePhase2CliArgs returns help mode without side effects", () => {
   assert.equal(result.mode, "help");
 });
 
-test("parsePhase2CliArgs resolves review artifact defaults", () => {
+test("parsePhase2CliArgs prefers --library over env defaults", () => {
   const result = parsePhase2CliArgs([
     "review",
+    "--library",
+    "/flag/library",
     "--timestamp",
     "2026-03-23T22-00-00-000Z",
-  ]);
+  ], {
+    env: {
+      EAGLE_LIBRARY_PATH: "/env/library",
+    },
+    homedir: () => "/home/tester",
+    pathExists: () => true,
+  });
 
   assert.equal(result.mode, "review");
+  assert.equal(result.libraryPath, "/flag/library");
   assert.equal(result.artifacts.reviewDir, ".tmp/eagle-phase2/2026-03-23T22-00-00-000Z/");
   assert.equal(
     result.artifacts.backupDir,
@@ -63,6 +72,44 @@ test("parsePhase2CliArgs resolves review artifact defaults", () => {
   assert.equal(
     result.artifacts.folderRuleReportJson,
     ".tmp/eagle-phase2/2026-03-23T22-00-00-000Z/folder-rule-report.json"
+  );
+});
+
+test("parsePhase2CliArgs uses EAGLE_LIBRARY_PATH when flag is absent", () => {
+  const result = parsePhase2CliArgs(["review"], {
+    env: {
+      EAGLE_LIBRARY_PATH: "/env/library",
+    },
+    homedir: () => "/home/tester",
+    pathExists: () => false,
+  });
+
+  assert.equal(result.libraryPath, "/env/library");
+});
+
+test("parsePhase2CliArgs discovers the Desktop library from homedir", () => {
+  const result = parsePhase2CliArgs(["review"], {
+    env: {},
+    homedir: () => "/home/tester",
+    pathExists: (candidatePath) =>
+      candidatePath === "/home/tester/Desktop/라이브러리/레퍼런스 - 게임,연출.library",
+  });
+
+  assert.equal(
+    result.libraryPath,
+    "/home/tester/Desktop/라이브러리/레퍼런스 - 게임,연출.library"
+  );
+});
+
+test("parsePhase2CliArgs fails clearly when no library path can be resolved", () => {
+  assert.throws(
+    () =>
+      parsePhase2CliArgs(["review"], {
+        env: {},
+        homedir: () => "/home/tester",
+        pathExists: () => false,
+      }),
+    /--library|EAGLE_LIBRARY_PATH/
   );
 });
 
@@ -94,7 +141,13 @@ test("eagle phase2 review writes stub artifacts", () => {
 
   removePhase2Artifacts(timestamp);
 
-  const result = runPhase2Cli(["review", "--timestamp", timestamp]);
+  const result = runPhase2Cli([
+    "review",
+    "--library",
+    "/tmp/test-library",
+    "--timestamp",
+    timestamp,
+  ]);
 
   assert.equal(result.status, 0);
   assert.equal(fs.existsSync(reviewDir), true);
@@ -108,16 +161,18 @@ test("eagle phase2 apply consumes a review file", () => {
   const timestamp = `apply-contract-${Date.now()}`;
   const reviewFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-review-")), "name-review.json");
 
-  fs.writeFileSync(reviewFile, JSON.stringify({ mode: "review" }));
+  fs.writeFileSync(reviewFile, JSON.stringify({ mode: "parsed-review-mode" }));
 
   const result = runPhase2Cli([
     "apply",
     "--review-file",
     reviewFile,
+    "--library",
+    "/tmp/test-library",
     "--timestamp",
     timestamp,
   ]);
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /apply/i);
+  assert.match(result.stdout, /parsed-review-mode/);
 });
