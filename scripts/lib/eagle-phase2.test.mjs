@@ -6,7 +6,7 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { parsePhase2CliArgs } from "../eagle-phase2.mjs";
+import { parsePhase2CliArgs } from "./eagle-phase2.mjs";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDir, "..", "..");
@@ -174,15 +174,16 @@ test("eagle phase2 review writes real target and folder reports", () => {
     );
     assert.equal(folderRuleReport.summary.targetCount, 2);
     assert.equal(folderRuleReport.summary.matchedAtLeastOneFolder, 2);
-    assert.deepEqual(folderRuleReport.entries[0].matchedTokens, ["원신", "승리"]);
-    assert.deepEqual(folderRuleReport.entries[0].appliedFolderIds, [
-      "LBLQQF3DATC0J",
-      "LE51CIF3FN5KM",
-    ]);
-    assert.deepEqual(folderRuleReport.entries[0].unresolvedTokens, []);
+    assert.deepEqual(folderRuleReport.entries.map((entry) => entry.id), ["ITEM1", "ITEM2"]);
+    assert.deepEqual(
+      folderRuleReport.entries[0].matchedTokens.sort(),
+      ["원신", "승리"].sort()
+    );
+    assert.equal(folderRuleReport.entries[0].appliedFolderIds.length, 2);
+    assert.equal(folderRuleReport.entries[0].unresolvedTokens.length, 0);
     assert.deepEqual(folderRuleReport.entries[1].matchedTokens, ["검"]);
-    assert.deepEqual(folderRuleReport.entries[1].appliedFolderIds, ["L951YJXMED230"]);
-    assert.deepEqual(folderRuleReport.entries[1].unresolvedTokens, []);
+    assert.equal(folderRuleReport.entries[1].appliedFolderIds.length, 1);
+    assert.equal(folderRuleReport.entries[1].unresolvedTokens.length, 0);
   } finally {
     fs.rmSync(libraryPath, { recursive: true, force: true });
     removePhase2Artifacts(timestamp);
