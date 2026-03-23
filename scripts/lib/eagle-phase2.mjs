@@ -817,7 +817,33 @@ function writeMetadataWithBackup(entry, mutation, backupDir) {
 
 function writeApplyReport(outputPath, report) {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
+  const tempPath = `${outputPath}.tmp`;
+  fs.writeFileSync(tempPath, `${JSON.stringify(report, null, 2)}\n`);
+  fs.renameSync(tempPath, outputPath);
+}
+
+function buildApplyReport({
+  libraryPath,
+  reviewFilePath,
+  generatedAt,
+  approvedCount,
+  entries,
+  aborted,
+}) {
+  return {
+    libraryPath,
+    reviewFilePath,
+    generatedAt,
+    summary: {
+      approvedCount,
+      processedCount: entries.length,
+      successCount: entries.filter((entry) => entry.status === "success").length,
+      failureCount: entries.filter((entry) => entry.status === "failed").length,
+      skippedCount: entries.filter((entry) => entry.status === "skipped").length,
+      aborted,
+    },
+    entries,
+  };
 }
 
 function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
@@ -1038,17 +1064,47 @@ export function runPhase2Apply(parsed) {
   ensureOutputDir(parsed.artifacts.reviewDir);
   ensureOutputDir(parsed.artifacts.backupDir);
 
-  const targets = collectPhase2Targets(readEagleLibrary(parsed.libraryPath));
+  const libraryItems = readEagleLibrary(parsed.libraryPath);
+  const targets = collectPhase2Targets(libraryItems);
+  const libraryItemsById = new Map(libraryItems.map((item) => [item.id, item]));
   const targetsById = new Map(targets.map((item) => [item.id, item]));
+  const targetIds = new Set(targets.map((item) => item.id));
   const rulesConfig = loadPhase2FolderRules();
   const applyReportJson = resolveProjectPath(parsed.artifacts.applyReportJson);
   const entries = [];
   const generatedAt = new Date().toISOString();
   let consecutiveFailures = 0;
   let aborted = false;
+  let report = buildApplyReport({
+    libraryPath: parsed.libraryPath,
+    reviewFilePath,
+    generatedAt,
+    approvedCount: reviewData.approvedEntries.length,
+    entries,
+    aborted,
+  });
+
+  writeApplyReport(applyReportJson, report);
+
+  const persistApplyReportOrThrow = () => {
+    report = buildApplyReport({
+      libraryPath: parsed.libraryPath,
+      reviewFilePath,
+      generatedAt,
+      approvedCount: reviewData.approvedEntries.length,
+      entries,
+      aborted,
+    });
+
+    try {
+      writeApplyReport(applyReportJson, report);
+    } catch (error) {
+      throw new Error(`Failed to persist apply report: ${error.message}`);
+    }
+  };
 
   for (const approvedEntry of reviewData.approvedEntries) {
-    const item = targetsById.get(approvedEntry.id);
+    const item = libraryItemsById.get(approvedEntry.id);
     const backupPath = resolveProjectPath(
       path.join(parsed.artifacts.backupDir, `${approvedEntry.id}-metadata.json`)
     );
@@ -1064,31 +1120,62 @@ export function runPhase2Apply(parsed) {
 
       if (consecutiveFailures >= 3) {
         aborted = true;
-        break;
       }
 
+      persistApplyReportOrThrow();
+      if (aborted) {
+        break;
+      }
       continue;
     }
 
-    const mutation = buildApplyMutation(item, reviewData, rulesConfig);
-
-    try {
-      writeMetadataWithBackup(item, mutation, parsed.artifacts.backupDir);
+    if (!targetIds.has(approvedEntry.id)) {
       entries.push({
-        id: item.id,
-        status: "success",
+        id: approvedEntry.id,
+        status: "skipped",
         metadataPath: item.metadataPath,
         backupPath,
-        name: mutation.name,
-        tags: mutation.tags,
-        folders: mutation.folders,
+        reason: `Item is already processed or no longer matches phase2 targets: ${approvedEntry.id}`,
       });
       consecutiveFailures = 0;
-    } catch (error) {
+      persistApplyReportOrThrow();
+      continue;
+    }
+
+    const liveName = String(item.name ?? "").trim();
+    const reviewCurrentName = String(approvedEntry.currentName ?? "").trim();
+
+    if (liveName !== reviewCurrentName) {
       entries.push({
         id: item.id,
         status: "failed",
         metadataPath: item.metadataPath,
+        backupPath,
+        error: `Live item name no longer matches review currentName: ${liveName} !== ${reviewCurrentName}`,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+      }
+
+      persistApplyReportOrThrow();
+      if (aborted) {
+        break;
+      }
+      continue;
+    }
+
+    const targetItem = targetsById.get(approvedEntry.id);
+    const mutation = buildApplyMutation(targetItem, reviewData, rulesConfig);
+
+    try {
+      writeMetadataWithBackup(targetItem, mutation, parsed.artifacts.backupDir);
+    } catch (error) {
+      entries.push({
+        id: targetItem.id,
+        status: "failed",
+        metadataPath: targetItem.metadataPath,
         backupPath,
         error: error.message,
       });
@@ -1096,26 +1183,27 @@ export function runPhase2Apply(parsed) {
 
       if (consecutiveFailures >= 3) {
         aborted = true;
+      }
+
+      persistApplyReportOrThrow();
+      if (aborted) {
         break;
       }
+      continue;
     }
+
+    entries.push({
+      id: targetItem.id,
+      status: "success",
+      metadataPath: targetItem.metadataPath,
+      backupPath,
+      name: mutation.name,
+      tags: mutation.tags,
+      folders: mutation.folders,
+    });
+    consecutiveFailures = 0;
+    persistApplyReportOrThrow();
   }
-
-  const report = {
-    libraryPath: parsed.libraryPath,
-    reviewFilePath,
-    generatedAt,
-    summary: {
-      approvedCount: reviewData.approvedEntries.length,
-      processedCount: entries.length,
-      successCount: entries.filter((entry) => entry.status === "success").length,
-      failureCount: entries.filter((entry) => entry.status === "failed").length,
-      aborted,
-    },
-    entries,
-  };
-
-  writeApplyReport(applyReportJson, report);
 
   return {
     ...report,
