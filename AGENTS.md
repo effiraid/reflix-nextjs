@@ -14,3 +14,11 @@ When the user asks to process uncategorized Eagle thumbnails, treat it as the an
 - The script replaces static `_thumbnail.png` files with animated WebP content while keeping the `_thumbnail.png` filename.
 - Backups are written to `.tmp/eagle-thumbnail-backups/<timestamp>/`.
 - Delete backups only after the user explicitly confirms the thumbnails look correct in Eagle.
+
+## Eagle Phase 2 Ops
+
+- Use `npm run eagle:phase2:review` to generate name review artifacts for uncategorized mp4 items.
+- Review and edit the generated `name-review.json`, marking approved entries with `"approved": true`.
+- Use `npm run eagle:phase2:apply -- --review-file <absolute-path>` to apply approved renames, tag sync, and folder assignment.
+- Tags exclude numeric-only tokens such as `2`, `3`, `(2)`.
+- Folder writes use only folder IDs explicitly listed in `scripts/config/eagle-phase2-folder-rules.json`.

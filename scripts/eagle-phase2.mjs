@@ -21,12 +21,30 @@ if (isMainModule) {
     }
 
     if (parsed.mode === "review") {
-      runPhase2Review(parsed);
+      const result = runPhase2Review(parsed);
+      process.stdout.write(`📂 Eagle Library: ${parsed.libraryPath}\n`);
+      process.stdout.write("📝 Mode: review\n");
+      process.stdout.write(`🧾 name-review.json: ${result.nameReviewJson}\n`);
     } else if (parsed.mode === "apply") {
-      runPhase2Apply(parsed);
+      const result = runPhase2Apply(parsed);
+      process.stdout.write(`📂 Eagle Library: ${parsed.libraryPath}\n`);
+      process.stdout.write("✍️ Mode: apply\n");
+      process.stdout.write(`🧾 apply-report.json: ${result.applyReportJson}\n`);
+
+      if (result.summary.failureCount > 0 || result.summary.aborted) {
+        process.stderr.write(
+          `Apply completed with failures. Successes: ${result.summary.successCount}, failures: ${result.summary.failureCount}, aborted: ${result.summary.aborted}\n`
+        );
+        process.exitCode = 1;
+      }
     }
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
+    if (error.applyReportJson && error.hasDurableApplyReport) {
+      process.stderr.write(
+        `Durable partial apply-report.json: ${error.applyReportJson}\n`
+      );
+    }
     process.exitCode = 1;
   }
 }

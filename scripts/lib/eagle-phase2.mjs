@@ -45,6 +45,16 @@ function resolveProjectPath(relativePath) {
   return path.join(PROJECT_ROOT, relativePath);
 }
 
+function canonicalizeLibraryPath(libraryPath) {
+  const absolutePath = path.resolve(String(libraryPath ?? ""));
+
+  try {
+    return fs.realpathSync(absolutePath);
+  } catch {
+    return path.normalize(absolutePath);
+  }
+}
+
 function writeJsonFile(relativePath, payload) {
   const absolutePath = resolveProjectPath(relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
@@ -61,6 +71,13 @@ function writeOutputJsonFile(outputDir, filename, payload) {
   const absolutePath = resolveOutputPath(outputDir, filename);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function ensureOutputDir(outputDir) {
+  fs.mkdirSync(
+    path.isAbsolute(outputDir) ? outputDir : resolveProjectPath(outputDir),
+    { recursive: true }
+  );
 }
 
 function loadPhase2FolderRules() {
@@ -110,10 +127,6 @@ function isReviewSuffixToken(token) {
 
 function isNumericReviewToken(token) {
   return /^\d+$/.test(token) || isReviewSuffixToken(token);
-}
-
-function isAdjacentDuplicateToken(tokens, index) {
-  return index > 0 && tokens[index] === tokens[index - 1];
 }
 
 function isAllowlistedReviewToken(token) {
@@ -254,68 +267,143 @@ function buildReviewMarkdown(entries) {
 
 function collectPhase2Targets(source) {
   const items = Array.isArray(source) ? source : readEagleLibrary(source);
-  return items.filter((item) => item.ext === "mp4" && (!item.folders || item.folders.length === 0));
+  return items
+    .filter((item) => item.ext === "mp4" && (!item.folders || item.folders.length === 0))
+    .sort((left, right) => left.id.localeCompare(right.id));
 }
 
-function buildNameReviewEntries(items, options = {}) {
-  const sourceItems = Array.isArray(items) ? items : [];
-  const entryMap = new Map();
-  const groupObservations = new Map();
-  const globalTokenCounts = new Map();
+function buildReviewObservation(item) {
+  const tokens = tokenizeName(item.name);
+  return {
+    item,
+    tokens,
+    currentName: String(item.name ?? "").trim(),
+    prefixKey: tokens.length >= REVIEW_PREFIX_WIDTH ? tokens.slice(0, REVIEW_PREFIX_WIDTH).join(" ") : "",
+  };
+}
 
-  for (const item of sourceItems) {
-    const tokens = tokenizeName(item.name);
-    const prefixKey = tokens.length >= REVIEW_PREFIX_WIDTH ? tokens.slice(0, REVIEW_PREFIX_WIDTH).join(" ") : "";
-    const observation = {
-      item,
-      tokens,
-    };
+function groupReviewObservationsByPrefix(items) {
+  const grouped = new Map();
 
-    if (prefixKey) {
-      const group = groupObservations.get(prefixKey) || [];
-      group.push(observation);
-      groupObservations.set(prefixKey, group);
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+    if (!observation.prefixKey) {
+      continue;
     }
 
-    for (const token of tokens) {
+    const group = grouped.get(observation.prefixKey) || [];
+    group.push(observation);
+    grouped.set(observation.prefixKey, group);
+  }
+
+  return grouped;
+}
+
+function countGlobalReviewTokens(items) {
+  const counts = new Map();
+
+  for (const item of items) {
+    for (const token of tokenizeName(item.name)) {
       if (isNumericReviewToken(token)) {
         continue;
       }
 
-      globalTokenCounts.set(token, (globalTokenCounts.get(token) || 0) + 1);
-    }
-
-    const hasRepeatedTokens = tokens.some((token, index) => {
-      if (isNumericReviewToken(token)) {
-        return false;
-      }
-
-      return tokens.indexOf(token) !== index;
-    });
-    const hasSuffixToken = tokens.some(isReviewSuffixToken);
-    const normalizedName = normalizeReviewProposal(item.name);
-
-    if ((hasRepeatedTokens || hasSuffixToken) && normalizedName && normalizedName !== String(item.name ?? "").trim()) {
-      addReviewEntry(entryMap, {
-        id: item.id,
-        currentName: String(item.name ?? "").trim(),
-        proposedName: normalizedName,
-        reason: [
-          hasRepeatedTokens ? "repeated words" : null,
-          hasSuffixToken ? "parenthesized sequence suffix" : null,
-        ]
-          .filter(Boolean)
-          .join(" and "),
-        confidence: hasRepeatedTokens && hasSuffixToken ? 0.98 : hasSuffixToken ? 0.97 : 0.94,
-      });
+      counts.set(token, (counts.get(token) || 0) + 1);
     }
   }
 
-  for (const [prefixKey, observations] of groupObservations.entries()) {
+  return counts;
+}
+
+function findRepeatedNameIssues(observation) {
+  const repeatedTokens = new Set();
+
+  for (let index = 0; index < observation.tokens.length; index += 1) {
+    const token = observation.tokens[index];
+    if (isNumericReviewToken(token)) {
+      continue;
+    }
+
+    if (observation.tokens.indexOf(token) !== index) {
+      repeatedTokens.add(token);
+    }
+  }
+
+  const hasSuffixToken = observation.tokens.some(isReviewSuffixToken);
+  const hasRepeatedTokens = repeatedTokens.size > 0;
+
+  if (!hasRepeatedTokens && !hasSuffixToken) {
+    return null;
+  }
+
+  return {
+    proposedName: normalizeReviewProposal(observation.item.name),
+    reason: [
+      hasRepeatedTokens ? "repeated words" : null,
+      hasSuffixToken ? "parenthesized sequence suffix" : null,
+    ]
+      .filter(Boolean)
+      .join(" and "),
+    confidence: hasRepeatedTokens && hasSuffixToken ? 0.98 : hasSuffixToken ? 0.97 : 0.94,
+  };
+}
+
+function buildRepeatedNameCandidates(items) {
+  const candidates = [];
+
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+    const issue = findRepeatedNameIssues(observation);
+
+    if (!issue) {
+      continue;
+    }
+
+    if (!issue.proposedName || issue.proposedName === observation.currentName) {
+      continue;
+    }
+
+    candidates.push({
+      id: observation.item.id,
+      currentName: observation.currentName,
+      ...issue,
+    });
+  }
+
+  return candidates;
+}
+
+function findSeriesConsistencyReplacementToken(variantToken, variantCount, candidateEntries) {
+  const eligibleCandidates = [...candidateEntries.entries()].filter(
+    ([candidateToken, candidateObservations]) =>
+      candidateToken !== variantToken &&
+      !isAllowlistedReviewToken(candidateToken) &&
+      candidateObservations.length >= variantCount * REVIEW_SERIES_FREQUENCY_MULTIPLIER &&
+      levenshteinDistance(variantToken, candidateToken) <= REVIEW_SERIES_MAX_EDIT_DISTANCE
+  );
+
+  if (eligibleCandidates.length === 0) {
+    return null;
+  }
+
+  return eligibleCandidates
+    .sort((left, right) => {
+      if (right[1].length !== left[1].length) {
+        return right[1].length - left[1].length;
+      }
+
+      return levenshteinDistance(variantToken, left[0]) - levenshteinDistance(variantToken, right[0]);
+    })[0][0];
+}
+
+function buildSeriesConsistencyCandidates(groupedObservations) {
+  const candidates = [];
+
+  for (const observations of groupedObservations.values()) {
     const maxLength = Math.max(...observations.map((observation) => observation.tokens.length));
 
     for (let tokenIndex = REVIEW_PREFIX_WIDTH; tokenIndex < maxLength; tokenIndex += 1) {
-      const counts = new Map();
+      const tokensAtIndex = new Map();
 
       for (const observation of observations) {
         const token = observation.tokens[tokenIndex];
@@ -323,49 +411,33 @@ function buildNameReviewEntries(items, options = {}) {
           continue;
         }
 
-        const bucket = counts.get(token) || [];
+        const bucket = tokensAtIndex.get(token) || [];
         bucket.push(observation);
-        counts.set(token, bucket);
+        tokensAtIndex.set(token, bucket);
       }
 
-      for (const [variantToken, variantObservations] of counts.entries()) {
+      for (const [variantToken, variantObservations] of tokensAtIndex.entries()) {
         if (isAllowlistedReviewToken(variantToken)) {
           continue;
         }
 
-        const commonCandidates = [...counts.entries()].filter(([candidateToken, candidateObservations]) => {
-          if (candidateToken === variantToken || isAllowlistedReviewToken(candidateToken)) {
-            return false;
-          }
-
-          return (
-            candidateObservations.length >= variantObservations.length * REVIEW_SERIES_FREQUENCY_MULTIPLIER &&
-            levenshteinDistance(variantToken, candidateToken) <= REVIEW_SERIES_MAX_EDIT_DISTANCE
-          );
-        });
-
-        if (commonCandidates.length === 0) {
+        const replacementToken = findSeriesConsistencyReplacementToken(
+          variantToken,
+          variantObservations.length,
+          tokensAtIndex
+        );
+        if (!replacementToken) {
           continue;
         }
-
-        const [replacementToken] = commonCandidates.sort((left, right) => {
-          if (right[1].length !== left[1].length) {
-            return right[1].length - left[1].length;
-          }
-
-          return levenshteinDistance(variantToken, left[0]) - levenshteinDistance(variantToken, right[0]);
-        })[0];
 
         for (const observation of variantObservations) {
           const candidateTokens = [...observation.tokens];
           candidateTokens[tokenIndex] = replacementToken;
-          const proposedName = normalizeReviewProposal(candidateTokens.join(" "));
-
-          addReviewEntry(entryMap, {
+          candidates.push({
             id: observation.item.id,
-            currentName: String(observation.item.name ?? "").trim(),
-            proposedName,
-            reason: `series-consistency outlier`,
+            currentName: observation.currentName,
+            proposedName: normalizeReviewProposal(candidateTokens.join(" ")),
+            reason: "series-consistency outlier",
             confidence: 0.92,
           });
         }
@@ -373,11 +445,45 @@ function buildNameReviewEntries(items, options = {}) {
     }
   }
 
-  for (const item of sourceItems) {
-    const tokens = tokenizeName(item.name);
+  return candidates;
+}
 
-    for (let tokenIndex = 0; tokenIndex < tokens.length; tokenIndex += 1) {
-      const rareToken = tokens[tokenIndex];
+function findRareTokenReplacementToken(rareToken, globalTokenCounts) {
+  const eligibleCandidates = [...globalTokenCounts.entries()]
+    .filter(([token, frequency]) => {
+      if (
+        token === rareToken ||
+        isAllowlistedReviewToken(token) ||
+        frequency < REVIEW_RARE_MIN_FREQUENCY
+      ) {
+        return false;
+      }
+
+      const maxDistance =
+        rareToken.length <= REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH
+          ? REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE
+          : REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE;
+      return levenshteinDistance(rareToken, token) <= maxDistance;
+    })
+    .sort((left, right) => {
+      if (right[1] !== left[1]) {
+        return right[1] - left[1];
+      }
+
+      return levenshteinDistance(rareToken, left[0]) - levenshteinDistance(rareToken, right[0]);
+    });
+
+  return eligibleCandidates[0]?.[0] || null;
+}
+
+function buildRareTokenCandidates(items, globalTokenCounts) {
+  const candidates = [];
+
+  for (const item of items) {
+    const observation = buildReviewObservation(item);
+
+    for (let tokenIndex = 0; tokenIndex < observation.tokens.length; tokenIndex += 1) {
+      const rareToken = observation.tokens[tokenIndex];
       if (!rareToken || isNumericReviewToken(rareToken) || isAllowlistedReviewToken(rareToken)) {
         continue;
       }
@@ -386,56 +492,270 @@ function buildNameReviewEntries(items, options = {}) {
         continue;
       }
 
-      const candidateToken = [...globalTokenCounts.entries()]
-        .filter(([token, frequency]) => {
-          if (
-            token === rareToken ||
-            isAllowlistedReviewToken(token) ||
-            frequency < REVIEW_RARE_MIN_FREQUENCY
-          ) {
-            return false;
-          }
-
-          const maxDistance =
-            rareToken.length <= REVIEW_RARE_SHORT_TOKEN_MAX_LENGTH
-              ? REVIEW_RARE_SHORT_TOKEN_MAX_EDIT_DISTANCE
-              : REVIEW_RARE_LONG_TOKEN_MAX_EDIT_DISTANCE;
-          return levenshteinDistance(rareToken, token) <= maxDistance;
-        })
-        .sort((left, right) => {
-          if (right[1] !== left[1]) {
-            return right[1] - left[1];
-          }
-
-          return levenshteinDistance(rareToken, left[0]) - levenshteinDistance(rareToken, right[0]);
-        })[0];
-
-      if (!candidateToken) {
+      const replacementToken = findRareTokenReplacementToken(rareToken, globalTokenCounts);
+      if (!replacementToken) {
         continue;
       }
 
-      const [replacementToken] = candidateToken;
-      const candidateTokens = [...tokens];
+      const candidateTokens = [...observation.tokens];
       candidateTokens[tokenIndex] = replacementToken;
-      const proposedName = normalizeReviewProposal(candidateTokens.join(" "));
-
-      addReviewEntry(entryMap, {
-        id: item.id,
-        currentName: String(item.name ?? "").trim(),
-        proposedName,
+      candidates.push({
+        id: observation.item.id,
+        currentName: observation.currentName,
+        proposedName: normalizeReviewProposal(candidateTokens.join(" ")),
         reason: "rare-token near-match",
         confidence: 0.88,
       });
     }
   }
 
-  const entries = sortReviewEntries([...entryMap.values()]);
-
-  return options.includeAllCandidates === true ? entries : entries;
+  return candidates;
 }
 
-function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir }) {
-  const generatedAt = new Date().toISOString();
+function buildNameReviewEntries(items) {
+  const sourceItems = Array.isArray(items) ? items : [];
+  const entryMap = new Map();
+
+  for (const candidate of buildRepeatedNameCandidates(sourceItems)) {
+    addReviewEntry(entryMap, candidate);
+  }
+
+  for (const candidate of buildSeriesConsistencyCandidates(
+    groupReviewObservationsByPrefix(sourceItems)
+  )) {
+    addReviewEntry(entryMap, candidate);
+  }
+
+  const globalTokenCounts = countGlobalReviewTokens(sourceItems);
+  for (const candidate of buildRareTokenCandidates(sourceItems, globalTokenCounts)) {
+    addReviewEntry(entryMap, candidate);
+  }
+
+  return sortReviewEntries([...entryMap.values()]);
+}
+
+function validateApprovedRenameEntries(approvedEntries) {
+  const byId = new Map();
+
+  for (const entry of Array.isArray(approvedEntries) ? approvedEntries : []) {
+    if (!entry || entry.approved !== true) {
+      continue;
+    }
+
+    const bucket = byId.get(entry.id) || [];
+    bucket.push(entry);
+    byId.set(entry.id, bucket);
+  }
+
+  for (const [id, entries] of byId.entries()) {
+    if (entries.length > 1) {
+      throw new Error(`Duplicate approved rename entries for item id ${id}`);
+    }
+  }
+}
+
+function validateNameReviewEntries(entries) {
+  if (!Array.isArray(entries)) {
+    throw new Error("Invalid name review artifact: entries must be an array");
+  }
+
+  for (const entry of entries) {
+    const isValidEntry =
+      entry &&
+      typeof entry === "object" &&
+      typeof entry.id === "string" &&
+      typeof entry.currentName === "string" &&
+      typeof entry.proposedName === "string" &&
+      typeof entry.reason === "string" &&
+      typeof entry.confidence === "number" &&
+      typeof entry.approved === "boolean";
+
+    if (!isValidEntry) {
+      throw new Error(
+        "Invalid name review artifact: entries must contain review entries with id, currentName, proposedName, reason, confidence, and approved fields"
+      );
+    }
+  }
+}
+
+function loadApprovedNameReview(reviewFilePath) {
+  const raw = fs.readFileSync(reviewFilePath, "utf8");
+  const reviewData = JSON.parse(raw);
+  const entries = reviewData.entries;
+  validateNameReviewEntries(entries);
+  const approvedEntries = entries.filter((entry) => entry && entry.approved === true);
+  validateApprovedRenameEntries(approvedEntries);
+
+  return {
+    ...reviewData,
+    reviewFilePath,
+    entries,
+    approvedEntries,
+  };
+}
+
+function applyApprovedRenames(item, approvedEntries) {
+  let entries;
+  if (Array.isArray(approvedEntries)) {
+    entries = approvedEntries;
+  } else if (approvedEntries && typeof approvedEntries === "object") {
+    if (!Array.isArray(approvedEntries.approvedEntries)) {
+      throw new Error("applyApprovedRenames expects an approvedEntries array");
+    }
+
+    entries = approvedEntries.approvedEntries;
+  } else {
+    throw new Error("applyApprovedRenames expects an approvedEntries array");
+  }
+
+  validateApprovedRenameEntries(entries);
+
+  const originalName = String(item?.name ?? "");
+  const currentName = originalName.trim();
+  const approvedRename = entries.find(
+    (entry) =>
+      entry &&
+      entry.id === item?.id &&
+      entry.approved === true &&
+      String(entry.proposedName ?? "").trim()
+  );
+
+  if (!approvedRename) {
+    return {
+      ...item,
+      renameApplied: false,
+    };
+  }
+
+  const proposedName = String(approvedRename.proposedName).trim();
+  if (proposedName === currentName) {
+    return {
+      ...item,
+      renameApplied: false,
+    };
+  }
+
+  return {
+    ...item,
+    name: proposedName,
+    renameApplied: true,
+  };
+}
+
+function syncTagsFromName(name, options) {
+  void options;
+  const tokens = tokenizeName(name);
+  const tags = [];
+  const excludedNumericTokens = [];
+  const seenTags = new Set();
+
+  for (const token of tokens) {
+    if (isNumericReviewToken(token)) {
+      excludedNumericTokens.push(token);
+      continue;
+    }
+
+    if (seenTags.has(token)) {
+      continue;
+    }
+
+    seenTags.add(token);
+    tags.push(token);
+  }
+
+  return {
+    name: String(name ?? "").trim(),
+    tokens,
+    tags,
+    excludedNumericTokens,
+    lossyTagSync:
+      excludedNumericTokens.length > 0 || tags.length !== tokens.length - excludedNumericTokens.length,
+  };
+}
+
+function buildFolderResolutionView(name, rulesConfig = {}) {
+  const tagSync = syncTagsFromName(name);
+  const folderSync = resolveFolderIds(tagSync.tags, rulesConfig);
+
+  return {
+    tokens: tagSync.tokens,
+    tags: tagSync.tags,
+    excludedNumericTokens: tagSync.excludedNumericTokens,
+    folderIds: folderSync.folderIds,
+    matchedTokens: folderSync.matchedTokens,
+    unresolvedTokens: folderSync.unresolvedTokens,
+    lossyTagSync: tagSync.lossyTagSync || folderSync.lossyTagSync,
+  };
+}
+
+function resolveFolderIds(tokens, rulesConfig = {}) {
+  const ignoredTokens = new Set(rulesConfig.ignoredTokens || []);
+  const rules = rulesConfig.rules || {};
+  const folderIds = [];
+  const matchedTokens = [];
+  const unresolvedTokens = [];
+  const seenFolderIds = new Set();
+  const seenUnresolvedTokens = new Set();
+  const seenMatchedTokens = new Set();
+
+  for (const rawToken of Array.isArray(tokens) ? tokens : []) {
+    const token = normalizePhase2Token(rawToken);
+
+    if (!token || isNumericReviewToken(token) || ignoredTokens.has(token)) {
+      continue;
+    }
+
+    const rule = rules[token];
+    const ruleFolderIds = Array.isArray(rule?.folderIds) ? rule.folderIds : [];
+
+    if (ruleFolderIds.length === 0) {
+      if (!seenUnresolvedTokens.has(token)) {
+        seenUnresolvedTokens.add(token);
+        unresolvedTokens.push(token);
+      }
+      continue;
+    }
+
+    if (!seenMatchedTokens.has(token)) {
+      seenMatchedTokens.add(token);
+      matchedTokens.push(token);
+    }
+
+    for (const folderId of ruleFolderIds) {
+      if (seenFolderIds.has(folderId)) {
+        continue;
+      }
+
+      seenFolderIds.add(folderId);
+      folderIds.push(folderId);
+    }
+  }
+
+  return {
+    folderIds,
+    matchedTokens,
+    unresolvedTokens,
+    lossyTagSync: unresolvedTokens.length > 0,
+  };
+}
+
+function buildApplyMutation(item, approvedEntries, rulesConfig = {}) {
+  const renamedItem = applyApprovedRenames(item, approvedEntries);
+  const folderView = buildFolderResolutionView(renamedItem.name, rulesConfig);
+
+  return {
+    ...item,
+    ...renamedItem,
+    tags: folderView.tags,
+    folders: folderView.folderIds,
+    excludedNumericTokens: folderView.excludedNumericTokens,
+    matchedTokens: folderView.matchedTokens,
+    unresolvedTokens: folderView.unresolvedTokens,
+    lossyTagSync: folderView.lossyTagSync,
+  };
+}
+
+function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir, generatedAt }) {
   const reviewEntries = sortReviewEntries(entries).map((entry) => ({
     ...entry,
     approved: false,
@@ -460,6 +780,86 @@ function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir
   };
 }
 
+function writeMetadataWithBackup(entry, mutation, backupDir) {
+  const originalRaw = fs.readFileSync(entry.metadataPath, "utf8");
+  const originalMetadata = JSON.parse(originalRaw);
+  const absoluteBackupDir = path.isAbsolute(backupDir)
+    ? backupDir
+    : resolveProjectPath(backupDir);
+  const backupPath = path.join(absoluteBackupDir, `${entry.id}-metadata.json`);
+  const nextMetadata = {
+    ...originalMetadata,
+    name: mutation.name,
+    tags: mutation.tags,
+    folders: mutation.folders,
+  };
+  const tempMetadataPath = `${entry.metadataPath}.tmp`;
+  const restoreMetadataPath = `${entry.metadataPath}.restore`;
+
+  fs.mkdirSync(absoluteBackupDir, { recursive: true });
+  fs.writeFileSync(backupPath, originalRaw);
+
+  try {
+    fs.writeFileSync(tempMetadataPath, JSON.stringify(nextMetadata, null, 2));
+    fs.renameSync(tempMetadataPath, entry.metadataPath);
+  } catch (error) {
+    try {
+      fs.rmSync(tempMetadataPath, { force: true });
+      fs.writeFileSync(restoreMetadataPath, originalRaw);
+      fs.renameSync(restoreMetadataPath, entry.metadataPath);
+    } catch (restoreError) {
+      error.message = `${error.message}; restore failed: ${restoreError.message}`;
+    } finally {
+      fs.rmSync(restoreMetadataPath, { force: true });
+    }
+
+    throw error;
+  }
+
+  return {
+    backupPath,
+    metadataPath: entry.metadataPath,
+  };
+}
+
+function writeApplyReport(outputPath, report) {
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  const tempPath = `${outputPath}.tmp`;
+  fs.writeFileSync(tempPath, `${JSON.stringify(report, null, 2)}\n`);
+  fs.renameSync(tempPath, outputPath);
+}
+
+function createApplyReportPersistenceError(error, applyReportJson) {
+  const wrappedError = new Error(`Failed to persist apply report: ${error.message}`);
+  wrappedError.applyReportJson = applyReportJson;
+  wrappedError.hasDurableApplyReport = fs.existsSync(applyReportJson);
+  return wrappedError;
+}
+
+function buildApplyReport({
+  libraryPath,
+  reviewFilePath,
+  generatedAt,
+  approvedCount,
+  entries,
+  aborted,
+}) {
+  return {
+    libraryPath,
+    reviewFilePath,
+    generatedAt,
+    summary: {
+      approvedCount,
+      processedCount: entries.length,
+      successCount: entries.filter((entry) => entry.status === "success").length,
+      failureCount: entries.filter((entry) => entry.status === "failed").length,
+      skippedCount: entries.filter((entry) => entry.status === "skipped").length,
+      aborted,
+    },
+    entries,
+  };
+}
+
 function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
   return {
     libraryPath,
@@ -472,43 +872,23 @@ function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
       name: item.name,
       tags: item.tags || [],
       folders: item.folders || [],
-      metadataPath: item.metadataPath || path.join(item._infoDir, "metadata.json"),
+      metadataPath: item.metadataPath,
     })),
   };
 }
 
 function buildPhase2FolderRuleReport(libraryPath, targets, generatedAt) {
   const ruleData = loadPhase2FolderRules();
-  const ignoredTokens = new Set(ruleData.ignoredTokens || []);
-  const ruleEntries = ruleData.rules || {};
 
   const entries = targets.map((item) => {
-    const tokens = tokenizeName(item.name);
-    const matchedTokens = [];
-    const appliedFolderIds = [];
-
-    for (const token of tokens) {
-      const rule = ruleEntries[token];
-      if (!rule) {
-        continue;
-      }
-
-      matchedTokens.push(token);
-      for (const folderId of rule.folderIds || []) {
-        if (!appliedFolderIds.includes(folderId)) {
-          appliedFolderIds.push(folderId);
-        }
-      }
-    }
+    const folderView = buildFolderResolutionView(item.name, ruleData);
 
     return {
       id: item.id,
-      tokens,
-      matchedTokens,
-      appliedFolderIds,
-      unresolvedTokens: tokens.filter(
-        (token) => !ignoredTokens.has(token) && !matchedTokens.includes(token)
-      ),
+      tokens: folderView.tokens,
+      matchedTokens: folderView.matchedTokens,
+      appliedFolderIds: folderView.folderIds,
+      unresolvedTokens: folderView.unresolvedTokens,
     };
   });
 
@@ -604,6 +984,10 @@ export function parsePhase2CliArgs(
     throw new Error(`Unknown argument: ${arg}`);
   }
 
+  if (mode === "apply" && !options.reviewFile) {
+    throw new Error("apply mode requires --review-file <path>");
+  }
+
   const timestamp = normalizeTimestamp(options.timestamp);
   const artifacts = buildPhase2Artifacts(timestamp);
   const libraryPath = resolveLibraryPath({
@@ -621,10 +1005,6 @@ export function parsePhase2CliArgs(
   }
 
   if (mode === "apply") {
-    if (!options.reviewFile) {
-      throw new Error("apply mode requires --review-file <path>");
-    }
-
     return {
       mode,
       libraryPath,
@@ -642,8 +1022,8 @@ export function printPhase2Usage() {
 }
 
 export function runPhase2Review(parsed) {
-  fs.mkdirSync(resolveProjectPath(parsed.artifacts.reviewDir), { recursive: true });
-  fs.mkdirSync(resolveProjectPath(parsed.artifacts.backupDir), { recursive: true });
+  ensureOutputDir(parsed.artifacts.reviewDir);
+  ensureOutputDir(parsed.artifacts.backupDir);
 
   const generatedAt = new Date().toISOString();
   const targets = collectPhase2Targets(readEagleLibrary(parsed.libraryPath));
@@ -655,35 +1035,206 @@ export function runPhase2Review(parsed) {
     generatedAt
   );
 
-  createNameReviewArtifact({
+  const reviewArtifact = createNameReviewArtifact({
     libraryPath: parsed.libraryPath,
     entries: nameReviewEntries,
     targetCount: targets.length,
     outputDir: parsed.artifacts.reviewDir,
+    generatedAt,
   });
   writeJsonFile(parsed.artifacts.targetSnapshotJson, targetSnapshot);
   writeJsonFile(parsed.artifacts.folderRuleReportJson, folderRuleReport);
 
-  process.stdout.write(`Phase 2 review artifacts written to ${parsed.artifacts.reviewDir}\n`);
+  return {
+    libraryPath: parsed.libraryPath,
+    generatedAt,
+    reviewDir: resolveProjectPath(parsed.artifacts.reviewDir),
+    backupDir: resolveProjectPath(parsed.artifacts.backupDir),
+    nameReviewJson: reviewArtifact.nameReviewJson,
+    nameReviewMd: reviewArtifact.nameReviewMd,
+    targetSnapshotJson: resolveProjectPath(parsed.artifacts.targetSnapshotJson),
+    folderRuleReportJson: resolveProjectPath(parsed.artifacts.folderRuleReportJson),
+    summary: {
+      targetCount: targets.length,
+      candidateCount: nameReviewEntries.length,
+    },
+  };
 }
 
 export function runPhase2Apply(parsed) {
   const reviewFilePath = path.isAbsolute(parsed.reviewFile)
     ? parsed.reviewFile
     : path.resolve(process.cwd(), parsed.reviewFile);
-  const raw = fs.readFileSync(reviewFilePath, "utf8");
-  const reviewData = JSON.parse(raw);
+  const reviewData = loadApprovedNameReview(reviewFilePath);
+  const canonicalReviewLibraryPath = canonicalizeLibraryPath(reviewData.libraryPath);
+  const canonicalTargetLibraryPath = canonicalizeLibraryPath(parsed.libraryPath);
 
-  process.stdout.write(`Loaded review file: ${reviewFilePath}\n`);
-  process.stdout.write(
-    `Phase 2 apply stub executed for ${reviewData.mode || "review"}\n`
-  );
+  if (canonicalReviewLibraryPath !== canonicalTargetLibraryPath) {
+    throw new Error(
+      `Review file libraryPath does not match target library path: ${reviewData.libraryPath} !== ${parsed.libraryPath}`
+    );
+  }
+
+  ensureOutputDir(parsed.artifacts.reviewDir);
+  ensureOutputDir(parsed.artifacts.backupDir);
+
+  const libraryItems = readEagleLibrary(parsed.libraryPath);
+  const targets = collectPhase2Targets(libraryItems);
+  const libraryItemsById = new Map(libraryItems.map((item) => [item.id, item]));
+  const targetsById = new Map(targets.map((item) => [item.id, item]));
+  const targetIds = new Set(targets.map((item) => item.id));
+  const rulesConfig = loadPhase2FolderRules();
+  const applyReportJson = resolveProjectPath(parsed.artifacts.applyReportJson);
+  const entries = [];
+  const generatedAt = new Date().toISOString();
+  let consecutiveFailures = 0;
+  let aborted = false;
+  let report = buildApplyReport({
+    libraryPath: parsed.libraryPath,
+    reviewFilePath,
+    generatedAt,
+    approvedCount: reviewData.approvedEntries.length,
+    entries,
+    aborted,
+  });
+
+  writeApplyReport(applyReportJson, report);
+
+  const persistApplyReportOrThrow = () => {
+    report = buildApplyReport({
+      libraryPath: parsed.libraryPath,
+      reviewFilePath,
+      generatedAt,
+      approvedCount: reviewData.approvedEntries.length,
+      entries,
+      aborted,
+    });
+
+    try {
+      writeApplyReport(applyReportJson, report);
+    } catch (error) {
+      throw createApplyReportPersistenceError(error, applyReportJson);
+    }
+  };
+
+  for (const approvedEntry of reviewData.approvedEntries) {
+    const item = libraryItemsById.get(approvedEntry.id);
+    const backupPath = resolveProjectPath(
+      path.join(parsed.artifacts.backupDir, `${approvedEntry.id}-metadata.json`)
+    );
+
+    if (!item) {
+      entries.push({
+        id: approvedEntry.id,
+        status: "failed",
+        backupPath,
+        error: `Target item not found in library: ${approvedEntry.id}`,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+      }
+
+      persistApplyReportOrThrow();
+      if (aborted) {
+        break;
+      }
+      continue;
+    }
+
+    if (!targetIds.has(approvedEntry.id)) {
+      entries.push({
+        id: approvedEntry.id,
+        status: "skipped",
+        metadataPath: item.metadataPath,
+        backupPath,
+        reason: `Item is already processed or no longer matches phase2 targets: ${approvedEntry.id}`,
+      });
+      consecutiveFailures = 0;
+      persistApplyReportOrThrow();
+      continue;
+    }
+
+    const liveName = String(item.name ?? "").trim();
+    const reviewCurrentName = String(approvedEntry.currentName ?? "").trim();
+
+    if (liveName !== reviewCurrentName) {
+      entries.push({
+        id: item.id,
+        status: "failed",
+        metadataPath: item.metadataPath,
+        backupPath,
+        error: `Live item name no longer matches review currentName: ${liveName} !== ${reviewCurrentName}`,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+      }
+
+      persistApplyReportOrThrow();
+      if (aborted) {
+        break;
+      }
+      continue;
+    }
+
+    const targetItem = targetsById.get(approvedEntry.id);
+    const mutation = buildApplyMutation(targetItem, reviewData, rulesConfig);
+
+    try {
+      writeMetadataWithBackup(targetItem, mutation, parsed.artifacts.backupDir);
+    } catch (error) {
+      entries.push({
+        id: targetItem.id,
+        status: "failed",
+        metadataPath: targetItem.metadataPath,
+        backupPath,
+        error: error.message,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+      }
+
+      persistApplyReportOrThrow();
+      if (aborted) {
+        break;
+      }
+      continue;
+    }
+
+    entries.push({
+      id: targetItem.id,
+      status: "success",
+      metadataPath: targetItem.metadataPath,
+      backupPath,
+      name: mutation.name,
+      tags: mutation.tags,
+      folders: mutation.folders,
+    });
+    consecutiveFailures = 0;
+    persistApplyReportOrThrow();
+  }
+
+  return {
+    ...report,
+    applyReportJson,
+    backupDir: resolveProjectPath(parsed.artifacts.backupDir),
+  };
 }
 
 export {
+  applyApprovedRenames,
+  buildApplyMutation,
   buildNameReviewEntries,
   collectPhase2Targets,
   createNameReviewArtifact,
+  loadApprovedNameReview,
   normalizeReviewProposal,
   tokenizeName,
+  resolveFolderIds,
+  syncTagsFromName,
 };
