@@ -553,11 +553,18 @@ function loadApprovedNameReview(reviewFilePath) {
 }
 
 function applyApprovedRenames(item, approvedEntries) {
-  const entries = Array.isArray(approvedEntries)
-    ? approvedEntries
-    : Array.isArray(approvedEntries?.approvedEntries)
-      ? approvedEntries.approvedEntries
-      : [];
+  let entries;
+  if (Array.isArray(approvedEntries)) {
+    entries = approvedEntries;
+  } else if (approvedEntries && typeof approvedEntries === "object") {
+    if (!Array.isArray(approvedEntries.approvedEntries)) {
+      throw new Error("applyApprovedRenames expects an approvedEntries array");
+    }
+
+    entries = approvedEntries.approvedEntries;
+  } else {
+    throw new Error("applyApprovedRenames expects an approvedEntries array");
+  }
 
   validateApprovedRenameEntries(entries);
 

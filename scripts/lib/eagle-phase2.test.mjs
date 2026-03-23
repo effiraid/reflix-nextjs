@@ -151,6 +151,33 @@ test("loadApprovedNameReview ignores stale approvedEntries when entries disagree
   }
 });
 
+test("loadApprovedNameReview rejects duplicate approved entries from disk", () => {
+  const reviewFile = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-approved-duplicate-")),
+    "name-review.json"
+  );
+
+  try {
+    fs.writeFileSync(
+      reviewFile,
+      JSON.stringify(
+        {
+          entries: [
+            { id: "A", approved: true, proposedName: "첫 번째" },
+            { id: "A", approved: true, proposedName: "두 번째" },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    assert.throws(() => loadApprovedNameReview(reviewFile), /duplicate approved rename entries/i);
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+  }
+});
+
 test("applyApprovedRenames rejects duplicate approved entries for the same item id", () => {
   assert.throws(
     () =>
@@ -162,6 +189,17 @@ test("applyApprovedRenames rejects duplicate approved entries for the same item 
         ]
       ),
     /duplicate approved rename entries/i
+  );
+});
+
+test("applyApprovedRenames rejects unsupported review object shapes", () => {
+  assert.throws(
+    () =>
+      applyApprovedRenames(
+        { id: "A", name: "원래 이름" },
+        { entries: [{ id: "A", approved: true, proposedName: "적용 이름" }] }
+      ),
+    /approvedEntries array/i
   );
 });
 
