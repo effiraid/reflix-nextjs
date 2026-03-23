@@ -102,8 +102,22 @@ test("loadApprovedNameReview returns only approved entries", () => {
       JSON.stringify(
         {
           entries: [
-            { id: "A", approved: true, proposedName: "새 이름" },
-            { id: "B", approved: false, proposedName: "무시" },
+            {
+              id: "A",
+              currentName: "원래 이름",
+              proposedName: "새 이름",
+              reason: "manual approval",
+              confidence: 1,
+              approved: true,
+            },
+            {
+              id: "B",
+              currentName: "원래 이름 2",
+              proposedName: "무시",
+              reason: "manual approval",
+              confidence: 1,
+              approved: false,
+            },
           ],
         },
         null,
@@ -131,11 +145,32 @@ test("loadApprovedNameReview ignores stale approvedEntries when entries disagree
       JSON.stringify(
         {
           entries: [
-            { id: "A", approved: false, proposedName: "새 이름" },
+            {
+              id: "A",
+              currentName: "원래 이름",
+              proposedName: "새 이름",
+              reason: "manual approval",
+              confidence: 1,
+              approved: false,
+            },
           ],
           approvedEntries: [
-            { id: "A", approved: true, proposedName: "stale override" },
-            { id: "B", approved: true, proposedName: "stale override 2" },
+            {
+              id: "A",
+              currentName: "원래 이름",
+              proposedName: "stale override",
+              reason: "manual approval",
+              confidence: 1,
+              approved: true,
+            },
+            {
+              id: "B",
+              currentName: "원래 이름 2",
+              proposedName: "stale override 2",
+              reason: "manual approval",
+              confidence: 1,
+              approved: true,
+            },
           ],
         },
         null,
@@ -146,6 +181,43 @@ test("loadApprovedNameReview ignores stale approvedEntries when entries disagree
     const result = loadApprovedNameReview(reviewFile);
 
     assert.deepEqual(result.approvedEntries, []);
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+  }
+});
+
+test("loadApprovedNameReview rejects non-review artifacts", () => {
+  const reviewFile = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-non-review-")),
+    "folder-rule-report.json"
+  );
+
+  try {
+    fs.writeFileSync(
+      reviewFile,
+      JSON.stringify(
+        {
+          libraryPath: "/library",
+          generatedAt: "2026-03-24T00:00:00.000Z",
+          summary: {
+            targetCount: 1,
+          },
+          entries: [
+            {
+              id: "ITEM1",
+              tokens: ["검"],
+              matchedTokens: ["검"],
+              appliedFolderIds: ["L951YJXMED230"],
+              unresolvedTokens: [],
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    assert.throws(() => loadApprovedNameReview(reviewFile), /invalid name review/i);
   } finally {
     fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
   }
@@ -163,8 +235,22 @@ test("loadApprovedNameReview rejects duplicate approved entries from disk", () =
       JSON.stringify(
         {
           entries: [
-            { id: "A", approved: true, proposedName: "첫 번째" },
-            { id: "A", approved: true, proposedName: "두 번째" },
+            {
+              id: "A",
+              currentName: "원래 이름",
+              proposedName: "첫 번째",
+              reason: "manual approval",
+              confidence: 1,
+              approved: true,
+            },
+            {
+              id: "A",
+              currentName: "원래 이름",
+              proposedName: "두 번째",
+              reason: "manual approval",
+              confidence: 1,
+              approved: true,
+            },
           ],
         },
         null,

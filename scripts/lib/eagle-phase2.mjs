@@ -537,10 +537,35 @@ function validateApprovedRenameEntries(approvedEntries) {
   }
 }
 
+function validateNameReviewEntries(entries) {
+  if (!Array.isArray(entries)) {
+    throw new Error("Invalid name review artifact: entries must be an array");
+  }
+
+  for (const entry of entries) {
+    const isValidEntry =
+      entry &&
+      typeof entry === "object" &&
+      typeof entry.id === "string" &&
+      typeof entry.currentName === "string" &&
+      typeof entry.proposedName === "string" &&
+      typeof entry.reason === "string" &&
+      typeof entry.confidence === "number" &&
+      typeof entry.approved === "boolean";
+
+    if (!isValidEntry) {
+      throw new Error(
+        "Invalid name review artifact: entries must contain review entries with id, currentName, proposedName, reason, confidence, and approved fields"
+      );
+    }
+  }
+}
+
 function loadApprovedNameReview(reviewFilePath) {
   const raw = fs.readFileSync(reviewFilePath, "utf8");
   const reviewData = JSON.parse(raw);
-  const entries = Array.isArray(reviewData.entries) ? reviewData.entries : [];
+  const entries = reviewData.entries;
+  validateNameReviewEntries(entries);
   const approvedEntries = entries.filter((entry) => entry && entry.approved === true);
   validateApprovedRenameEntries(approvedEntries);
 
