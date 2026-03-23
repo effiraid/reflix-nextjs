@@ -19,6 +19,31 @@
 
 ---
 
+## Task Overview
+
+| # | Task | 설명 |
+|---|------|------|
+| 1 | Project Setup & Dependencies | 프로젝트 초기 설정, 패키지 설치, next.config.ts 구성 |
+| 2 | i18n Foundation | proxy.ts 로케일 감지, dictionaries, [lang] 레이아웃 |
+| 3 | Theme + Global Styles | next-themes 다크/라이트 모드, CSS 변수, globals.css |
+| 4 | Mock Data & Data Utilities | types.ts, constants.ts, data.ts, filter.ts, 목 JSON 데이터 |
+| 5 | Zustand Stores | filterStore, clipStore, uiStore 상태 관리 |
+| 6 | Navbar Component | 상단 네비게이션 바 (로고, 검색, 언어/테마 토글) |
+| 7 | Browse Page — 3-Panel Layout | 좌측 필터 + 중앙 그리드 + 우측 정보 패널 껍데기 |
+| 8 | ClipCard + 3-Stage Loading | LQIP → PNG 썸네일 → WebP 애니메이션 단계별 로딩 |
+| 9 | MasonryGrid (Virtualized) | @tanstack/react-virtual 기반 가상화 핀터레스트 그리드 |
+| 10 | Filter Components | FolderTree + TagFilter + ActiveFilters 필터 UI |
+| 11 | Right Panel — Clip Info | 선택된 클립 상세 정보 표시 패널 |
+| 12 | VideoPlayer + Download Prevention | 커스텀 비디오 플레이어 + 다운로드 방지 처리 |
+| 13 | QuickViewModal | 스페이스바 퀵뷰 모달 + 좌우 네비게이션 |
+| 14 | Clip Detail Page (ISR) | 개별 클립 상세 페이지 ('use cache' ISR) |
+| 15 | Home Page | 홈 랜딩 페이지 (히어로 + 최근 클립 + CTA) |
+| 16 | Search Page (Pagefind) | Pagefind 기반 정적 검색 페이지 |
+| 17 | Export Pipeline | Eagle → JSON + FFmpeg WebP/LQIP → R2 업로드 CLI |
+| 18 | PWA + Metadata + Final Polish | manifest.ts, service worker, OG 이미지, 최종 점검 |
+
+---
+
 ## File Structure
 
 ```
