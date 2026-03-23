@@ -21,26 +21,43 @@ export function RightPanelInspector({
 }: RightPanelInspectorProps) {
   const title = clip.i18n.title[lang] || clip.name;
   const thumbnailUrl = `${MEDIA_BASE_URL}${clip.thumbnailUrl}`;
+  const previewUrl = `${MEDIA_BASE_URL}${clip.previewUrl}`;
+  const mediaKindKey = getClipMediaKind(clip.ext);
   const mediaKind =
-    getClipMediaKind(clip.ext) === "video" ? dict.clip.video : dict.clip.image;
+    mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
   const folderLabels = clip.folders.map((folderId) =>
     getCategoryLabel(folderId, categories, lang)
   );
   const palette = clip.palettes?.slice(0, 6) ?? [];
   const linkText = clip.url || dict.clip.noLink;
-  const memoText = clip.annotation || dict.clip.memo;
+  const memoText = clip.annotation || "-";
   const hasLink = Boolean(clip.url);
   const hasMemo = Boolean(clip.annotation);
 
   return (
     <div className="space-y-5 p-4 text-sm text-foreground">
-      <div className="overflow-hidden rounded-2xl border border-border bg-surface/60">
-        <img
-          src={thumbnailUrl}
-          alt={title}
-          className="h-48 w-full object-cover"
-          loading="lazy"
-        />
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/60">
+        <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-white">
+          {clip.ext.replace(/^\./, "").toUpperCase()}
+        </div>
+        {mediaKindKey === "video" ? (
+          <video
+            src={previewUrl}
+            poster={thumbnailUrl}
+            muted
+            loop
+            playsInline
+            autoPlay
+            className="h-48 w-full object-cover"
+          />
+        ) : (
+          <img
+            src={thumbnailUrl}
+            alt={title}
+            className="h-48 w-full object-cover"
+            loading="lazy"
+          />
+        )}
       </div>
 
       {palette.length > 0 && (
@@ -153,7 +170,7 @@ function TokenSection({ label, items }: { label: string; items: string[] }) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted">-</p>
+        <p className="text-sm italic text-muted">-</p>
       )}
     </section>
   );

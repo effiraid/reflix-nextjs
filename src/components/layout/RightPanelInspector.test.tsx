@@ -92,6 +92,7 @@ describe("RightPanelInspector", () => {
     expect(screen.getByText("검")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "공유" })).toBeInTheDocument();
     expect(screen.getByText("동영상")).toBeInTheDocument();
+    expect(screen.getByText("MP4")).toBeInTheDocument();
     expect(screen.queryByText("규격")).not.toBeInTheDocument();
     expect(screen.queryByText("파일 크기")).not.toBeInTheDocument();
   });
@@ -110,7 +111,7 @@ describe("RightPanelInspector", () => {
       />
     );
 
-    const memoPlaceholder = screen.getAllByText("메모")[1];
+    const memoPlaceholder = screen.getByText("-");
     const linkPlaceholder = screen.getByText("링크 없음");
     const shareButton = screen.getByRole("button", { name: "공유" });
 

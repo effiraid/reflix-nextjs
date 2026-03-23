@@ -40,8 +40,12 @@ export function RightPanelContent({
     return () => controller.abort();
   }, [selectedClipId]);
 
-  if (!activeClip) {
+  if (!selectedClipId) {
     return null;
+  }
+
+  if (!activeClip) {
+    return <div className="p-4 text-sm text-muted">{dict.common.loading}</div>;
   }
 
   return (
