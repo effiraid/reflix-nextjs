@@ -3,11 +3,20 @@ import { getCategoryLabel } from "./categories";
 import type { CategoryTree } from "./types";
 
 const categories: CategoryTree = {
-  ultimate: {
-    slug: "ultimate",
+  combat: {
+    slug: "combat",
     i18n: {
-      ko: "필살기",
-      en: "Ultimate",
+      ko: "전투",
+      en: "Combat",
+    },
+    children: {
+      ultimate: {
+        slug: "ultimate",
+        i18n: {
+          ko: "필살기",
+          en: "Ultimate",
+        },
+      },
     },
   },
 };
