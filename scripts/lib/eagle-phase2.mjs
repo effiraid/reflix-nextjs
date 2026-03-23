@@ -63,6 +63,13 @@ function writeOutputJsonFile(outputDir, filename, payload) {
   fs.writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
+function ensureOutputDir(outputDir) {
+  fs.mkdirSync(
+    path.isAbsolute(outputDir) ? outputDir : resolveProjectPath(outputDir),
+    { recursive: true }
+  );
+}
+
 function loadPhase2FolderRules() {
   const rulesPath = resolveProjectPath("scripts/config/eagle-phase2-folder-rules.json");
   return JSON.parse(fs.readFileSync(rulesPath, "utf8"));
@@ -763,6 +770,46 @@ function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir
   };
 }
 
+function writeMetadataWithBackup(entry, mutation, backupDir) {
+  const originalRaw = fs.readFileSync(entry.metadataPath, "utf8");
+  const originalMetadata = JSON.parse(originalRaw);
+  const absoluteBackupDir = path.isAbsolute(backupDir)
+    ? backupDir
+    : resolveProjectPath(backupDir);
+  const backupPath = path.join(absoluteBackupDir, `${entry.id}-metadata.json`);
+  const nextMetadata = {
+    ...originalMetadata,
+    name: mutation.name,
+    tags: mutation.tags,
+    folders: mutation.folders,
+  };
+
+  fs.mkdirSync(absoluteBackupDir, { recursive: true });
+  fs.writeFileSync(backupPath, originalRaw);
+
+  try {
+    fs.writeFileSync(entry.metadataPath, JSON.stringify(nextMetadata, null, 2));
+  } catch (error) {
+    try {
+      fs.writeFileSync(entry.metadataPath, originalRaw);
+    } catch (restoreError) {
+      error.message = `${error.message}; restore failed: ${restoreError.message}`;
+    }
+
+    throw error;
+  }
+
+  return {
+    backupPath,
+    metadataPath: entry.metadataPath,
+  };
+}
+
+function writeApplyReport(outputPath, report) {
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`);
+}
+
 function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
   return {
     libraryPath,
@@ -925,8 +972,8 @@ export function printPhase2Usage() {
 }
 
 export function runPhase2Review(parsed) {
-  fs.mkdirSync(resolveProjectPath(parsed.artifacts.reviewDir), { recursive: true });
-  fs.mkdirSync(resolveProjectPath(parsed.artifacts.backupDir), { recursive: true });
+  ensureOutputDir(parsed.artifacts.reviewDir);
+  ensureOutputDir(parsed.artifacts.backupDir);
 
   const generatedAt = new Date().toISOString();
   const targets = collectPhase2Targets(readEagleLibrary(parsed.libraryPath));
@@ -938,7 +985,7 @@ export function runPhase2Review(parsed) {
     generatedAt
   );
 
-  createNameReviewArtifact({
+  const reviewArtifact = createNameReviewArtifact({
     libraryPath: parsed.libraryPath,
     entries: nameReviewEntries,
     targetCount: targets.length,
@@ -948,20 +995,121 @@ export function runPhase2Review(parsed) {
   writeJsonFile(parsed.artifacts.targetSnapshotJson, targetSnapshot);
   writeJsonFile(parsed.artifacts.folderRuleReportJson, folderRuleReport);
 
-  process.stdout.write(`Phase 2 review artifacts written to ${parsed.artifacts.reviewDir}\n`);
+  return {
+    libraryPath: parsed.libraryPath,
+    generatedAt,
+    reviewDir: resolveProjectPath(parsed.artifacts.reviewDir),
+    backupDir: resolveProjectPath(parsed.artifacts.backupDir),
+    nameReviewJson: reviewArtifact.nameReviewJson,
+    nameReviewMd: reviewArtifact.nameReviewMd,
+    targetSnapshotJson: resolveProjectPath(parsed.artifacts.targetSnapshotJson),
+    folderRuleReportJson: resolveProjectPath(parsed.artifacts.folderRuleReportJson),
+    summary: {
+      targetCount: targets.length,
+      candidateCount: nameReviewEntries.length,
+    },
+  };
 }
 
 export function runPhase2Apply(parsed) {
   const reviewFilePath = path.isAbsolute(parsed.reviewFile)
     ? parsed.reviewFile
     : path.resolve(process.cwd(), parsed.reviewFile);
-  const raw = fs.readFileSync(reviewFilePath, "utf8");
-  const reviewData = JSON.parse(raw);
+  const reviewData = loadApprovedNameReview(reviewFilePath);
 
-  process.stdout.write(`Loaded review file: ${reviewFilePath}\n`);
-  process.stdout.write(
-    `Phase 2 apply stub executed for ${reviewData.mode || "review"}\n`
-  );
+  if (reviewData.libraryPath !== parsed.libraryPath) {
+    throw new Error(
+      `Review file libraryPath does not match target library path: ${reviewData.libraryPath} !== ${parsed.libraryPath}`
+    );
+  }
+
+  ensureOutputDir(parsed.artifacts.reviewDir);
+  ensureOutputDir(parsed.artifacts.backupDir);
+
+  const targets = collectPhase2Targets(readEagleLibrary(parsed.libraryPath));
+  const targetsById = new Map(targets.map((item) => [item.id, item]));
+  const rulesConfig = loadPhase2FolderRules();
+  const applyReportJson = resolveProjectPath(parsed.artifacts.applyReportJson);
+  const entries = [];
+  const generatedAt = new Date().toISOString();
+  let consecutiveFailures = 0;
+  let aborted = false;
+
+  for (const approvedEntry of reviewData.approvedEntries) {
+    const item = targetsById.get(approvedEntry.id);
+    const backupPath = resolveProjectPath(
+      path.join(parsed.artifacts.backupDir, `${approvedEntry.id}-metadata.json`)
+    );
+
+    if (!item) {
+      entries.push({
+        id: approvedEntry.id,
+        status: "failed",
+        backupPath,
+        error: `Target item not found in library: ${approvedEntry.id}`,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+        break;
+      }
+
+      continue;
+    }
+
+    const mutation = buildApplyMutation(item, reviewData, rulesConfig);
+
+    try {
+      writeMetadataWithBackup(item, mutation, parsed.artifacts.backupDir);
+      entries.push({
+        id: item.id,
+        status: "success",
+        metadataPath: item.metadataPath,
+        backupPath,
+        name: mutation.name,
+        tags: mutation.tags,
+        folders: mutation.folders,
+      });
+      consecutiveFailures = 0;
+    } catch (error) {
+      entries.push({
+        id: item.id,
+        status: "failed",
+        metadataPath: item.metadataPath,
+        backupPath,
+        error: error.message,
+      });
+      consecutiveFailures += 1;
+
+      if (consecutiveFailures >= 3) {
+        aborted = true;
+        break;
+      }
+    }
+  }
+
+  const report = {
+    libraryPath: parsed.libraryPath,
+    reviewFilePath,
+    generatedAt,
+    summary: {
+      approvedCount: reviewData.approvedEntries.length,
+      processedCount: entries.length,
+      successCount: entries.filter((entry) => entry.status === "success").length,
+      failureCount: entries.filter((entry) => entry.status === "failed").length,
+      aborted,
+    },
+    entries,
+  };
+
+  writeApplyReport(applyReportJson, report);
+
+  return {
+    ...report,
+    applyReportJson,
+    backupDir: resolveProjectPath(parsed.artifacts.backupDir),
+  };
 }
 
 export {
