@@ -98,6 +98,16 @@ function writeApprovedReviewFile({ libraryPath, entries }) {
   return reviewFile;
 }
 
+function createTempSymlink(targetPath) {
+  const symlinkDir = fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-link-"));
+  const symlinkPath = path.join(symlinkDir, "library-link.library");
+  fs.symlinkSync(targetPath, symlinkPath);
+  return {
+    symlinkDir,
+    symlinkPath,
+  };
+}
+
 test("collectPhase2Targets keeps only uncategorized mp4 items", () => {
   const targets = collectPhase2Targets([
     { id: "A", ext: "mp4", folders: [], isDeleted: false },
@@ -858,6 +868,13 @@ test("eagle phase2 apply aborts when the review file points at another library",
       },
     ],
   });
+  const targetMetadataPath = path.join(
+    targetLibraryPath,
+    "images",
+    "ITEM1.info",
+    "metadata.json"
+  );
+  const originalTargetMetadata = fs.readFileSync(targetMetadataPath, "utf8");
 
   removePhase2Artifacts(timestamp);
 
@@ -878,10 +895,69 @@ test("eagle phase2 apply aborts when the review file points at another library",
       fs.existsSync(path.join(projectRoot, ".tmp", "eagle-phase2", timestamp, "apply-report.json")),
       false
     );
+    assert.equal(
+      fs.existsSync(path.join(projectRoot, ".tmp", "eagle-phase2-backups", timestamp)),
+      false
+    );
+    assert.equal(fs.readFileSync(targetMetadataPath, "utf8"), originalTargetMetadata);
   } finally {
     fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
     fs.rmSync(reviewLibraryPath, { recursive: true, force: true });
     fs.rmSync(targetLibraryPath, { recursive: true, force: true });
+    removePhase2Artifacts(timestamp);
+  }
+});
+
+test("runPhase2Apply accepts review files that spell the same library through a symlink path", () => {
+  const timestamp = `apply-canonical-library-${Date.now()}-${randomUUID()}`;
+  const libraryPath = createTempEagleLibrary([
+    {
+      id: "ITEM1",
+      metadata: {
+        id: "ITEM1",
+        name: "원신 승리",
+        ext: "mp4",
+        folders: [],
+        tags: ["legacy"],
+      },
+    },
+  ]);
+  const { symlinkDir, symlinkPath } = createTempSymlink(libraryPath);
+  const reviewFile = writeApprovedReviewFile({
+    libraryPath: `${symlinkPath}${path.sep}`,
+    entries: [
+      {
+        id: "ITEM1",
+        currentName: "원신 승리",
+        proposedName: "원신 검",
+        reason: "manual approval",
+        confidence: 1,
+        approved: true,
+      },
+    ],
+  });
+  const parsed = parsePhase2CliArgs([
+    "apply",
+    "--review-file",
+    reviewFile,
+    "--library",
+    libraryPath,
+    "--timestamp",
+    timestamp,
+  ]);
+
+  removePhase2Artifacts(timestamp);
+
+  try {
+    const result = runPhase2Apply(parsed);
+
+    assert.equal(result.summary.failureCount, 0);
+    assert.equal(result.summary.aborted, false);
+    assert.equal(readLibraryMetadata(libraryPath, "ITEM1").name, "원신 검");
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+    fs.rmSync(symlinkDir, { recursive: true, force: true });
+    fs.rmSync(libraryPath, { recursive: true, force: true });
     removePhase2Artifacts(timestamp);
   }
 });
@@ -1197,6 +1273,63 @@ test("runPhase2Apply CLI prints the apply summary contract", () => {
     assert.match(result.stdout, /✍️ Mode: apply/);
     assert.match(result.stdout, /🧾 apply-report\.json: .*apply-report\.json/);
   } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+    fs.rmSync(libraryPath, { recursive: true, force: true });
+    removePhase2Artifacts(timestamp);
+  }
+});
+
+test("runPhase2Apply CLI exits non-zero and reports failures when apply ends with item errors", () => {
+  const timestamp = `apply-cli-failure-${Date.now()}-${randomUUID()}`;
+  const libraryPath = createTempEagleLibrary([
+    {
+      id: "ITEM1",
+      metadata: {
+        id: "ITEM1",
+        name: "원신 승리",
+        ext: "mp4",
+        folders: [],
+        tags: ["legacy"],
+      },
+    },
+  ]);
+  const reviewFile = writeApprovedReviewFile({
+    libraryPath,
+    entries: [
+      {
+        id: "ITEM1",
+        currentName: "원신 승리",
+        proposedName: "원신 검",
+        reason: "manual approval",
+        confidence: 1,
+        approved: true,
+      },
+    ],
+  });
+  const metadataPath = path.join(libraryPath, "images", "ITEM1.info", "metadata.json");
+  const originalMode = fs.statSync(metadataPath).mode;
+
+  removePhase2Artifacts(timestamp);
+
+  try {
+    fs.chmodSync(metadataPath, 0o444);
+
+    const result = runPhase2Cli([
+      "apply",
+      "--review-file",
+      reviewFile,
+      "--library",
+      libraryPath,
+      "--timestamp",
+      timestamp,
+    ]);
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /🧾 apply-report\.json: .*apply-report\.json/);
+    assert.match(result.stderr, /apply completed with failures/i);
+    assert.match(result.stderr, /successes: 0, failures: 1, aborted: false/i);
+  } finally {
+    fs.chmodSync(metadataPath, originalMode & 0o777);
     fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
     fs.rmSync(libraryPath, { recursive: true, force: true });
     removePhase2Artifacts(timestamp);

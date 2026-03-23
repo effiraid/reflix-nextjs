@@ -45,6 +45,16 @@ function resolveProjectPath(relativePath) {
   return path.join(PROJECT_ROOT, relativePath);
 }
 
+function canonicalizeLibraryPath(libraryPath) {
+  const absolutePath = path.resolve(String(libraryPath ?? ""));
+
+  try {
+    return fs.realpathSync(absolutePath);
+  } catch {
+    return path.normalize(absolutePath);
+  }
+}
+
 function writeJsonFile(relativePath, payload) {
   const absolutePath = resolveProjectPath(relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
@@ -1016,8 +1026,10 @@ export function runPhase2Apply(parsed) {
     ? parsed.reviewFile
     : path.resolve(process.cwd(), parsed.reviewFile);
   const reviewData = loadApprovedNameReview(reviewFilePath);
+  const canonicalReviewLibraryPath = canonicalizeLibraryPath(reviewData.libraryPath);
+  const canonicalTargetLibraryPath = canonicalizeLibraryPath(parsed.libraryPath);
 
-  if (reviewData.libraryPath !== parsed.libraryPath) {
+  if (canonicalReviewLibraryPath !== canonicalTargetLibraryPath) {
     throw new Error(
       `Review file libraryPath does not match target library path: ${reviewData.libraryPath} !== ${parsed.libraryPath}`
     );
