@@ -29,6 +29,8 @@ export function RightPanelInspector({
   const palette = clip.palettes?.slice(0, 6) ?? [];
   const linkText = clip.url || dict.clip.noLink;
   const memoText = clip.annotation || dict.clip.memo;
+  const hasLink = Boolean(clip.url);
+  const hasMemo = Boolean(clip.annotation);
 
   return (
     <div className="space-y-5 p-4 text-sm text-foreground">
@@ -65,9 +67,14 @@ export function RightPanelInspector({
         <h3 className="text-lg font-semibold leading-tight">{title}</h3>
       </div>
 
-      <FieldCard label={dict.clip.memo} value={memoText} />
+      <FieldCard label={dict.clip.memo} value={memoText} isPlaceholder={!hasMemo} />
 
-      <FieldCard label={dict.clip.sourceUrl} value={linkText} mono />
+      <FieldCard
+        label={dict.clip.sourceUrl}
+        value={linkText}
+        mono={hasLink}
+        isPlaceholder={!hasLink}
+      />
 
       <TokenSection label={dict.clip.folders} items={folderLabels} />
 
@@ -92,8 +99,7 @@ export function RightPanelInspector({
 
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-xl border border-border bg-surface px-4 py-3 font-medium transition-colors hover:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={!clip.url}
+        className="flex w-full items-center justify-center rounded-xl border border-border bg-surface px-4 py-3 font-medium transition-colors hover:bg-surface/80"
       >
         {dict.clip.share}
       </button>
@@ -105,10 +111,12 @@ function FieldCard({
   label,
   value,
   mono = false,
+  isPlaceholder = false,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  isPlaceholder?: boolean;
 }) {
   return (
     <section className="rounded-2xl border border-border bg-surface/40 p-4">
@@ -117,7 +125,8 @@ function FieldCard({
       </div>
       <p
         className={`break-words text-sm leading-6 ${
-          mono ? "font-mono text-xs" : ""
+          isPlaceholder ? "italic text-muted" : ""
+        } ${mono ? "font-mono text-xs" : ""
         }`}
       >
         {value}

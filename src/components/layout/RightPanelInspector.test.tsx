@@ -95,4 +95,33 @@ describe("RightPanelInspector", () => {
     expect(screen.queryByText("규격")).not.toBeInTheDocument();
     expect(screen.queryByText("파일 크기")).not.toBeInTheDocument();
   });
+
+  it("renders blank memo and link as muted placeholders while keeping the share CTA enabled", () => {
+    render(
+      <RightPanelInspector
+        clip={{
+          ...clip,
+          annotation: "",
+          url: "",
+        }}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const memoPlaceholder = screen.getAllByText("메모")[1];
+    const linkPlaceholder = screen.getByText("링크 없음");
+    const shareButton = screen.getByRole("button", { name: "공유" });
+
+    expect(memoPlaceholder).toBeInTheDocument();
+    expect(memoPlaceholder).toHaveClass("text-muted");
+    expect(memoPlaceholder).toHaveClass("italic");
+    expect(linkPlaceholder).toBeInTheDocument();
+    expect(linkPlaceholder).toHaveClass("text-muted");
+    expect(linkPlaceholder).toHaveClass("italic");
+    expect(linkPlaceholder).not.toHaveClass("font-mono");
+    expect(shareButton).toBeInTheDocument();
+    expect(shareButton).not.toBeDisabled();
+  });
 });
