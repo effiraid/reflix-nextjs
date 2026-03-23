@@ -40,6 +40,11 @@ if (isMainModule) {
     }
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
+    if (error.applyReportJson && error.hasDurableApplyReport) {
+      process.stderr.write(
+        `Durable partial apply-report.json: ${error.applyReportJson}\n`
+      );
+    }
     process.exitCode = 1;
   }
 }

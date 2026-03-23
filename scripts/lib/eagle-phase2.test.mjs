@@ -33,6 +33,16 @@ function runPhase2Cli(args) {
   });
 }
 
+function runPhase2CliWithEnv(args, envOverrides) {
+  return spawnSync(process.execPath, [cliPath, ...args], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      ...envOverrides,
+    },
+  });
+}
+
 function removePhase2Artifacts(timestamp) {
   fs.rmSync(path.join(projectRoot, ".tmp", "eagle-phase2", timestamp), {
     recursive: true,
@@ -1026,6 +1036,80 @@ test("runPhase2Apply backs up metadata before mutation and writes apply-report.j
   }
 });
 
+test("runPhase2Apply writes metadata through a temp file and rename instead of in-place overwrite", () => {
+  const timestamp = `apply-atomic-metadata-${Date.now()}-${randomUUID()}`;
+  const libraryPath = createTempEagleLibrary([
+    {
+      id: "ITEM1",
+      metadata: {
+        id: "ITEM1",
+        name: "원신 승리",
+        ext: "mp4",
+        folders: [],
+        tags: ["legacy"],
+      },
+    },
+  ]);
+  const reviewFile = writeApprovedReviewFile({
+    libraryPath,
+    entries: [
+      {
+        id: "ITEM1",
+        currentName: "원신 승리",
+        proposedName: "원신 검",
+        reason: "manual approval",
+        confidence: 1,
+        approved: true,
+      },
+    ],
+  });
+  const parsed = parsePhase2CliArgs([
+    "apply",
+    "--review-file",
+    reviewFile,
+    "--library",
+    libraryPath,
+    "--timestamp",
+    timestamp,
+  ]);
+  const metadataPath = path.join(libraryPath, "images", "ITEM1.info", "metadata.json");
+  const metadataTempPath = `${metadataPath}.tmp`;
+  const originalWriteFileSync = fs.writeFileSync;
+  const originalRenameSync = fs.renameSync;
+  const renameCalls = [];
+
+  removePhase2Artifacts(timestamp);
+
+  try {
+    fs.writeFileSync = (targetPath, data, options) => {
+      if (targetPath === metadataPath) {
+        throw new Error("metadata was overwritten in place");
+      }
+
+      return originalWriteFileSync(targetPath, data, options);
+    };
+    fs.renameSync = (fromPath, toPath) => {
+      renameCalls.push([String(fromPath), String(toPath)]);
+      return originalRenameSync(fromPath, toPath);
+    };
+
+    const result = runPhase2Apply(parsed);
+
+    assert.equal(result.entries[0].status, "success");
+    assert.equal(readLibraryMetadata(libraryPath, "ITEM1").name, "원신 검");
+    assert.deepEqual(
+      renameCalls.filter(([fromPath, toPath]) => fromPath === metadataTempPath && toPath === metadataPath),
+      [[metadataTempPath, metadataPath]]
+    );
+  } finally {
+    fs.writeFileSync = originalWriteFileSync;
+    fs.renameSync = originalRenameSync;
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+    fs.rmSync(libraryPath, { recursive: true, force: true });
+    removePhase2Artifacts(timestamp);
+  }
+});
+
 test("runPhase2Apply fails closed when the live item name drifted after review", () => {
   const timestamp = `apply-drift-${Date.now()}-${randomUUID()}`;
   const libraryPath = createTempEagleLibrary([
@@ -1119,6 +1203,7 @@ test("runPhase2Apply restores the original metadata when an item write fails", (
     timestamp,
   ]);
   const metadataPath = path.join(libraryPath, "images", "ITEM1.info", "metadata.json");
+  const metadataTempPath = `${metadataPath}.tmp`;
   const originalMetadata = fs.readFileSync(metadataPath, "utf8");
   const originalWriteFileSync = fs.writeFileSync;
   let injectedFailure = false;
@@ -1127,7 +1212,7 @@ test("runPhase2Apply restores the original metadata when an item write fails", (
 
   try {
     fs.writeFileSync = (targetPath, data, options) => {
-      if (!injectedFailure && targetPath === metadataPath) {
+      if (!injectedFailure && targetPath === metadataTempPath) {
         injectedFailure = true;
         originalWriteFileSync(targetPath, '{"broken":', options);
         throw new Error("simulated metadata write failure");
@@ -1197,13 +1282,13 @@ test("runPhase2Apply reruns skip prior successes without consuming the abort thr
   ]);
   const originalWriteFileSync = fs.writeFileSync;
   const firstRunFailures = new Set([
-    path.join(libraryPath, "images", "ITEM2.info", "metadata.json"),
-    path.join(libraryPath, "images", "ITEM3.info", "metadata.json"),
-    path.join(libraryPath, "images", "ITEM4.info", "metadata.json"),
+    `${path.join(libraryPath, "images", "ITEM2.info", "metadata.json")}.tmp`,
+    `${path.join(libraryPath, "images", "ITEM3.info", "metadata.json")}.tmp`,
+    `${path.join(libraryPath, "images", "ITEM4.info", "metadata.json")}.tmp`,
   ]);
   const secondRunFailures = new Set([
-    path.join(libraryPath, "images", "ITEM2.info", "metadata.json"),
-    path.join(libraryPath, "images", "ITEM3.info", "metadata.json"),
+    `${path.join(libraryPath, "images", "ITEM2.info", "metadata.json")}.tmp`,
+    `${path.join(libraryPath, "images", "ITEM3.info", "metadata.json")}.tmp`,
   ]);
   const failedPaths = new Set();
 
@@ -1336,9 +1421,9 @@ test("runPhase2Apply aborts after three consecutive write failures and preserves
     timestamp,
   ]);
   const failingMetadataPaths = new Set([
-    path.join(libraryPath, "images", "ITEM2.info", "metadata.json"),
-    path.join(libraryPath, "images", "ITEM3.info", "metadata.json"),
-    path.join(libraryPath, "images", "ITEM4.info", "metadata.json"),
+    `${path.join(libraryPath, "images", "ITEM2.info", "metadata.json")}.tmp`,
+    `${path.join(libraryPath, "images", "ITEM3.info", "metadata.json")}.tmp`,
+    `${path.join(libraryPath, "images", "ITEM4.info", "metadata.json")}.tmp`,
   ]);
   const originalWriteFileSync = fs.writeFileSync;
   const failedPaths = new Set();
@@ -1477,6 +1562,98 @@ test("runPhase2Apply keeps a durable apply report on disk when a late report wri
   }
 });
 
+test("runPhase2Apply CLI reports the durable partial apply report path when report persistence fails", () => {
+  const timestamp = `apply-cli-report-failure-${Date.now()}-${randomUUID()}`;
+  const libraryPath = createTempEagleLibrary([
+    {
+      id: "ITEM1",
+      metadata: {
+        id: "ITEM1",
+        name: "원신 승리",
+        ext: "mp4",
+        folders: [],
+        tags: ["legacy"],
+      },
+    },
+    {
+      id: "ITEM2",
+      metadata: {
+        id: "ITEM2",
+        name: "원신 승리",
+        ext: "mp4",
+        folders: [],
+        tags: ["legacy"],
+      },
+    },
+  ]);
+  const reviewFile = writeApprovedReviewFile({
+    libraryPath,
+    entries: ["ITEM1", "ITEM2"].map((id) => ({
+      id,
+      currentName: "원신 승리",
+      proposedName: "원신 검",
+      reason: "manual approval",
+      confidence: 1,
+      approved: true,
+    })),
+  });
+  const applyReportJson = path.join(projectRoot, ".tmp", "eagle-phase2", timestamp, "apply-report.json");
+  const preloadPath = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-preload-")),
+    "fail-apply-report.cjs"
+  );
+
+  fs.writeFileSync(
+    preloadPath,
+    [
+      'const fs = require("node:fs");',
+      "const originalWriteFileSync = fs.writeFileSync;",
+      "let reportWriteCount = 0;",
+      "fs.writeFileSync = function patchedWriteFileSync(targetPath, data, options) {",
+      '  if (String(targetPath).includes("apply-report.json.tmp")) {',
+      "    reportWriteCount += 1;",
+      "    if (reportWriteCount === 3) {",
+      '      throw new Error("simulated apply report write failure");',
+      "    }",
+      "  }",
+      "  return originalWriteFileSync.call(this, targetPath, data, options);",
+      "};",
+      "",
+    ].join("\n")
+  );
+
+  removePhase2Artifacts(timestamp);
+
+  try {
+    const result = runPhase2CliWithEnv(
+      [
+        "apply",
+        "--review-file",
+        reviewFile,
+        "--library",
+        libraryPath,
+        "--timestamp",
+        timestamp,
+      ],
+      {
+        NODE_OPTIONS: `--require ${preloadPath}`,
+      }
+    );
+
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /durable partial apply-report\.json/i);
+    assert.match(
+      result.stderr,
+      new RegExp(applyReportJson.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    );
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+    fs.rmSync(path.dirname(preloadPath), { recursive: true, force: true });
+    fs.rmSync(libraryPath, { recursive: true, force: true });
+    removePhase2Artifacts(timestamp);
+  }
+});
+
 test("runPhase2Apply CLI prints the apply summary contract", () => {
   const timestamp = `apply-cli-${Date.now()}-${randomUUID()}`;
   const libraryPath = createTempEagleLibrary([
@@ -1556,13 +1733,13 @@ test("runPhase2Apply CLI exits non-zero and reports failures when apply ends wit
       },
     ],
   });
-  const metadataPath = path.join(libraryPath, "images", "ITEM1.info", "metadata.json");
-  const originalMode = fs.statSync(metadataPath).mode;
+  const infoDir = path.join(libraryPath, "images", "ITEM1.info");
+  const originalMode = fs.statSync(infoDir).mode;
 
   removePhase2Artifacts(timestamp);
 
   try {
-    fs.chmodSync(metadataPath, 0o444);
+    fs.chmodSync(infoDir, 0o555);
 
     const result = runPhase2Cli([
       "apply",
@@ -1579,7 +1756,7 @@ test("runPhase2Apply CLI exits non-zero and reports failures when apply ends wit
     assert.match(result.stderr, /apply completed with failures/i);
     assert.match(result.stderr, /successes: 0, failures: 1, aborted: false/i);
   } finally {
-    fs.chmodSync(metadataPath, originalMode & 0o777);
+    fs.chmodSync(infoDir, originalMode & 0o777);
     fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
     fs.rmSync(libraryPath, { recursive: true, force: true });
     removePhase2Artifacts(timestamp);

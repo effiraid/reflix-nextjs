@@ -793,17 +793,24 @@ function writeMetadataWithBackup(entry, mutation, backupDir) {
     tags: mutation.tags,
     folders: mutation.folders,
   };
+  const tempMetadataPath = `${entry.metadataPath}.tmp`;
+  const restoreMetadataPath = `${entry.metadataPath}.restore`;
 
   fs.mkdirSync(absoluteBackupDir, { recursive: true });
   fs.writeFileSync(backupPath, originalRaw);
 
   try {
-    fs.writeFileSync(entry.metadataPath, JSON.stringify(nextMetadata, null, 2));
+    fs.writeFileSync(tempMetadataPath, JSON.stringify(nextMetadata, null, 2));
+    fs.renameSync(tempMetadataPath, entry.metadataPath);
   } catch (error) {
     try {
-      fs.writeFileSync(entry.metadataPath, originalRaw);
+      fs.rmSync(tempMetadataPath, { force: true });
+      fs.writeFileSync(restoreMetadataPath, originalRaw);
+      fs.renameSync(restoreMetadataPath, entry.metadataPath);
     } catch (restoreError) {
       error.message = `${error.message}; restore failed: ${restoreError.message}`;
+    } finally {
+      fs.rmSync(restoreMetadataPath, { force: true });
     }
 
     throw error;
@@ -820,6 +827,13 @@ function writeApplyReport(outputPath, report) {
   const tempPath = `${outputPath}.tmp`;
   fs.writeFileSync(tempPath, `${JSON.stringify(report, null, 2)}\n`);
   fs.renameSync(tempPath, outputPath);
+}
+
+function createApplyReportPersistenceError(error, applyReportJson) {
+  const wrappedError = new Error(`Failed to persist apply report: ${error.message}`);
+  wrappedError.applyReportJson = applyReportJson;
+  wrappedError.hasDurableApplyReport = fs.existsSync(applyReportJson);
+  return wrappedError;
 }
 
 function buildApplyReport({
@@ -1099,7 +1113,7 @@ export function runPhase2Apply(parsed) {
     try {
       writeApplyReport(applyReportJson, report);
     } catch (error) {
-      throw new Error(`Failed to persist apply report: ${error.message}`);
+      throw createApplyReportPersistenceError(error, applyReportJson);
     }
   };
 
