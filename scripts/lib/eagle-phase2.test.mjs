@@ -4,6 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -257,7 +258,7 @@ test("parsePhase2CliArgs fails clearly when no library path can be resolved", ()
 });
 
 test("eagle phase2 help prints usage and avoids side effects", () => {
-  const timestamp = `help-contract-${Date.now()}`;
+  const timestamp = `help-contract-${Date.now()}-${randomUUID()}`;
   const reviewDir = path.join(projectRoot, ".tmp", "eagle-phase2", timestamp);
   const backupDir = path.join(projectRoot, ".tmp", "eagle-phase2-backups", timestamp);
 
@@ -278,7 +279,7 @@ test("eagle phase2 help prints usage and avoids side effects", () => {
 });
 
 test("eagle phase2 review writes real target and folder reports", () => {
-  const timestamp = `review-contract-${Date.now()}`;
+  const timestamp = `review-contract-${Date.now()}-${randomUUID()}`;
   const libraryPath = createTempEagleLibrary([
     {
       id: "ITEM1",
@@ -342,11 +343,12 @@ test("eagle phase2 review writes real target and folder reports", () => {
     assert.equal(nameReview.libraryPath, libraryPath);
     assert.equal(nameReview.summary.targetCount, 2);
     assert.equal(targetSnapshot.summary.targetCount, 2);
-    assert.match(targetSnapshot.entries[0].metadataPath, /ITEM1\.info\/metadata\.json$/);
     assert.deepEqual(
       targetSnapshot.entries.map((entry) => entry.id),
       ["ITEM1", "ITEM2"]
     );
+    const targetById = new Map(targetSnapshot.entries.map((entry) => [entry.id, entry]));
+    assert.match(targetById.get("ITEM1").metadataPath, /ITEM1\.info\/metadata\.json$/);
 
     assert.equal(folderRuleReport.summary.targetCount, 2);
     assert.equal(folderRuleReport.summary.matchedAtLeastOneFolder, 2);
@@ -369,7 +371,7 @@ test("eagle phase2 review writes real target and folder reports", () => {
 });
 
 test("eagle phase2 apply consumes a review file", () => {
-  const timestamp = `apply-contract-${Date.now()}`;
+  const timestamp = `apply-contract-${Date.now()}-${randomUUID()}`;
   const reviewFile = path.join(
     fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-review-")),
     "name-review.json"

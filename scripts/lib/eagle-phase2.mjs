@@ -112,10 +112,6 @@ function isNumericReviewToken(token) {
   return /^\d+$/.test(token) || isReviewSuffixToken(token);
 }
 
-function isAdjacentDuplicateToken(tokens, index) {
-  return index > 0 && tokens[index] === tokens[index - 1];
-}
-
 function isAllowlistedReviewToken(token) {
   return REVIEW_ALLOWLIST_TOKENS.has(token);
 }
@@ -254,10 +250,12 @@ function buildReviewMarkdown(entries) {
 
 function collectPhase2Targets(source) {
   const items = Array.isArray(source) ? source : readEagleLibrary(source);
-  return items.filter((item) => item.ext === "mp4" && (!item.folders || item.folders.length === 0));
+  return items
+    .filter((item) => item.ext === "mp4" && (!item.folders || item.folders.length === 0))
+    .sort((left, right) => left.id.localeCompare(right.id));
 }
 
-function buildNameReviewEntries(items, options = {}) {
+function buildNameReviewEntries(items) {
   const sourceItems = Array.isArray(items) ? items : [];
   const entryMap = new Map();
   const groupObservations = new Map();
@@ -429,13 +427,10 @@ function buildNameReviewEntries(items, options = {}) {
     }
   }
 
-  const entries = sortReviewEntries([...entryMap.values()]);
-
-  return options.includeAllCandidates === true ? entries : entries;
+  return sortReviewEntries([...entryMap.values()]);
 }
 
-function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir }) {
-  const generatedAt = new Date().toISOString();
+function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir, generatedAt }) {
   const reviewEntries = sortReviewEntries(entries).map((entry) => ({
     ...entry,
     approved: false,
@@ -660,6 +655,7 @@ export function runPhase2Review(parsed) {
     entries: nameReviewEntries,
     targetCount: targets.length,
     outputDir: parsed.artifacts.reviewDir,
+    generatedAt,
   });
   writeJsonFile(parsed.artifacts.targetSnapshotJson, targetSnapshot);
   writeJsonFile(parsed.artifacts.folderRuleReportJson, folderRuleReport);
