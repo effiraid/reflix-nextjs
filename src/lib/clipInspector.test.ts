@@ -16,10 +16,13 @@ describe("clipInspector", () => {
   it("detects video clip media kinds from extensions", () => {
     expect(getClipMediaKind("mp4")).toBe("video");
     expect(getClipMediaKind(".MOV")).toBe("video");
+    expect(getClipMediaKind("  .mp4  ")).toBe("video");
   });
 
   it("detects image clip media kinds from extensions", () => {
     expect(getClipMediaKind("webp")).toBe("image");
     expect(getClipMediaKind(".PNG")).toBe("image");
+    expect(getClipMediaKind("  JPG ")).toBe("image");
+    expect(getClipMediaKind("svg")).toBe("image");
   });
 });
