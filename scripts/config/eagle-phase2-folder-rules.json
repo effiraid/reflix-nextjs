@@ -1,0 +1,77 @@
+{
+  "ignoredTokens": ["게임", "연출", "전투", "레이아웃"],
+  "rules": {
+    "원신": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "명조": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "스타세일러": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "갓오브워": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "아케인": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "젠레스존제로": {
+      "folderIds": ["LBLQQF3DATC0J"],
+      "note": "game title/world token"
+    },
+    "마법사": {
+      "folderIds": ["L951YJXMX9H86"],
+      "note": "caster token mapped to magic"
+    },
+    "검": {
+      "folderIds": ["L951YJXMED230"],
+      "note": "weapon token mapped to sword"
+    },
+    "둔기": {
+      "folderIds": ["L951YJXMDC0IG"],
+      "note": "weapon token mapped to blunt"
+    },
+    "활": {
+      "folderIds": ["L951YJXM1E4ZI"],
+      "note": "weapon token mapped to bow"
+    },
+    "총": {
+      "folderIds": ["L951YJXM907RF"],
+      "note": "weapon token mapped to gun"
+    },
+    "등장": {
+      "folderIds": ["LI1NWS4NAQ8SF"],
+      "note": "direction token mapped to entrance"
+    },
+    "승리": {
+      "folderIds": ["LE51CIF3FN5KM"],
+      "note": "direction token mapped to victory"
+    },
+    "선택": {
+      "folderIds": ["LO5N917A9MNAW"],
+      "note": "direction token mapped to selection"
+    },
+    "점프": {
+      "folderIds": ["LI1OBKZ059SGS"],
+      "note": "movement token mapped to jump"
+    },
+    "착지": {
+      "folderIds": ["L951Y2DCS8TTU"],
+      "note": "movement token mapped to movement-other"
+    },
+    "시전": {
+      "folderIds": ["L951YJXMX9H86"],
+      "note": "cast token mapped to magic"
+    },
+    "밀치기": {
+      "folderIds": ["MN34S7XS08AQ1"],
+      "note": "action token mapped to melee attack"
+    }
+  }
+}
