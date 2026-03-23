@@ -6,7 +6,14 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { parsePhase2CliArgs } from "./eagle-phase2.mjs";
+import {
+  collectPhase2Targets,
+  buildNameReviewEntries,
+  createNameReviewArtifact,
+  normalizeReviewProposal,
+  parsePhase2CliArgs,
+  tokenizeName,
+} from "./eagle-phase2.mjs";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDir, "..", "..");
@@ -50,6 +57,116 @@ function createTempEagleLibrary(items) {
 
   return root;
 }
+
+test("collectPhase2Targets keeps only uncategorized mp4 items", () => {
+  const targets = collectPhase2Targets([
+    { id: "A", ext: "mp4", folders: [], isDeleted: false },
+    { id: "B", ext: "jpg", folders: [], isDeleted: false },
+    { id: "C", ext: "mp4", folders: ["X"], isDeleted: false },
+  ]);
+
+  assert.deepEqual(targets.map((item) => item.id), ["A"]);
+});
+
+test("tokenizeName preserves review-allowlist tokens", () => {
+  const tokens = tokenizeName("33원정대 2d pov pv 오브 손 발");
+
+  assert.ok(tokens.includes("33원정대"));
+  assert.ok(tokens.includes("2d"));
+  assert.ok(tokens.includes("pov"));
+  assert.ok(tokens.includes("pv"));
+  assert.ok(tokens.includes("오브"));
+  assert.ok(tokens.includes("손"));
+  assert.ok(tokens.includes("발"));
+});
+
+test("normalizeReviewProposal strips repeat markers and parenthesized suffixes", () => {
+  assert.equal(normalizeReviewProposal("게임 게임 승리 (2)"), "게임 승리");
+});
+
+test("buildNameReviewEntries flags repeated words and parenthesized sequence suffixes", () => {
+  const entries = buildNameReviewEntries([
+    { id: "A", name: "게임 게임 승리 (2)" },
+    { id: "B", name: "게임 스타세일러 승리" },
+  ]);
+
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+
+  assert.equal(byId.get("A").approved, false);
+  assert.equal(byId.get("A").proposedName, "게임 승리");
+  assert.match(byId.get("A").reason, /repeat|suffix|sequence/i);
+});
+
+test("buildNameReviewEntries flags series-consistency outliers in a shared prefix group", () => {
+  const entries = buildNameReviewEntries([
+    { id: "A", name: "게임 스타세일러 마법사 승리" },
+    { id: "B", name: "게임 스타세일러 마법사 승리" },
+    { id: "C", name: "게임 스타세일러 마법사 승리" },
+    { id: "D", name: "게임 스타세일러 마볍사 승리" },
+  ]);
+
+  const outlier = entries.find((entry) => entry.id === "D");
+
+  assert.ok(outlier);
+  assert.equal(outlier.approved, false);
+  assert.equal(outlier.proposedName, "게임 스타세일러 마법사 승리");
+  assert.match(outlier.reason, /series/i);
+});
+
+test("buildNameReviewEntries flags rare-token near-match outliers", () => {
+  const entries = buildNameReviewEntries([
+    { id: "A", name: "게임 스타세일러 마법사 승리" },
+    { id: "B", name: "게임 스타세일러 마법사 승리" },
+    { id: "C", name: "게임 스타세일러 마법사 승리" },
+    { id: "D", name: "게임 스타세일러 마볍사 승리" },
+  ]);
+
+  assert.equal(entries.some((entry) => entry.id === "D"), true);
+});
+
+test("createNameReviewArtifact writes the review contract files", () => {
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-review-"));
+
+  try {
+    const artifact = createNameReviewArtifact({
+      libraryPath: "/library/root",
+      entries: [
+        {
+          id: "B",
+          currentName: "게임 스타세일러 마법사 승리",
+          proposedName: "게임 스타세일러 마법사 승리",
+          reason: "token review",
+          confidence: 0.5,
+          approved: false,
+        },
+        {
+          id: "A",
+          currentName: "게임 스타세일러 마볍사 승리",
+          proposedName: "게임 스타세일러 마법사 승리",
+          reason: "series-consistency outlier",
+          confidence: 0.9,
+          approved: false,
+        },
+      ],
+      targetCount: 2,
+      outputDir,
+    });
+
+    const nameReview = JSON.parse(
+      fs.readFileSync(path.join(outputDir, "name-review.json"), "utf8")
+    );
+    const markdown = fs.readFileSync(path.join(outputDir, "name-review.md"), "utf8");
+
+    assert.equal(nameReview.summary.targetCount, 2);
+    assert.equal(nameReview.summary.candidateCount, 2);
+    assert.equal(nameReview.entries.every((entry) => entry.approved === false), true);
+    assert.match(markdown, /\| id \| currentName \| proposedName \| reason \| confidence \| approved \|/);
+    assert.ok(markdown.indexOf("| A |") < markdown.indexOf("| B |"));
+    assert.equal(artifact.nameReviewJson.endsWith("name-review.json"), true);
+  } finally {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  }
+});
 
 test("parsePhase2CliArgs requires a review file for apply mode", () => {
   assert.throws(() => parsePhase2CliArgs(["apply"]), /--review-file/);
@@ -218,6 +335,7 @@ test("eagle phase2 review writes real target and folder reports", () => {
     assert.equal(nameReview.libraryPath, libraryPath);
     assert.equal(nameReview.summary.targetCount, 2);
     assert.equal(targetSnapshot.summary.targetCount, 2);
+    assert.match(targetSnapshot.entries[0].metadataPath, /ITEM1\.info\/metadata\.json$/);
     assert.deepEqual(
       targetSnapshot.entries.map((entry) => entry.id),
       ["ITEM1", "ITEM2"]

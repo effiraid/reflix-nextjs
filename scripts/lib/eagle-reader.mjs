@@ -50,6 +50,7 @@ export function readEagleLibrary(libraryPath, options = {}) {
 
       items.push({
         ...meta,
+        metadataPath,
         _mediaPath: mediaFile ? path.join(infoDir, mediaFile) : null,
         _thumbnailPath: thumbnailFile
           ? path.join(infoDir, thumbnailFile)
