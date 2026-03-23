@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Home",
+    "browse": "Browse",
+    "search": "Search",
+    "searchPlaceholder": "Search tags, categories, keywords..."
+  },
+  "home": {
+    "hero": "Game Animation Reference",
+    "heroSub": "Explore 7,000+ game animation reference clips",
+    "cta": "Start Browsing",
+    "popularClips": "Popular Clips",
+    "categories": "Categories"
+  },
+  "browse": {
+    "all": "All",
+    "uncategorized": "Uncategorized",
+    "untagged": "Untagged",
+    "star4plus": "4+ Stars",
+    "recentlyUsed": "Recently Used",
+    "random": "Random",
+    "allTags": "All Tags",
+    "community": "Community",
+    "items": "items",
+    "sortNewest": "Newest",
+    "sortRating": "Top Rated",
+    "sortName": "Name",
+    "noResults": "No results found"
+  },
+  "clip": {
+    "play": "Play",
+    "pause": "Pause",
+    "speed": "Speed",
+    "detail": "View Detail",
+    "related": "Related Clips",
+    "tags": "Tags",
+    "folders": "Folders",
+    "rating": "Rating",
+    "memo": "Memo",
+    "properties": "Properties",
+    "size": "Size",
+    "resolution": "Resolution",
+    "format": "Format",
+    "added": "Date Added",
+    "duration": "Duration",
+    "inspectorRating": "Rating",
+    "inspectorDuration": "Duration",
+    "fileType": "File Type",
+    "share": "Share",
+    "video": "Video",
+    "image": "Image",
+    "noLink": "No link",
+    "colorPalette": "Color Palette",
+    "sourceUrl": "Source URL"
+  },
+  "common": {
+    "close": "Close",
+    "loading": "Loading..."
+  }
+}
