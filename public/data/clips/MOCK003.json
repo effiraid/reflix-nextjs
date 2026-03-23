@@ -1,0 +1,33 @@
+{
+  "id": "MOCK003",
+  "name": "기사 전투 대기 자세",
+  "ext": "mp4",
+  "size": 1572864,
+  "width": 640,
+  "height": 360,
+  "duration": 3.0,
+  "tags": ["기사", "대검", "전사"],
+  "folders": ["L951Y2DB121ZU"],
+  "star": 4,
+  "annotation": "",
+  "url": "",
+  "palettes": [
+    { "color": [71, 85, 105], "ratio": 0.30 },
+    { "color": [148, 163, 184], "ratio": 0.25 },
+    { "color": [30, 41, 59], "ratio": 0.20 },
+    { "color": [234, 179, 8], "ratio": 0.15 },
+    { "color": [100, 116, 139], "ratio": 0.10 }
+  ],
+  "btime": 1711324800000,
+  "mtime": 1711324800000,
+  "i18n": {
+    "title": { "ko": "기사 전투 대기 자세", "en": "" },
+    "description": { "ko": "", "en": "" }
+  },
+  "videoUrl": "/videos/MOCK003.mp4",
+  "thumbnailUrl": "/thumbnails/MOCK003.png",
+  "webpUrl": "/webp/MOCK003.webp",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQ",
+  "category": "combat-ready",
+  "relatedClips": ["MOCK001", "MOCK002", "MOCK008", "MOCK011"]
+}

@@ -1,0 +1,106 @@
+{
+  "id": "L3TR52T27B2VL",
+  "name": "연출 아케인 힘듦 거친 호흡 숨을 몰아 쉴",
+  "ext": "mp4",
+  "size": 782724,
+  "width": 640,
+  "height": 360,
+  "duration": 6.917,
+  "tags": [
+    "아케인",
+    "힘듦",
+    "호흡",
+    "거침",
+    "숨",
+    "지침",
+    "힘겨움",
+    "연출"
+  ],
+  "folders": [
+    "L475K68YP1NH3"
+  ],
+  "star": 3,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        13,
+        11,
+        12
+      ],
+      "ratio": 32
+    },
+    {
+      "color": [
+        133,
+        100,
+        101
+      ],
+      "ratio": 27
+    },
+    {
+      "color": [
+        96,
+        66,
+        67
+      ],
+      "ratio": 14
+    },
+    {
+      "color": [
+        193,
+        176,
+        169
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        49,
+        82,
+        117
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        39,
+        56,
+        75
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        68,
+        101,
+        125
+      ],
+      "ratio": 2.82
+    }
+  ],
+  "btime": 1653975943346,
+  "mtime": 1654612116136,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 힘듦 거친 호흡 숨을 몰아 쉴",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "videoUrl": "/videos/L3TR52T27B2VL.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T27B2VL.webp",
+  "previewUrl": "/previews/L3TR52T27B2VL.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEAAwEBAAAAAAAAAAAAAAAABwIGBQMBAAMBAQAAAAAAAAAAAAAAAAEDBAUCEAEBAAICAQUBAAAAAAAAAAABAAIhEQMSE/ChYUFREQEBAAAAAAAAAAAAAAAAAAAAAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AM9l1YH58tkfA4aWPPFVd0Z87Zsc1c68U0VPTxP77+7pCYgG70cqZoIskkxASSAv/9k=",
+  "category": "direction-video",
+  "relatedClips": [
+    "L3TR52T2A751G",
+    "L3TR52T22TPVR",
+    "L3TR52T2BJCOW",
+    "L3TR52T2F47S1"
+  ]
+}

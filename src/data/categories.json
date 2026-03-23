@@ -1,0 +1,143 @@
+{
+  "L951Y2DC15G7B": {
+    "slug": "movement",
+    "i18n": { "ko": "이동", "en": "Movement" },
+    "children": {
+      "L951Y2DCUS32V": { "slug": "walk", "i18n": { "ko": "걷기", "en": "Walking" } },
+      "L951Y2DCQ8GH0": { "slug": "run", "i18n": { "ko": "달리기", "en": "Running" } },
+      "MDDW9EWAOMUXA": { "slug": "sprint", "i18n": { "ko": "전력질주", "en": "Sprint" } },
+      "LI1OBKZ059SGS": { "slug": "jump", "i18n": { "ko": "점프", "en": "Jump" } },
+      "L951Y2DCS8TTU": { "slug": "movement-other", "i18n": { "ko": "이동(기타)", "en": "Other Movement" } }
+    }
+  },
+  "L951Y2DCQ5YQ9": {
+    "slug": "combat",
+    "i18n": { "ko": "교전", "en": "Combat" },
+    "children": {
+      "L951Y2DB121ZU": { "slug": "combat-ready", "i18n": { "ko": "전투 준비", "en": "Combat Ready" } },
+      "LNPMWX908R1NR": { "slug": "attack", "i18n": { "ko": "교전(공격)", "en": "Attack" } },
+      "LE51BATCBL1T4": { "slug": "ultimate", "i18n": { "ko": "필살기", "en": "Ultimate" } },
+      "L951Y2DC2XEG9": { "slug": "buff", "i18n": { "ko": "버프", "en": "Buff" } },
+      "L951Y2DCT93FD": { "slug": "charge", "i18n": { "ko": "충전", "en": "Charge" } },
+      "MN34S7XS08AQ1": { "slug": "melee-attack", "i18n": { "ko": "근접 공격", "en": "Melee Attack" } },
+      "MN34S7XX4T46K": { "slug": "ranged-attack", "i18n": { "ko": "원거리 공격", "en": "Ranged Attack" } }
+    }
+  },
+  "L951Y2DCBVCYS": {
+    "slug": "hit-reaction",
+    "i18n": { "ko": "피격", "en": "Hit Reaction" },
+    "children": {
+      "L951Y2DCOTAJ6": { "slug": "hit", "i18n": { "ko": "피격", "en": "Hit" } },
+      "L951Y2DCJ1DAI": { "slug": "stun", "i18n": { "ko": "기절", "en": "Stun" } },
+      "L951Y2DCT25Y7": { "slug": "death", "i18n": { "ko": "사망", "en": "Death" } }
+    }
+  },
+  "L9QT7EUXB1KW9": {
+    "slug": "return",
+    "i18n": { "ko": "리턴", "en": "Return" }
+  },
+  "MN34RT36T1TE2": {
+    "slug": "idle",
+    "i18n": { "ko": "대기", "en": "Idle" },
+    "children": {
+      "MN34SE8916WHY": { "slug": "idle-general", "i18n": { "ko": "일반", "en": "General" } },
+      "MN34SE8FN7755": { "slug": "idle-combat", "i18n": { "ko": "전투", "en": "Combat" } }
+    }
+  },
+  "L951Y2DBP7GW0": {
+    "slug": "dialogue",
+    "i18n": { "ko": "대화", "en": "Dialogue" },
+    "children": {
+      "LNQ11AV1W2571": {
+        "slug": "dialogue-main",
+        "i18n": { "ko": "대화", "en": "Dialogue" },
+        "children": {
+          "MDDWHMJN8180H": { "slug": "dialogue-cinematic", "i18n": { "ko": "대화(연출)", "en": "Dialogue (Cinematic)" } },
+          "LBM9LDXNK6EFQ": { "slug": "dialogue-ingame", "i18n": { "ko": "대화(인게임)", "en": "Dialogue (In-game)" } },
+          "LNVQ99G8WEACR": { "slug": "moving-hold", "i18n": { "ko": "무빙홀드", "en": "Moving Hold" } },
+          "LNVQ9EDEDGM5G": { "slug": "facial", "i18n": { "ko": "표정", "en": "Facial" } }
+        }
+      },
+      "L951Y2DBAAWN4": { "slug": "dialogue-idle", "i18n": { "ko": "대기(일반)", "en": "Idle (General)" } },
+      "L951Y2DBDDEU8": { "slug": "dialogue-idle-combat", "i18n": { "ko": "대기(전투)", "en": "Idle (Combat)" } },
+      "L951Y2DC2F7R7": { "slug": "emote-ingame", "i18n": { "ko": "감정표현(인게임)", "en": "Emote (In-game)" } }
+    }
+  },
+  "MN34RT2J2UKVE": {
+    "slug": "reaction",
+    "i18n": { "ko": "리액션", "en": "Reaction" },
+    "children": {
+      "MN34RZ0EZTQOV": { "slug": "surprise", "i18n": { "ko": "놀람/충격", "en": "Surprise/Shock" } },
+      "MN34RZ0I1OSKP": { "slug": "pain", "i18n": { "ko": "고통/쓰러짐", "en": "Pain/Collapse" } },
+      "MN34RZ0O4BJF5": { "slug": "emotion", "i18n": { "ko": "감정 표출", "en": "Emotion" } }
+    }
+  },
+  "MN34RT2X44ZSY": {
+    "slug": "daily",
+    "i18n": { "ko": "생활 동작", "en": "Daily Actions" },
+    "children": {
+      "MN34S0ZHF566Z": { "slug": "sit-lie-stand", "i18n": { "ko": "앉기/눕기/일어나기", "en": "Sit/Lie/Stand" } },
+      "MN34S0ZL8PT4C": { "slug": "grab-release-lift", "i18n": { "ko": "잡기/놓기/들기", "en": "Grab/Release/Lift" } },
+      "MN34S0ZRPT5WD": { "slug": "daily-other", "i18n": { "ko": "기타(인터랙션 포함)", "en": "Other (Interaction)" } }
+    }
+  },
+  "L475K68YP1NH3": {
+    "slug": "direction-video",
+    "i18n": { "ko": "연출 기법", "en": "Direction (Video)" },
+    "children": {
+      "LNVQB186C0N87": { "slug": "effect", "i18n": { "ko": "효과", "en": "Effects" } },
+      "LS4TGT25G3YZ8": { "slug": "transition", "i18n": { "ko": "전환", "en": "Transition" } }
+    }
+  },
+  "LBLQQF3DATC0J": {
+    "slug": "direction-game",
+    "i18n": { "ko": "게임 연출", "en": "Direction (Game)" },
+    "children": {
+      "LI1NWS4NAQ8SF": { "slug": "entrance", "i18n": { "ko": "등장", "en": "Entrance" } },
+      "LO5N917A9MNAW": { "slug": "selection", "i18n": { "ko": "선택", "en": "Selection" } },
+      "LE51CIF3FN5KM": { "slug": "victory", "i18n": { "ko": "승리", "en": "Victory" } },
+      "LNTR50S0Z82WH": { "slug": "gacha", "i18n": { "ko": "뽑기", "en": "Gacha" } }
+    }
+  },
+  "L951YJXMQ4GRC": {
+    "slug": "weapons",
+    "i18n": { "ko": "무기별", "en": "Weapons" },
+    "children": {
+      "L951YJXMS03D0": {
+        "slug": "melee",
+        "i18n": { "ko": "둔기류", "en": "Melee" },
+        "children": {
+          "L951YJXMED230": { "slug": "sword", "i18n": { "ko": "검", "en": "Sword" } },
+          "L951YJXM6LFV6": { "slug": "dagger", "i18n": { "ko": "단검", "en": "Dagger" } },
+          "L951YJXMDC0IG": { "slug": "blunt", "i18n": { "ko": "둔기", "en": "Blunt" } },
+          "L951YJXM2W7LT": { "slug": "spear", "i18n": { "ko": "창, 봉", "en": "Spear & Staff" } },
+          "L951YJXM3MHGT": { "slug": "shield", "i18n": { "ko": "방패", "en": "Shield" } }
+        }
+      },
+      "L951YJXMYASC0": {
+        "slug": "ranged",
+        "i18n": { "ko": "원거리류", "en": "Ranged" },
+        "children": {
+          "L951YJXMX9H86": { "slug": "magic", "i18n": { "ko": "마법", "en": "Magic" } },
+          "L951YJXM1E4ZI": { "slug": "bow", "i18n": { "ko": "활", "en": "Bow" } },
+          "L951YJXM907RF": { "slug": "gun", "i18n": { "ko": "총", "en": "Gun" } }
+        }
+      },
+      "L951YJXMDIKP9": {
+        "slug": "other-weapons",
+        "i18n": { "ko": "기타 무기류", "en": "Other Weapons" },
+        "children": {
+          "L951YJXMQKZGR": { "slug": "body", "i18n": { "ko": "신체(격투가)", "en": "Body (Martial)" } }
+        }
+      }
+    }
+  },
+  "LI1NQS5NKKQ57": {
+    "slug": "poses",
+    "i18n": { "ko": "포즈", "en": "Poses" },
+    "children": {
+      "L9OZ80G066SKO": { "slug": "preset", "i18n": { "ko": "프리셋 포즈", "en": "Preset Poses" } },
+      "LBU7Y2H4GH2QO": { "slug": "pose-idle", "i18n": { "ko": "대기(일반)", "en": "Idle" } }
+    }
+  }
+}

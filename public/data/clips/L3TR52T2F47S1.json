@@ -1,0 +1,133 @@
+{
+  "id": "L3TR52T2F47S1",
+  "name": "연출 아케인 힘듦 올라감 끌어 올리기 일어나서 달리기",
+  "ext": "mp4",
+  "size": 278841,
+  "width": 640,
+  "height": 360,
+  "duration": 3.157334,
+  "tags": [
+    "아케인",
+    "달리기",
+    "힘듦",
+    "올리기",
+    "올라가기",
+    "지침",
+    "힘겨움",
+    "오르기",
+    "연출",
+    "뛰기"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "L951Y2DCQ8GH0"
+  ],
+  "star": 3,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        6,
+        8,
+        9
+      ],
+      "ratio": 34
+    },
+    {
+      "color": [
+        29,
+        34,
+        38
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        95,
+        112,
+        109
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        49,
+        56,
+        65
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        85,
+        83,
+        100
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        35,
+        44,
+        46
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        65,
+        72,
+        77
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        76,
+        82,
+        83
+      ],
+      "ratio": 3.96
+    },
+    {
+      "color": [
+        82,
+        102,
+        92
+      ],
+      "ratio": 1.76
+    },
+    {
+      "color": [
+        44,
+        48,
+        50
+      ],
+      "ratio": 1.71
+    }
+  ],
+  "btime": 1653975943440,
+  "mtime": 1638336620000,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 힘듦 올라감 끌어 올리기 일어나서 달리기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "videoUrl": "/videos/L3TR52T2F47S1.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T2F47S1.webp",
+  "previewUrl": "/previews/L3TR52T2F47S1.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABYAAEBAQEBAAAAAAAAAAAAAAAABQQHAwEBAQEBAAAAAAAAAAAAAAAAAAIDARABAQADAQEBAAAAAAAAAAAAAAECEhEDE1ERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDnE88VX5Y/jBvHlv1bNnywkR9YpdiXa4I4CVgAP//Z",
+  "category": "direction-video",
+  "relatedClips": [
+    "L3TR52T22TPVR",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G",
+    "L3TR52T2BJCOW"
+  ]
+}

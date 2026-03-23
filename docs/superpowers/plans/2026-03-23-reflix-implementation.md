@@ -2482,3 +2482,27 @@ Task 17 (Export Pipeline) — independent, can run in parallel with Tasks 6-16
 
 **장점:** 전체 흐름 파악 용이, 컨텍스트 일관성
 **단점:** 병렬 불가, 세션이 길어짐
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | — | — |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | CLEAN | 7 issues, 2 critical gaps |
+| Design Review | `/plan-design-review` | UI/UX gaps | 0 | — | — |
+
+**ENG REVIEW FINDINGS (2026-03-23):**
+1. 호버 시 비디오 스크러빙 제거 → WebP만 재생 (Phase 2로 이동)
+2. useFilterSync를 단방향으로 변경 (URL = single source of truth)
+3. 클립 JSON 이중 저장 제거 → public/data/clips/만 사용
+4. ResizeObserver 훅으로 반응형 열 수 계산
+5. clipStore에서 filteredClips 중복 상태 제거
+6. Vitest + filter.ts + stores 단위 테스트 추가
+7. MasonryColumn에 스크롤 컨테이너 ref를 prop으로 전달
+
+**CRITICAL GAPS:**
+- `getClipIndex()` 실패 시 에러 처리 없음
+- `IntersectionObserver` SSR 가드 필요
+
+**VERDICT:** ENG CLEARED — 구현 준비 완료

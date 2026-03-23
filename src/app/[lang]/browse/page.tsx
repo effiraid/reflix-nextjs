@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getDictionary } from "../dictionaries";
-import { getClipIndex, getCategories, getTagGroups } from "@/lib/data";
+import { getClipIndex, getCategories, getTagGroups, getTagI18n } from "@/lib/data";
 import { Navbar } from "@/components/layout/Navbar";
 import { LeftPanel } from "@/components/layout/LeftPanel";
 import { RightPanel } from "@/components/layout/RightPanel";
@@ -17,11 +17,12 @@ export default async function BrowsePage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-  const [dict, clipIndex, categories, tagGroups] = await Promise.all([
+  const [dict, clipIndex, categories, tagGroups, tagI18n] = await Promise.all([
     getDictionary(lang as Locale),
     getClipIndex(),
     getCategories(),
     getTagGroups(),
+    getTagI18n(),
   ]);
 
   return (
@@ -42,9 +43,17 @@ export default async function BrowsePage({
         </LeftPanel>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <SubToolbar />
           <Suspense>
-            <FilterPanel tagGroups={tagGroups} clips={clipIndex.clips} lang={lang as Locale} />
+            <SubToolbar lang={lang as Locale} dict={dict} />
+          </Suspense>
+          <Suspense>
+            <FilterPanel
+              tagGroups={tagGroups}
+              clips={clipIndex.clips}
+              lang={lang as Locale}
+              tagI18n={tagI18n}
+              dict={dict}
+            />
           </Suspense>
           <main className="flex-1 overflow-y-auto" data-masonry-scroll>
             <Suspense
@@ -53,6 +62,7 @@ export default async function BrowsePage({
               <BrowseClient
                 initialClips={clipIndex.clips}
                 categories={categories}
+                tagI18n={tagI18n}
                 dict={dict}
               />
             </Suspense>

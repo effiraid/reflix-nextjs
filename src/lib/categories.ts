@@ -29,6 +29,20 @@ export function getCategoryLabel(
   return node?.i18n[lang] ?? id;
 }
 
+export function collectExpandableFolderIds(tree: CategoryTree): string[] {
+  const ids: string[] = [];
+
+  for (const [id, node] of Object.entries(tree)) {
+    if (!node.children || Object.keys(node.children).length === 0) {
+      continue;
+    }
+
+    ids.push(id, ...collectExpandableFolderIds(node.children));
+  }
+
+  return ids;
+}
+
 function findNode(
   id: string,
   tree: Record<string, CategoryNode>

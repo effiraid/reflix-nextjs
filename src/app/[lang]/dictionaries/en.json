@@ -21,6 +21,7 @@
     "random": "Random",
     "allTags": "All Tags",
     "community": "Community",
+    "tagSearchPlaceholder": "Search tags",
     "items": "items",
     "sortNewest": "Newest",
     "sortRating": "Top Rated",
@@ -55,6 +56,7 @@
   },
   "common": {
     "close": "Close",
+    "select": "Select",
     "loading": "Loading...",
     "loadFailed": "Could not load this clip."
   }

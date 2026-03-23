@@ -1,0 +1,17 @@
+{
+  "groups": [
+    { "id": "emotion-joy", "name": { "ko": "기쁨", "en": "Joy" }, "parent": "emotion", "color": "#22c55e", "tags": ["기쁨", "웃음", "환호", "행복", "감격"] },
+    { "id": "emotion-sad", "name": { "ko": "슬픔", "en": "Sadness" }, "parent": "emotion", "color": "#3b82f6", "tags": ["슬픔", "울음", "눈물", "절망"] },
+    { "id": "emotion-angry", "name": { "ko": "화남", "en": "Anger" }, "parent": "emotion", "color": "#ef4444", "tags": ["화남", "분노", "격분", "짜증"] },
+    { "id": "emotion-pain", "name": { "ko": "아픔", "en": "Pain" }, "parent": "emotion", "color": "#f97316", "tags": ["아픔", "고통", "부상", "힘듦"] },
+    { "id": "class-warrior", "name": { "ko": "전사", "en": "Warrior" }, "parent": "class", "tags": ["전사", "기사", "탱커"] },
+    { "id": "class-mage", "name": { "ko": "마법사", "en": "Mage" }, "parent": "class", "tags": ["마법사", "위저드", "소서러"] },
+    { "id": "weapon-sword", "name": { "ko": "검", "en": "Sword" }, "parent": "weapon", "tags": ["검", "대검", "쌍검", "도"] },
+    { "id": "weapon-magic", "name": { "ko": "마법", "en": "Magic" }, "parent": "weapon", "tags": ["마법", "지팡이", "스태프", "오브"] }
+  ],
+  "parentGroups": [
+    { "id": "emotion", "name": { "ko": "감정", "en": "Emotion" }, "children": ["emotion-joy", "emotion-sad", "emotion-angry", "emotion-pain"] },
+    { "id": "class", "name": { "ko": "클래스", "en": "Class" }, "children": ["class-warrior", "class-mage"] },
+    { "id": "weapon", "name": { "ko": "무기", "en": "Weapon" }, "children": ["weapon-sword", "weapon-magic"] }
+  ]
+}
