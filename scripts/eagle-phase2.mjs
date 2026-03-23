@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,6 +10,7 @@ const DEFAULT_USAGE = `Usage:
   node scripts/eagle-phase2.mjs review [--library <path>] [--timestamp <value>]
   node scripts/eagle-phase2.mjs apply --review-file <path> [--library <path>] [--timestamp <value>]
   node scripts/eagle-phase2.mjs --help`;
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 function normalizeTimestamp(timestamp) {
   if (timestamp) {
@@ -30,6 +32,16 @@ function buildPhase2Artifacts(timestamp) {
     folderRuleReportJson: path.join(reviewDir, "folder-rule-report.json"),
     applyReportJson: path.join(reviewDir, "apply-report.json"),
   };
+}
+
+function resolveProjectPath(relativePath) {
+  return path.join(PROJECT_ROOT, relativePath);
+}
+
+function writeJsonFile(relativePath, payload) {
+  const absolutePath = resolveProjectPath(relativePath);
+  fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+  fs.writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`);
 }
 
 function readOptionValue(args, index, flag) {
@@ -115,13 +127,66 @@ export function printPhase2Usage() {
   process.stdout.write(`${DEFAULT_USAGE}\n`);
 }
 
+export function runPhase2Review(parsed) {
+  fs.mkdirSync(resolveProjectPath(parsed.artifacts.reviewDir), { recursive: true });
+  fs.mkdirSync(resolveProjectPath(parsed.artifacts.backupDir), { recursive: true });
+
+  const generatedAt = new Date().toISOString();
+  const stubPayload = {
+    mode: "review",
+    libraryPath: parsed.libraryPath,
+    timestamp: parsed.timestamp,
+    generatedAt,
+    placeholder: true,
+  };
+
+  writeJsonFile(parsed.artifacts.nameReviewJson, {
+    ...stubPayload,
+    file: "name-review.json",
+  });
+  writeJsonFile(parsed.artifacts.targetSnapshotJson, {
+    ...stubPayload,
+    file: "target-snapshot.json",
+  });
+  writeJsonFile(parsed.artifacts.folderRuleReportJson, {
+    ...stubPayload,
+    file: "folder-rule-report.json",
+  });
+
+  process.stdout.write(`Phase 2 review artifacts written to ${parsed.artifacts.reviewDir}\n`);
+}
+
+export function runPhase2Apply(parsed) {
+  const reviewFilePath = path.isAbsolute(parsed.reviewFile)
+    ? parsed.reviewFile
+    : path.resolve(process.cwd(), parsed.reviewFile);
+  const raw = fs.readFileSync(reviewFilePath, "utf8");
+  const reviewData = JSON.parse(raw);
+
+  process.stdout.write(`Loaded review file: ${reviewFilePath}\n`);
+  process.stdout.write(
+    `Phase 2 apply stub executed for ${reviewData.mode || "review"}\n`
+  );
+}
+
 const isMainModule = fileURLToPath(import.meta.url) === process.argv[1];
 
 if (isMainModule) {
-  const parsed = parsePhase2CliArgs();
+  try {
+    const parsed = parsePhase2CliArgs();
 
-  if (parsed.mode === "help") {
-    printPhase2Usage();
-    process.exit(0);
+    if (parsed.mode === "help") {
+      printPhase2Usage();
+      process.exit(0);
+    }
+
+    if (parsed.mode === "review") {
+      runPhase2Review(parsed);
+    } else if (parsed.mode === "apply") {
+      runPhase2Apply(parsed);
+    }
+  } catch (error) {
+    process.stderr.write(`${error.message}\n`);
+    process.exitCode = 1;
   }
 }
