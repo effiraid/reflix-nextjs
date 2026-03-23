@@ -9,7 +9,7 @@ export function getClipMediaKind(ext: string): "video" | "image" {
 }
 
 export function formatClipDuration(durationInSeconds: number): string {
-  const totalSeconds = Math.round(durationInSeconds);
+  const totalSeconds = Math.max(0, Math.round(durationInSeconds));
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
