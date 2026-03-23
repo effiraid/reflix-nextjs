@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { MEDIA_BASE_URL } from "@/lib/constants";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
@@ -36,9 +37,9 @@ export function RightPanelInspector({
 
   return (
     <div className="space-y-5 p-4 text-sm text-foreground">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface/60">
-        <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-white">
-          {clip.ext.replace(/^\./, "").toUpperCase()}
+      <div className="relative h-48 overflow-hidden rounded-2xl border border-border bg-surface/60">
+        <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
+          {mediaKind}
         </div>
         {mediaKindKey === "video" ? (
           <video
@@ -48,14 +49,15 @@ export function RightPanelInspector({
             loop
             playsInline
             autoPlay
-            className="h-48 w-full object-cover"
+            className="h-full w-full object-cover"
           />
         ) : (
-          <img
+          <Image
             src={thumbnailUrl}
             alt={title}
-            className="h-48 w-full object-cover"
-            loading="lazy"
+            fill
+            sizes="320px"
+            className="object-cover"
           />
         )}
       </div>

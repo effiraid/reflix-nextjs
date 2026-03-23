@@ -48,6 +48,7 @@ const dict = {
   common: {
     close: "닫기",
     loading: "로딩 중...",
+    loadFailed: "클립을 불러오지 못했습니다.",
   },
 } as Dictionary;
 
@@ -75,6 +76,29 @@ describe("RightPanelContent", () => {
     render(<RightPanelContent categories={categories} lang="ko" dict={dict} />);
 
     expect(screen.getByText("로딩 중...")).toBeInTheDocument();
+    expect(screen.queryByText(/Inspector:/)).not.toBeInTheDocument();
+  });
+
+  it("renders an error state when the selected clip fetch fails", async () => {
+    useClipStoreMock.mockReturnValue({
+      selectedClipId: "missing-clip",
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+        } as Response)
+      )
+    );
+
+    render(<RightPanelContent categories={categories} lang="ko" dict={dict} />);
+
+    expect(
+      await screen.findByText("클립을 불러오지 못했습니다.")
+    ).toBeInTheDocument();
+    expect(screen.queryByText("로딩 중...")).not.toBeInTheDocument();
     expect(screen.queryByText(/Inspector:/)).not.toBeInTheDocument();
   });
 });

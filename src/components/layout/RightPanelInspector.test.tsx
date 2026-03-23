@@ -91,8 +91,8 @@ describe("RightPanelInspector", () => {
     expect(screen.getByText("필살기")).toBeInTheDocument();
     expect(screen.getByText("검")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "공유" })).toBeInTheDocument();
-    expect(screen.getByText("동영상")).toBeInTheDocument();
-    expect(screen.getByText("MP4")).toBeInTheDocument();
+    expect(screen.getAllByText("동영상")).toHaveLength(2);
+    expect(screen.queryByText("MP4")).not.toBeInTheDocument();
     expect(screen.queryByText("규격")).not.toBeInTheDocument();
     expect(screen.queryByText("파일 크기")).not.toBeInTheDocument();
   });
@@ -124,5 +124,25 @@ describe("RightPanelInspector", () => {
     expect(linkPlaceholder).not.toHaveClass("font-mono");
     expect(shareButton).toBeInTheDocument();
     expect(shareButton).not.toBeDisabled();
+  });
+
+  it("renders image clips with a visible thumbnail and localized media labels", () => {
+    render(
+      <RightPanelInspector
+        clip={{
+          ...clip,
+          ext: "png",
+          previewUrl: "/previews/clip-1.png",
+          thumbnailUrl: "/thumbs/clip-1.png",
+        }}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getAllByText("이미지")).toHaveLength(2);
+    expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
+    expect(screen.queryByText("PNG")).not.toBeInTheDocument();
   });
 });

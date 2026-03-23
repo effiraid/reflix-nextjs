@@ -55,6 +55,7 @@
   },
   "common": {
     "close": "닫기",
-    "loading": "로딩 중..."
+    "loading": "로딩 중...",
+    "loadFailed": "클립을 불러오지 못했습니다."
   }
 }
