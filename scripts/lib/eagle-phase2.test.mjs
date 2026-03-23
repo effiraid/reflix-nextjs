@@ -119,6 +119,35 @@ test("loadApprovedNameReview returns only approved entries", () => {
   }
 });
 
+test("loadApprovedNameReview normalizes precomputed approvedEntries", () => {
+  const reviewFile = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-approved-precomputed-")),
+    "name-review.json"
+  );
+
+  try {
+    fs.writeFileSync(
+      reviewFile,
+      JSON.stringify(
+        {
+          approvedEntries: [
+            { id: "A", approved: true, proposedName: "새 이름" },
+            { id: "B", approved: false, proposedName: "무시" },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    const result = loadApprovedNameReview(reviewFile);
+
+    assert.deepEqual(result.approvedEntries.map((entry) => entry.id), ["A"]);
+  } finally {
+    fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
+  }
+});
+
 test("applyApprovedRenames only applies approved rename entries", () => {
   const result = applyApprovedRenames(
     { id: "A", name: "원래 이름" },
@@ -130,6 +159,20 @@ test("applyApprovedRenames only applies approved rename entries", () => {
 
   assert.equal(result.name, "적용 이름");
   assert.equal(result.renameApplied, true);
+});
+
+test("applyApprovedRenames preserves the original name when no approved rename applies", () => {
+  const result = applyApprovedRenames(
+    { id: "A", name: "  원래 이름  " },
+    [{ id: "A", approved: false, proposedName: "적용 이름" }]
+  );
+
+  assert.equal(result.name, "  원래 이름  ");
+  assert.equal(result.renameApplied, false);
+});
+
+test("syncTagsFromName keeps the options parameter in the public API", () => {
+  assert.equal(syncTagsFromName.length, 2);
 });
 
 test("syncTagsFromName excludes numeric-only tokens and keeps allowlisted tokens", () => {
