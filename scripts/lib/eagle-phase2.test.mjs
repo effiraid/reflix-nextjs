@@ -119,7 +119,7 @@ test("loadApprovedNameReview returns only approved entries", () => {
   }
 });
 
-test("loadApprovedNameReview normalizes precomputed approvedEntries", () => {
+test("loadApprovedNameReview ignores stale approvedEntries when entries disagree", () => {
   const reviewFile = path.join(
     fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-approved-precomputed-")),
     "name-review.json"
@@ -130,9 +130,12 @@ test("loadApprovedNameReview normalizes precomputed approvedEntries", () => {
       reviewFile,
       JSON.stringify(
         {
+          entries: [
+            { id: "A", approved: false, proposedName: "새 이름" },
+          ],
           approvedEntries: [
-            { id: "A", approved: true, proposedName: "새 이름" },
-            { id: "B", approved: false, proposedName: "무시" },
+            { id: "A", approved: true, proposedName: "stale override" },
+            { id: "B", approved: true, proposedName: "stale override 2" },
           ],
         },
         null,
@@ -142,7 +145,7 @@ test("loadApprovedNameReview normalizes precomputed approvedEntries", () => {
 
     const result = loadApprovedNameReview(reviewFile);
 
-    assert.deepEqual(result.approvedEntries.map((entry) => entry.id), ["A"]);
+    assert.deepEqual(result.approvedEntries, []);
   } finally {
     fs.rmSync(path.dirname(reviewFile), { recursive: true, force: true });
   }
@@ -161,10 +164,10 @@ test("applyApprovedRenames only applies approved rename entries", () => {
   assert.equal(result.renameApplied, true);
 });
 
-test("applyApprovedRenames preserves the original name when no approved rename applies", () => {
+test("applyApprovedRenames preserves the original name when approved rename is a trim-only no-op", () => {
   const result = applyApprovedRenames(
     { id: "A", name: "  원래 이름  " },
-    [{ id: "A", approved: false, proposedName: "적용 이름" }]
+    [{ id: "A", approved: true, proposedName: "원래 이름 " }]
   );
 
   assert.equal(result.name, "  원래 이름  ");

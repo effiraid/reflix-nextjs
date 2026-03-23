@@ -521,12 +521,7 @@ function loadApprovedNameReview(reviewFilePath) {
   const raw = fs.readFileSync(reviewFilePath, "utf8");
   const reviewData = JSON.parse(raw);
   const entries = Array.isArray(reviewData.entries) ? reviewData.entries : [];
-  const sourceApprovedEntries = Array.isArray(reviewData.approvedEntries)
-    ? reviewData.approvedEntries
-    : entries;
-  const approvedEntries = sourceApprovedEntries.filter(
-    (entry) => entry && entry.approved === true
-  );
+  const approvedEntries = entries.filter((entry) => entry && entry.approved === true);
 
   return {
     ...reviewData,
@@ -543,7 +538,8 @@ function applyApprovedRenames(item, approvedEntries) {
       ? approvedEntries.approvedEntries
       : [];
 
-  const currentName = String(item?.name ?? "").trim();
+  const originalName = String(item?.name ?? "");
+  const currentName = originalName.trim();
   const approvedRename = entries.find(
     (entry) =>
       entry &&
@@ -560,16 +556,22 @@ function applyApprovedRenames(item, approvedEntries) {
   }
 
   const proposedName = String(approvedRename.proposedName).trim();
+  if (proposedName === currentName) {
+    return {
+      ...item,
+      renameApplied: false,
+    };
+  }
 
   return {
     ...item,
     name: proposedName,
-    renameApplied: proposedName !== currentName,
+    renameApplied: true,
   };
 }
 
 function syncTagsFromName(name, options) {
-  const syncOptions = options || {};
+  options = options || {};
   const tokens = tokenizeName(name);
   const tags = [];
   const excludedNumericTokens = [];
