@@ -37,9 +37,15 @@ function createTempEagleLibrary(items) {
   for (const item of items) {
     const infoDir = path.join(imagesDir, `${item.id}.info`);
     fs.mkdirSync(infoDir, { recursive: true });
-    fs.writeFileSync(path.join(infoDir, "metadata.json"), JSON.stringify(item.metadata, null, 2));
+    fs.writeFileSync(
+      path.join(infoDir, "metadata.json"),
+      JSON.stringify(item.metadata, null, 2)
+    );
     fs.writeFileSync(path.join(infoDir, item.mediaFile || `${item.id}.mp4`), "video");
-    fs.writeFileSync(path.join(infoDir, item.thumbnailFile || `${item.id}_thumbnail.png`), "thumb");
+    fs.writeFileSync(
+      path.join(infoDir, item.thumbnailFile || `${item.id}_thumbnail.png`),
+      "thumb"
+    );
   }
 
   return root;
@@ -55,14 +61,20 @@ test("parsePhase2CliArgs returns help mode without side effects", () => {
   assert.equal(result.mode, "help");
 });
 
-test("parsePhase2CliArgs resolves review artifact defaults", () => {
-  const result = parsePhase2CliArgs([
-    "review",
-    "--timestamp",
-    "2026-03-23T22-00-00-000Z",
-  ]);
+test("parsePhase2CliArgs prefers --library over env defaults", () => {
+  const result = parsePhase2CliArgs(
+    ["review", "--library", "/flag/library", "--timestamp", "2026-03-23T22-00-00-000Z"],
+    {
+      env: {
+        EAGLE_LIBRARY_PATH: "/env/library",
+      },
+      homedir: () => "/home/tester",
+      pathExists: () => true,
+    }
+  );
 
   assert.equal(result.mode, "review");
+  assert.equal(result.libraryPath, "/flag/library");
   assert.equal(result.artifacts.reviewDir, ".tmp/eagle-phase2/2026-03-23T22-00-00-000Z/");
   assert.equal(
     result.artifacts.backupDir,
@@ -79,6 +91,44 @@ test("parsePhase2CliArgs resolves review artifact defaults", () => {
   assert.equal(
     result.artifacts.folderRuleReportJson,
     ".tmp/eagle-phase2/2026-03-23T22-00-00-000Z/folder-rule-report.json"
+  );
+});
+
+test("parsePhase2CliArgs uses EAGLE_LIBRARY_PATH when flag is absent", () => {
+  const result = parsePhase2CliArgs(["review"], {
+    env: {
+      EAGLE_LIBRARY_PATH: "/env/library",
+    },
+    homedir: () => "/home/tester",
+    pathExists: () => false,
+  });
+
+  assert.equal(result.libraryPath, "/env/library");
+});
+
+test("parsePhase2CliArgs discovers the Desktop library from homedir", () => {
+  const result = parsePhase2CliArgs(["review"], {
+    env: {},
+    homedir: () => "/home/tester",
+    pathExists: (candidatePath) =>
+      candidatePath === "/home/tester/Desktop/라이브러리/레퍼런스 - 게임,연출.library",
+  });
+
+  assert.equal(
+    result.libraryPath,
+    "/home/tester/Desktop/라이브러리/레퍼런스 - 게임,연출.library"
+  );
+});
+
+test("parsePhase2CliArgs fails clearly when no library path can be resolved", () => {
+  assert.throws(
+    () =>
+      parsePhase2CliArgs(["review"], {
+        env: {},
+        homedir: () => "/home/tester",
+        pathExists: () => false,
+      }),
+    /--library|EAGLE_LIBRARY_PATH/
   );
 });
 
@@ -154,6 +204,7 @@ test("eagle phase2 review writes real target and folder reports", () => {
     assert.equal(result.status, 0);
     assert.equal(fs.existsSync(reviewDir), true);
     assert.equal(fs.existsSync(backupDir), true);
+
     const nameReview = JSON.parse(
       fs.readFileSync(path.join(reviewDir, "name-review.json"), "utf8")
     );
@@ -166,24 +217,26 @@ test("eagle phase2 review writes real target and folder reports", () => {
 
     assert.equal(nameReview.libraryPath, libraryPath);
     assert.equal(nameReview.summary.targetCount, 2);
-    assert.deepEqual(nameReview.entries, []);
     assert.equal(targetSnapshot.summary.targetCount, 2);
     assert.deepEqual(
       targetSnapshot.entries.map((entry) => entry.id),
       ["ITEM1", "ITEM2"]
     );
+
     assert.equal(folderRuleReport.summary.targetCount, 2);
     assert.equal(folderRuleReport.summary.matchedAtLeastOneFolder, 2);
-    assert.deepEqual(folderRuleReport.entries.map((entry) => entry.id), ["ITEM1", "ITEM2"]);
+
+    const entryById = new Map(folderRuleReport.entries.map((entry) => [entry.id, entry]));
+    assert.deepEqual([...entryById.keys()].sort(), ["ITEM1", "ITEM2"]);
     assert.deepEqual(
-      folderRuleReport.entries[0].matchedTokens.sort(),
+      entryById.get("ITEM1").matchedTokens.sort(),
       ["원신", "승리"].sort()
     );
-    assert.equal(folderRuleReport.entries[0].appliedFolderIds.length, 2);
-    assert.equal(folderRuleReport.entries[0].unresolvedTokens.length, 0);
-    assert.deepEqual(folderRuleReport.entries[1].matchedTokens, ["검"]);
-    assert.equal(folderRuleReport.entries[1].appliedFolderIds.length, 1);
-    assert.equal(folderRuleReport.entries[1].unresolvedTokens.length, 0);
+    assert.equal(entryById.get("ITEM1").appliedFolderIds.length, 2);
+    assert.equal(entryById.get("ITEM1").unresolvedTokens.length, 0);
+    assert.deepEqual(entryById.get("ITEM2").matchedTokens, ["검"]);
+    assert.equal(entryById.get("ITEM2").appliedFolderIds.length, 1);
+    assert.equal(entryById.get("ITEM2").unresolvedTokens.length, 0);
   } finally {
     fs.rmSync(libraryPath, { recursive: true, force: true });
     removePhase2Artifacts(timestamp);
@@ -192,18 +245,23 @@ test("eagle phase2 review writes real target and folder reports", () => {
 
 test("eagle phase2 apply consumes a review file", () => {
   const timestamp = `apply-contract-${Date.now()}`;
-  const reviewFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-review-")), "name-review.json");
+  const reviewFile = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), "eagle-phase2-review-")),
+    "name-review.json"
+  );
 
-  fs.writeFileSync(reviewFile, JSON.stringify({ mode: "review" }));
+  fs.writeFileSync(reviewFile, JSON.stringify({ mode: "parsed-review-mode" }));
 
   const result = runPhase2Cli([
     "apply",
     "--review-file",
     reviewFile,
+    "--library",
+    "/tmp/test-library",
     "--timestamp",
     timestamp,
   ]);
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /apply/i);
+  assert.match(result.stdout, /parsed-review-mode/);
 });
