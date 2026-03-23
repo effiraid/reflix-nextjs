@@ -151,6 +151,20 @@ test("loadApprovedNameReview ignores stale approvedEntries when entries disagree
   }
 });
 
+test("applyApprovedRenames rejects duplicate approved entries for the same item id", () => {
+  assert.throws(
+    () =>
+      applyApprovedRenames(
+        { id: "A", name: "원래 이름" },
+        [
+          { id: "A", approved: true, proposedName: "첫 번째" },
+          { id: "A", approved: true, proposedName: "두 번째" },
+        ]
+      ),
+    /duplicate approved rename entries/i
+  );
+});
+
 test("applyApprovedRenames only applies approved rename entries", () => {
   const result = applyApprovedRenames(
     { id: "A", name: "원래 이름" },
@@ -197,6 +211,61 @@ test("resolveFolderIds returns only explicit rule ids and tracks unresolved toke
   assert.deepEqual(result.folderIds, ["L951YJXMED230", "LE51CIF3FN5KM"]);
   assert.deepEqual(result.unresolvedTokens, ["미확인"]);
   assert.equal(result.lossyTagSync, true);
+});
+
+test("eagle phase2 review and apply agree on folder token resolution for numeric noise", () => {
+  const timestamp = `review-contract-${Date.now()}-${randomUUID()}`;
+  const libraryPath = createTempEagleLibrary([
+    {
+      id: "ITEM1",
+      metadata: {
+        id: "ITEM1",
+        name: "게임 2 검 (2)",
+        ext: "mp4",
+        folders: [],
+        tags: ["게임", "2", "검", "(2)"],
+      },
+    },
+  ]);
+  const reviewDir = path.join(projectRoot, ".tmp", "eagle-phase2", timestamp);
+  const backupDir = path.join(projectRoot, ".tmp", "eagle-phase2-backups", timestamp);
+
+  removePhase2Artifacts(timestamp);
+
+  try {
+    const reviewResult = runPhase2Cli([
+      "review",
+      "--library",
+      libraryPath,
+      "--timestamp",
+      timestamp,
+    ]);
+
+    assert.equal(reviewResult.status, 0);
+
+    const folderRuleReport = JSON.parse(
+      fs.readFileSync(path.join(reviewDir, "folder-rule-report.json"), "utf8")
+    );
+    const entry = folderRuleReport.entries.find((candidate) => candidate.id === "ITEM1");
+    const applyResult = buildApplyMutation(
+      { id: "ITEM1", name: "게임 2 검 (2)", tags: ["게임", "2", "검", "(2)"], folders: [] },
+      [{ id: "ITEM1", approved: true, proposedName: "게임 2 검 (2)" }],
+      {
+        ignoredTokens: ["게임", "연출", "전투", "레이아웃"],
+        rules: {
+          검: { folderIds: ["L951YJXMED230"] },
+        },
+      }
+    );
+
+    assert.deepEqual(entry.matchedTokens, applyResult.matchedTokens);
+    assert.deepEqual(entry.unresolvedTokens, applyResult.unresolvedTokens);
+  } finally {
+    fs.rmSync(libraryPath, { recursive: true, force: true });
+    removePhase2Artifacts(timestamp);
+    fs.rmSync(reviewDir, { recursive: true, force: true });
+    fs.rmSync(backupDir, { recursive: true, force: true });
+  }
 });
 
 test("buildApplyMutation combines approved renames, tag sync, and folder resolution", () => {

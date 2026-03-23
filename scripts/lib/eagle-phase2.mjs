@@ -517,11 +517,32 @@ function buildNameReviewEntries(items) {
   return sortReviewEntries([...entryMap.values()]);
 }
 
+function validateApprovedRenameEntries(approvedEntries) {
+  const byId = new Map();
+
+  for (const entry of Array.isArray(approvedEntries) ? approvedEntries : []) {
+    if (!entry || entry.approved !== true) {
+      continue;
+    }
+
+    const bucket = byId.get(entry.id) || [];
+    bucket.push(entry);
+    byId.set(entry.id, bucket);
+  }
+
+  for (const [id, entries] of byId.entries()) {
+    if (entries.length > 1) {
+      throw new Error(`Duplicate approved rename entries for item id ${id}`);
+    }
+  }
+}
+
 function loadApprovedNameReview(reviewFilePath) {
   const raw = fs.readFileSync(reviewFilePath, "utf8");
   const reviewData = JSON.parse(raw);
   const entries = Array.isArray(reviewData.entries) ? reviewData.entries : [];
   const approvedEntries = entries.filter((entry) => entry && entry.approved === true);
+  validateApprovedRenameEntries(approvedEntries);
 
   return {
     ...reviewData,
@@ -537,6 +558,8 @@ function applyApprovedRenames(item, approvedEntries) {
     : Array.isArray(approvedEntries?.approvedEntries)
       ? approvedEntries.approvedEntries
       : [];
+
+  validateApprovedRenameEntries(entries);
 
   const originalName = String(item?.name ?? "");
   const currentName = originalName.trim();
@@ -571,7 +594,7 @@ function applyApprovedRenames(item, approvedEntries) {
 }
 
 function syncTagsFromName(name, options) {
-  options = options || {};
+  void options;
   const tokens = tokenizeName(name);
   const tags = [];
   const excludedNumericTokens = [];
@@ -598,6 +621,21 @@ function syncTagsFromName(name, options) {
     excludedNumericTokens,
     lossyTagSync:
       excludedNumericTokens.length > 0 || tags.length !== tokens.length - excludedNumericTokens.length,
+  };
+}
+
+function buildFolderResolutionView(name, rulesConfig = {}) {
+  const tagSync = syncTagsFromName(name);
+  const folderSync = resolveFolderIds(tagSync.tags, rulesConfig);
+
+  return {
+    tokens: tagSync.tokens,
+    tags: tagSync.tags,
+    excludedNumericTokens: tagSync.excludedNumericTokens,
+    folderIds: folderSync.folderIds,
+    matchedTokens: folderSync.matchedTokens,
+    unresolvedTokens: folderSync.unresolvedTokens,
+    lossyTagSync: tagSync.lossyTagSync || folderSync.lossyTagSync,
   };
 }
 
@@ -654,18 +692,17 @@ function resolveFolderIds(tokens, rulesConfig = {}) {
 
 function buildApplyMutation(item, approvedEntries, rulesConfig = {}) {
   const renamedItem = applyApprovedRenames(item, approvedEntries);
-  const tagSync = syncTagsFromName(renamedItem.name);
-  const folderSync = resolveFolderIds(tagSync.tags, rulesConfig);
+  const folderView = buildFolderResolutionView(renamedItem.name, rulesConfig);
 
   return {
     ...item,
     ...renamedItem,
-    tags: tagSync.tags,
-    folders: folderSync.folderIds,
-    excludedNumericTokens: tagSync.excludedNumericTokens,
-    matchedTokens: folderSync.matchedTokens,
-    unresolvedTokens: folderSync.unresolvedTokens,
-    lossyTagSync: tagSync.lossyTagSync || folderSync.lossyTagSync,
+    tags: folderView.tags,
+    folders: folderView.folderIds,
+    excludedNumericTokens: folderView.excludedNumericTokens,
+    matchedTokens: folderView.matchedTokens,
+    unresolvedTokens: folderView.unresolvedTokens,
+    lossyTagSync: folderView.lossyTagSync,
   };
 }
 
@@ -713,36 +750,16 @@ function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
 
 function buildPhase2FolderRuleReport(libraryPath, targets, generatedAt) {
   const ruleData = loadPhase2FolderRules();
-  const ignoredTokens = new Set(ruleData.ignoredTokens || []);
-  const ruleEntries = ruleData.rules || {};
 
   const entries = targets.map((item) => {
-    const tokens = tokenizeName(item.name);
-    const matchedTokens = [];
-    const appliedFolderIds = [];
-
-    for (const token of tokens) {
-      const rule = ruleEntries[token];
-      if (!rule) {
-        continue;
-      }
-
-      matchedTokens.push(token);
-      for (const folderId of rule.folderIds || []) {
-        if (!appliedFolderIds.includes(folderId)) {
-          appliedFolderIds.push(folderId);
-        }
-      }
-    }
+    const folderView = buildFolderResolutionView(item.name, ruleData);
 
     return {
       id: item.id,
-      tokens,
-      matchedTokens,
-      appliedFolderIds,
-      unresolvedTokens: tokens.filter(
-        (token) => !ignoredTokens.has(token) && !matchedTokens.includes(token)
-      ),
+      tokens: folderView.tokens,
+      matchedTokens: folderView.matchedTokens,
+      appliedFolderIds: folderView.folderIds,
+      unresolvedTokens: folderView.unresolvedTokens,
     };
   });
 
