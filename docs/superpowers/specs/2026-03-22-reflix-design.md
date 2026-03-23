@@ -726,6 +726,26 @@ Supabase 전환 시 Eagle → DB 동기화 자동화:
 - 또는 cron job으로 주기적 동기화 (예: 매일 새벽 3시)
 - Supabase Edge Function으로 R2 업로드 + DB 갱신
 
+## 영상 다운로드 방지
+
+사용자가 영상을 직접 다운로드하지 못하도록 다층 보호 적용.
+
+**프론트엔드 보호:**
+- `<video>` 태그에 `controlsList="nodownload"` 속성 → 브라우저 기본 다운로드 버튼 제거
+- 우클릭 방지: `onContextMenu={e => e.preventDefault()}` → "다른 이름으로 저장" 차단
+- 드래그 방지: `draggable={false}`, `onDragStart={e => e.preventDefault()}`
+- CSS `pointer-events` + 투명 오버레이 레이어로 직접 영상 요소 접근 차단
+
+**서버/CDN 보호 (Cloudflare):**
+- R2 직접 URL 접근 차단: Cloudflare Worker에서 `Referer` 헤더 검증 — `reflix.app` 도메인에서 요청한 경우만 허용
+- 서명된 URL (Signed URL): 영상 URL에 만료 시간 포함 토큰 발급 (예: 1시간 유효). 토큰 없거나 만료 시 403
+- `Content-Disposition: inline` 헤더 강제 → 브라우저가 다운로드 대신 인라인 재생
+
+**한계 (인지하고 수용):**
+- 개발자 도구에서 네트워크 탭으로 URL 추출은 완전히 막을 수 없음 (모든 웹 영상의 본질적 한계)
+- Signed URL + Referer 검증으로 캐주얼 다운로드의 95%+ 차단이 목표
+- 추후 프리미엄 모델 전환 시 HLS 스트리밍(영상 분할) 도입으로 추가 보호 가능
+
 ## 알려진 기술 리스크
 
 | 리스크 | 대응 |
