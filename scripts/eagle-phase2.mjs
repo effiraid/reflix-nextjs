@@ -4,6 +4,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { readEagleLibrary } from "./lib/eagle-reader.mjs";
+
 const DEFAULT_LIBRARY_PATH =
   "/Users/macbook/Desktop/라이브러리/레퍼런스 - 게임,연출.library";
 const DEFAULT_USAGE = `Usage:
@@ -42,6 +44,93 @@ function writeJsonFile(relativePath, payload) {
   const absolutePath = resolveProjectPath(relativePath);
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
   fs.writeFileSync(absolutePath, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
+function loadPhase2FolderRules() {
+  const rulesPath = resolveProjectPath("scripts/config/eagle-phase2-folder-rules.json");
+  return JSON.parse(fs.readFileSync(rulesPath, "utf8"));
+}
+
+function normalizePhase2Token(token) {
+  return token.trim().replace(/^[()[\],.]+|[()[\],.]+$/g, "");
+}
+
+function extractPhase2Tokens(name) {
+  return name
+    .split(/\s+/)
+    .map(normalizePhase2Token)
+    .filter(Boolean);
+}
+
+function collectPhase2Targets(libraryPath) {
+  return readEagleLibrary(libraryPath).filter(
+    (item) => item.ext === "mp4" && (!item.folders || item.folders.length === 0)
+  );
+}
+
+function buildPhase2TargetSnapshot(libraryPath, targets, generatedAt) {
+  return {
+    libraryPath,
+    generatedAt,
+    summary: {
+      targetCount: targets.length,
+    },
+    entries: targets.map((item) => ({
+      id: item.id,
+      name: item.name,
+      tags: item.tags || [],
+      folders: item.folders || [],
+      metadataPath: path.join(item._infoDir, "metadata.json"),
+    })),
+  };
+}
+
+function buildPhase2FolderRuleReport(libraryPath, targets, generatedAt) {
+  const ruleData = loadPhase2FolderRules();
+  const ignoredTokens = new Set(ruleData.ignoredTokens || []);
+  const ruleEntries = ruleData.rules || {};
+
+  const entries = targets.map((item) => {
+    const tokens = extractPhase2Tokens(item.name);
+    const matchedTokens = [];
+    const appliedFolderIds = [];
+
+    for (const token of tokens) {
+      const rule = ruleEntries[token];
+      if (!rule) {
+        continue;
+      }
+
+      matchedTokens.push(token);
+      for (const folderId of rule.folderIds || []) {
+        if (!appliedFolderIds.includes(folderId)) {
+          appliedFolderIds.push(folderId);
+        }
+      }
+    }
+
+    return {
+      id: item.id,
+      tokens,
+      matchedTokens,
+      appliedFolderIds,
+      unresolvedTokens: tokens.filter(
+        (token) => !ignoredTokens.has(token) && !matchedTokens.includes(token)
+      ),
+    };
+  });
+
+  return {
+    libraryPath,
+    generatedAt,
+    summary: {
+      targetCount: targets.length,
+      matchedAtLeastOneFolder: entries.filter((entry) => entry.appliedFolderIds.length > 0)
+        .length,
+      unmatchedItemCount: entries.filter((entry) => entry.appliedFolderIds.length === 0).length,
+    },
+    entries,
+  };
 }
 
 function readOptionValue(args, index, flag) {
@@ -132,26 +221,25 @@ export function runPhase2Review(parsed) {
   fs.mkdirSync(resolveProjectPath(parsed.artifacts.backupDir), { recursive: true });
 
   const generatedAt = new Date().toISOString();
-  const stubPayload = {
-    mode: "review",
-    libraryPath: parsed.libraryPath,
-    timestamp: parsed.timestamp,
-    generatedAt,
-    placeholder: true,
-  };
+  const targets = collectPhase2Targets(parsed.libraryPath);
+  const targetSnapshot = buildPhase2TargetSnapshot(parsed.libraryPath, targets, generatedAt);
+  const folderRuleReport = buildPhase2FolderRuleReport(
+    parsed.libraryPath,
+    targets,
+    generatedAt
+  );
 
   writeJsonFile(parsed.artifacts.nameReviewJson, {
-    ...stubPayload,
-    file: "name-review.json",
+    libraryPath: parsed.libraryPath,
+    generatedAt,
+    summary: {
+      targetCount: targets.length,
+      candidateCount: 0,
+    },
+    entries: [],
   });
-  writeJsonFile(parsed.artifacts.targetSnapshotJson, {
-    ...stubPayload,
-    file: "target-snapshot.json",
-  });
-  writeJsonFile(parsed.artifacts.folderRuleReportJson, {
-    ...stubPayload,
-    file: "folder-rule-report.json",
-  });
+  writeJsonFile(parsed.artifacts.targetSnapshotJson, targetSnapshot);
+  writeJsonFile(parsed.artifacts.folderRuleReportJson, folderRuleReport);
 
   process.stdout.write(`Phase 2 review artifacts written to ${parsed.artifacts.reviewDir}\n`);
 }
