@@ -79,20 +79,6 @@ describe("ClipCard", () => {
     expect(overlay?.className).not.toContain("hover:opacity-100");
   });
 
-  it("applies the requested opacity to the clip text row", () => {
-    const props = {
-      clip,
-      infoOpacity: 0.2,
-    } as unknown as Parameters<typeof ClipCard>[0];
-
-    render(<ClipCard {...props} />);
-
-    const infoRow = screen.getByText(clip.name).closest("div");
-
-    expect(infoRow).not.toBeNull();
-    expect(infoRow).toHaveStyle({ opacity: "0.2" });
-  });
-
   it("resolves the thumbnail path through the shared media URL helper", () => {
     render(<ClipCard clip={clip} />);
 

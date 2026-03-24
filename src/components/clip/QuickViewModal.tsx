@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { VideoPlayer } from "@/components/clip/VideoPlayer";
 import { formatClipDuration } from "@/lib/clipInspector";
@@ -24,13 +24,11 @@ export function QuickViewModal({
   onNext,
   onPrevious,
 }: QuickViewModalProps) {
-  const [playbackToggleCount, setPlaybackToggleCount] = useState(0);
-
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === " " || event.code === "Space") {
         event.preventDefault();
-        setPlaybackToggleCount((count) => count + 1);
+        onClose();
       }
 
       if (event.key === "Escape") {
@@ -72,7 +70,7 @@ export function QuickViewModal({
               videoUrl={`/videos/${clip.id}.mp4`}
               thumbnailUrl={clip.thumbnailUrl}
               duration={clip.duration}
-              playbackToggleCount={playbackToggleCount}
+              autoPlayMuted
             />
 
             <div className="flex items-center justify-between gap-3">

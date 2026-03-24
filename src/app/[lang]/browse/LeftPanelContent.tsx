@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
-import { collectExpandableFolderIds, countCategoryNodes } from "@/lib/categories";
+import { collectExpandableFolderIds } from "@/lib/categories";
 import type { CategoryTree, ClipIndex, Locale } from "@/lib/types";
 
 interface LeftPanelContentProps {
@@ -20,7 +20,8 @@ interface LeftPanelContentProps {
       random: string;
       allTags: string;
       community: string;
-      items: string;
+      expandAllFolders: string;
+      collapseAllFolders: string;
     };
     clip: {
       folders: string;
@@ -41,9 +42,19 @@ export function LeftPanelContent({
     getDefaultExpandedFolderIds(categories)
   );
 
-  const totalFolderCount = countCategoryNodes(categories);
   const totalTagCount = new Set(clips.flatMap((c) => c.tags || [])).size;
   const expandableFolderIds = collectExpandableFolderIds(categories);
+  const allFoldersExpanded =
+    expandableFolderIds.length > 0 &&
+    expandableFolderIds.every((id) => expandedFolderIds.includes(id));
+  const folderTreeActionLabel = allFoldersExpanded
+    ? dict.browse.collapseAllFolders
+    : dict.browse.expandAllFolders;
+
+  function setAllFoldersExpanded(expanded: boolean) {
+    setFoldersExpanded(true);
+    setExpandedFolderIds(expanded ? expandableFolderIds : []);
+  }
 
   return (
     <div className="p-3 space-y-4 text-sm">
@@ -96,13 +107,13 @@ export function LeftPanelContent({
 
       {/* Folder tree */}
       <div className="rounded-xl border border-border bg-surface/40 p-1.5">
-        <button
-          type="button"
-          aria-expanded={foldersExpanded}
-          onClick={() => setFoldersExpanded((open) => !open)}
-          className="flex items-center justify-between w-full rounded-lg px-2.5 py-2 text-left text-[11px] font-semibold tracking-[0.14em] text-muted uppercase transition-colors hover:bg-background/80 hover:text-foreground"
-        >
-          <span className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-expanded={foldersExpanded}
+            onClick={() => setFoldersExpanded((open) => !open)}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[11px] font-semibold tracking-[0.14em] text-muted uppercase transition-colors hover:bg-background/80 hover:text-foreground"
+          >
             <ChevronRight
               aria-hidden="true"
               size={14}
@@ -110,11 +121,22 @@ export function LeftPanelContent({
               className={`shrink-0 text-muted transition-transform duration-150 ${foldersExpanded ? "rotate-90" : ""}`}
             />
             <span>{dict.clip.folders}</span>
-          </span>
-          <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[11px] font-medium normal-case tracking-normal text-muted">
-            {formatItemCount(totalFolderCount, dict.browse.items, lang)}
-          </span>
-        </button>
+          </button>
+          <button
+            type="button"
+            aria-label={folderTreeActionLabel}
+            title={folderTreeActionLabel}
+            onClick={() => setAllFoldersExpanded(!allFoldersExpanded)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-background/80 hover:text-foreground disabled:cursor-default disabled:opacity-50"
+            disabled={expandableFolderIds.length === 0}
+          >
+            {allFoldersExpanded ? (
+              <FoldVertical aria-hidden="true" size={15} strokeWidth={1.75} />
+            ) : (
+              <UnfoldVertical aria-hidden="true" size={15} strokeWidth={1.75} />
+            )}
+          </button>
+        </div>
         {foldersExpanded && (
           <div className="pt-1">
             <FolderTree
@@ -126,11 +148,7 @@ export function LeftPanelContent({
                 const usesMultiSelect = metaKey || ctrlKey;
 
                 if (usesMultiSelect && altKey) {
-                  setExpandedFolderIds((current) =>
-                    expandableFolderIds.every((id) => current.includes(id))
-                      ? []
-                      : expandableFolderIds
-                  );
+                  setAllFoldersExpanded(!allFoldersExpanded);
                   return;
                 }
 
@@ -162,10 +180,4 @@ function getDefaultExpandedFolderIds(categories: CategoryTree): string[] {
   return Object.entries(categories)
     .filter(([, node]) => node.children && Object.keys(node.children).length > 0)
     .map(([id]) => id);
-}
-
-function formatItemCount(count: number, suffix: string, lang: Locale) {
-  return lang === "en"
-    ? `${count.toLocaleString()} ${suffix}`
-    : `${count.toLocaleString()}${suffix}`;
 }

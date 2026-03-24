@@ -152,7 +152,7 @@ describe("BrowseClient", () => {
     randomSpy.mockRestore();
   });
 
-  it("opens quick view on Space and navigates the visible clip order with arrow keys", () => {
+  it("opens quick view on Space, closes it on Space, and navigates the visible clip order with arrow keys", () => {
     useClipStore.setState({
       selectedClipId: "clip-a",
       allClips: [],
@@ -176,6 +176,11 @@ describe("BrowseClient", () => {
       "data-video-url",
       "/videos/clip-a.mp4"
     );
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));

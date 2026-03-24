@@ -12,7 +12,6 @@ interface ClipCardProps {
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
   previewOnHover?: boolean;
   showInfo?: boolean;
-  infoOpacity?: number;
   onOpenQuickView?: (clipId: string) => void;
 }
 
@@ -21,7 +20,6 @@ export function ClipCard({
   enablePreview = true,
   previewOnHover = false,
   showInfo = true,
-  infoOpacity = 1,
   onOpenQuickView,
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
@@ -32,7 +30,6 @@ export function ClipCard({
 
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
-  const clampedInfoOpacity = Math.min(1, Math.max(0, infoOpacity));
 
   useEffect(() => {
     setPreviewFailed(false);
@@ -111,10 +108,7 @@ export function ClipCard({
 
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-          <div
-            className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white"
-            style={{ opacity: clampedInfoOpacity }}
-          >
+          <div className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white">
             <span className="truncate">{clip.name}</span>
             <span>{clip.duration.toFixed(1)}s</span>
           </div>

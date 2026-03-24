@@ -62,7 +62,8 @@ const dict = {
     random: "무작위",
     allTags: "모든 태그",
     community: "커뮤니티",
-    items: "개",
+    expandAllFolders: "폴더 전체 펼치기",
+    collapseAllFolders: "폴더 전체 접기",
   },
   clip: {
     folders: "폴더",
@@ -97,13 +98,15 @@ describe("LeftPanelContent", () => {
       />
     );
 
-    expect(screen.getByText("4개")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: dict.browse.expandAllFolders })
+    ).toBeInTheDocument();
     expect(screen.getByText("이동")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /폴더/ }));
+    fireEvent.click(screen.getByRole("button", { name: dict.clip.folders }));
     expect(screen.queryByText("이동")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /폴더/ }));
+    fireEvent.click(screen.getByRole("button", { name: dict.clip.folders }));
     expect(screen.getByText("이동")).toBeInTheDocument();
   });
 
@@ -149,8 +152,8 @@ describe("LeftPanelContent", () => {
       />
     );
 
-    const headerButton = screen.getByRole("button", { name: /폴더/ });
-    const section = headerButton.parentElement;
+    const headerButton = screen.getByRole("button", { name: dict.clip.folders });
+    const section = headerButton.closest(".rounded-xl");
 
     expect(section).toHaveClass("rounded-xl");
     expect(section).toHaveClass("border");
@@ -234,5 +237,39 @@ describe("LeftPanelContent", () => {
     expect(screen.queryByText("걷기")).not.toBeInTheDocument();
     expect(screen.queryByText("달리기")).not.toBeInTheDocument();
     expect(useFilterStore.getState().selectedFolders).toEqual([]);
+  });
+
+  it("toggles the entire tree from the header action button and swaps the action label", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        clips={clips}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const expandAllButton = screen.getByRole("button", {
+      name: dict.browse.expandAllFolders,
+    });
+
+    expect(screen.queryByText("천천히 걷기")).not.toBeInTheDocument();
+
+    fireEvent.click(expandAllButton);
+
+    expect(screen.getByText("천천히 걷기")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: dict.browse.collapseAllFolders })
+    ).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: dict.browse.collapseAllFolders })
+    );
+
+    expect(screen.queryByText("걷기")).not.toBeInTheDocument();
+    expect(screen.queryByText("달리기")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: dict.browse.expandAllFolders })
+    ).toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MoonStarIcon, SunMediumIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
@@ -22,6 +23,8 @@ interface NavbarProps {
 
 export function Navbar({ lang, dict }: NavbarProps) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const {
     leftPanelOpen,
     rightPanelOpen,
@@ -31,7 +34,7 @@ export function Navbar({ lang, dict }: NavbarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const isDarkTheme = theme === "dark";
+  const isDarkTheme = mounted && theme === "dark";
   const allPanelsOpen = leftPanelOpen && rightPanelOpen;
   const otherLang = lang === "ko" ? "en" : "ko";
   const query = searchParams.toString();
@@ -73,21 +76,29 @@ export function Navbar({ lang, dict }: NavbarProps) {
   }
 
   return (
-    <header className="h-12 border-b border-border flex items-center px-4 gap-3 shrink-0">
-      <Link href={`/${lang}`} className="font-bold text-lg tracking-tight">
-        REFLIX
-      </Link>
-
-      <nav className="flex items-center gap-2 ml-4 text-sm">
+    <header className="grid h-12 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 md:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]">
+      <div className="flex min-w-0 items-center gap-3">
         <Link
-          href={`/${lang}/browse`}
-          className="px-2 py-1 rounded hover:bg-surface-hover"
+          href={`/${lang}`}
+          className="shrink-0 font-bold text-lg tracking-tight"
         >
-          {dict.nav.browse}
+          REFLIX
         </Link>
-      </nav>
 
-      <div className="mx-4 hidden max-w-md flex-1 md:block">
+        <nav className="flex min-w-0 items-center gap-2 text-sm">
+          <Link
+            href={`/${lang}/browse`}
+            className="px-2 py-1 rounded hover:bg-surface-hover"
+          >
+            {dict.nav.browse}
+          </Link>
+        </nav>
+      </div>
+
+      <div
+        data-testid="navbar-search"
+        className="hidden w-full md:block md:justify-self-center"
+      >
         <SearchBar
           initialQuery={currentSearchQuery}
           placeholder={dict.nav.searchPlaceholder}
@@ -95,36 +106,38 @@ export function Navbar({ lang, dict }: NavbarProps) {
         />
       </div>
 
-      <div className="flex-1 md:hidden" />
-
-      {/* Language toggle */}
-      <button
-        onClick={() => router.push(switchedPath)}
-        className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
+      <div
+        data-testid="navbar-controls"
+        className="col-start-2 flex items-center justify-self-end gap-1 md:col-start-3"
       >
-        {lang === "ko" ? "EN" : "KO"}
-      </button>
+        <button
+          type="button"
+          onClick={() => router.push(switchedPath)}
+          className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
+        >
+          {lang === "ko" ? "EN" : "KO"}
+        </button>
 
-      {/* Theme toggle */}
-      <button
-        type="button"
-        aria-label={themeLabel}
-        title={themeLabel}
-        onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
-        className="p-1.5 rounded hover:bg-surface-hover text-sm"
-      >
-        <ThemeIcon className="size-4" strokeWidth={1.75} />
-      </button>
+        <button
+          type="button"
+          aria-label={themeLabel}
+          title={themeLabel}
+          onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+          className="p-1.5 rounded hover:bg-surface-hover text-sm"
+        >
+          <ThemeIcon className="size-4" strokeWidth={1.75} />
+        </button>
 
-      <button
-        type="button"
-        aria-label={panelLabel}
-        title={panelLabel}
-        onClick={handlePanelsToggle}
-        className="p-1.5 rounded hover:bg-surface-hover text-sm"
-      >
-        {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
-      </button>
+        <button
+          type="button"
+          aria-label={panelLabel}
+          title={panelLabel}
+          onClick={handlePanelsToggle}
+          className="p-1.5 rounded hover:bg-surface-hover text-sm"
+        >
+          {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
+        </button>
+      </div>
     </header>
   );
 }

@@ -21,16 +21,19 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
     videoUrl,
     thumbnailUrl,
     playbackToggleCount,
+    autoPlayMuted,
   }: {
     videoUrl: string;
     thumbnailUrl: string;
     playbackToggleCount?: number;
+    autoPlayMuted?: boolean;
   }) => (
     <div
       data-testid="video-player"
       data-video-url={videoUrl}
       data-thumbnail-url={thumbnailUrl}
       data-playback-toggle-count={String(playbackToggleCount ?? 0)}
+      data-auto-play-muted={String(autoPlayMuted ?? false)}
     />
   ),
 }));
@@ -84,6 +87,7 @@ describe("QuickViewModal", () => {
       "data-thumbnail-url",
       "/thumbnails/clip-1.webp"
     );
+    expect(player).toHaveAttribute("data-auto-play-muted", "true");
     expect(screen.getByRole("link", { name: "View Detail" })).toHaveAttribute(
       "href",
       "/ko/clip/clip-1"
@@ -118,7 +122,7 @@ describe("QuickViewModal", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("uses Space to toggle playback without closing the modal", () => {
+  it("uses Space to close the modal", () => {
     const onClose = vi.fn();
 
     render(
@@ -137,11 +141,10 @@ describe("QuickViewModal", () => {
 
     fireEvent.keyDown(window, { key: " " });
 
-    expect(onClose).not.toHaveBeenCalled();
-    expect(screen.getByRole("dialog", { name: "Clip One" })).toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("video-player")).toHaveAttribute(
       "data-playback-toggle-count",
-      "1"
+      "0"
     );
   });
 });

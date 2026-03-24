@@ -1,13 +1,5 @@
 import type { CategoryNode, CategoryTree, Locale } from "./types";
 
-/** Count every folder node in the category tree, including nested children. */
-export function countCategoryNodes(tree: Record<string, CategoryNode>): number {
-  return Object.values(tree).reduce(
-    (sum, node) => sum + 1 + (node.children ? countCategoryNodes(node.children) : 0),
-    0
-  );
-}
-
 /** Collect a folder ID and all its descendant IDs from the category tree. */
 export function collectDescendantIds(
   id: string,

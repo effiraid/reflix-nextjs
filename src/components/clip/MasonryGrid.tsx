@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useEffect, useState } from "react";
+import { useMemo, useRef, useEffect, useLayoutEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ClipCard } from "./ClipCard";
 import { useUIStore } from "@/stores/uiStore";
@@ -14,10 +14,13 @@ interface MasonryGridProps {
 
 export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastWidthRef = useRef<number | null>(null);
   const thumbnailSize = useUIStore((s) => s.thumbnailSize);
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
-  const usePreview = columnCount <= 3; // 1-3열: MP4 loop, 4-5열: 정적 썸네일
+  const previewOnHover = columnCount >= 4; // 4-5열: hover 시 MP4 preview, 1-3열: 즉시 재생
+  const showInfo = columnCount <= 3;
   const [scrollElement, setScrollElement] = useState<HTMLElement | null>(null);
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -26,6 +29,32 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
       ) as HTMLElement | null;
       setScrollElement(el);
     }
+  }, []);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const nextWidth = Math.round(
+        entries[0]?.contentRect.width ?? container.getBoundingClientRect().width
+      );
+
+      if (nextWidth <= 0) {
+        return;
+      }
+
+      if (lastWidthRef.current !== null && lastWidthRef.current !== nextWidth) {
+        setLayoutVersion((version) => version + 1);
+      }
+
+      lastWidthRef.current = nextWidth;
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
   }, []);
 
   // Distribute clips into columns by shortest-column-first
@@ -45,10 +74,11 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
     <div ref={containerRef} className="flex gap-3 p-3">
       {columns.map((colClips, colIndex) => (
         <MasonryColumn
-          key={`${columnCount}-${colIndex}`}
+          key={`${columnCount}-${layoutVersion}-${colIndex}`}
           clips={colClips}
           scrollElement={scrollElement}
-          usePreview={usePreview}
+          previewOnHover={previewOnHover}
+          showInfo={showInfo}
           onOpenQuickView={onOpenQuickView}
         />
       ))}
@@ -59,12 +89,14 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
 function MasonryColumn({
   clips,
   scrollElement,
-  usePreview,
+  previewOnHover,
+  showInfo,
   onOpenQuickView,
 }: {
   clips: ClipIndex[];
   scrollElement: HTMLElement | null;
-  usePreview: boolean;
+  previewOnHover: boolean;
+  showInfo: boolean;
   onOpenQuickView?: (clipId: string) => void;
 }) {
   // TanStack Virtual intentionally returns imperative helpers.
@@ -72,6 +104,7 @@ function MasonryColumn({
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: clips.length,
+    getItemKey: (index) => clips[index]?.id ?? index,
     getScrollElement: () => scrollElement,
     estimateSize: (index) => {
       const clip = clips[index];
@@ -108,7 +141,9 @@ function MasonryColumn({
             >
               <ClipCard
                 clip={clip}
-                enablePreview={usePreview}
+                enablePreview
+                previewOnHover={previewOnHover}
+                showInfo={showInfo}
                 onOpenQuickView={onOpenQuickView}
               />
             </div>

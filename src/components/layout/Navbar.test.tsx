@@ -130,4 +130,19 @@ describe("Navbar", () => {
 
     expect(push).toHaveBeenCalledWith("/ko/browse?q=search");
   });
+
+  it("uses a centered desktop search slot and right-aligned control group", () => {
+    render(<Navbar lang="ko" dict={dict} />);
+
+    const header = screen.getByRole("banner");
+    const searchSlot = screen.getByTestId("navbar-search");
+    const controls = screen.getByTestId("navbar-controls");
+
+    expect(header.className).toContain("grid");
+    expect(header.className).toContain(
+      "md:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]"
+    );
+    expect(searchSlot.className).toContain("md:justify-self-center");
+    expect(controls.className).toContain("justify-self-end");
+  });
 });
