@@ -3,6 +3,7 @@
 import fs from "fs";
 import path from "path";
 
+import { resolveEagleLibraryPath } from "./lib/eagle-library-path.mjs";
 import { readEagleLibrary } from "./lib/eagle-reader.mjs";
 import {
   getRemainingEligibleIds,
@@ -10,9 +11,7 @@ import {
 } from "./lib/eagle-thumbnail-pilot.mjs";
 import { inspectWebP } from "./lib/media-processor.mjs";
 
-const EAGLE_LIB =
-  process.env.EAGLE_LIBRARY_PATH ||
-  "/Users/macbook/Library/CloudStorage/Dropbox/!/레퍼런스 - 게임,연출.library";
+const EAGLE_LIB = resolveEagleLibraryPath();
 const PROJECT_ROOT = path.resolve(import.meta.dirname, "..");
 const args = process.argv.slice(2);
 

@@ -3,26 +3,41 @@
 import { useCallback } from "react";
 import Image from "next/image";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
+import { getMediaUrl } from "@/lib/mediaUrl";
 import { useClipStore } from "@/stores/clipStore";
 import type { ClipIndex } from "@/lib/types";
-import { MEDIA_BASE_URL } from "@/lib/constants";
 
 interface ClipCardProps {
   clip: ClipIndex;
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
+  onOpenQuickView?: (clipId: string) => void;
 }
 
-export function ClipCard({ clip, enablePreview = true }: ClipCardProps) {
+export function ClipCard({
+  clip,
+  enablePreview = true,
+  onOpenQuickView,
+}: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
   const { selectedClipId, setSelectedClipId } = useClipStore();
   const isSelected = selectedClipId === clip.id;
 
-  const thumbnailUrl = `${MEDIA_BASE_URL}${clip.thumbnailUrl}`;
-  const previewUrl = `${MEDIA_BASE_URL}${clip.previewUrl}`;
+  const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
+  const previewUrl = getMediaUrl(clip.previewUrl);
 
   const handleClick = useCallback(() => {
+    if (isSelected) {
+      onOpenQuickView?.(clip.id);
+      return;
+    }
+
     setSelectedClipId(clip.id);
-  }, [clip.id, setSelectedClipId]);
+  }, [clip.id, isSelected, onOpenQuickView, setSelectedClipId]);
+
+  const handleDoubleClick = useCallback(() => {
+    setSelectedClipId(clip.id);
+    onOpenQuickView?.(clip.id);
+  }, [clip.id, onOpenQuickView, setSelectedClipId]);
 
   const showPreview = enablePreview && stage === "webp" && isInView;
 
@@ -34,6 +49,7 @@ export function ClipCard({ clip, enablePreview = true }: ClipCardProps) {
       }`}
       style={{ aspectRatio: `${clip.width}/${clip.height}` }}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
     >
       {/* Stage 1: LQIP blur placeholder */}
       {clip.lqipBase64 && (

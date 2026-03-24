@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { MEDIA_BASE_URL } from "@/lib/constants";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
+import { getMediaUrl } from "@/lib/mediaUrl";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -21,8 +21,8 @@ export function RightPanelInspector({
   dict,
 }: RightPanelInspectorProps) {
   const title = clip.i18n.title[lang] || clip.name;
-  const thumbnailUrl = `${MEDIA_BASE_URL}${clip.thumbnailUrl}`;
-  const previewUrl = `${MEDIA_BASE_URL}${clip.previewUrl}`;
+  const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
+  const previewUrl = getMediaUrl(clip.previewUrl);
   const mediaKindKey = getClipMediaKind(clip.ext);
   const mediaKind =
     mediaKindKey === "video" ? dict.clip.video : dict.clip.image;

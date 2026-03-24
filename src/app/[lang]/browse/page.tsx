@@ -63,6 +63,7 @@ export default async function BrowsePage({
                 initialClips={clipIndex.clips}
                 categories={categories}
                 tagI18n={tagI18n}
+                lang={lang as Locale}
                 dict={dict}
               />
             </Suspense>

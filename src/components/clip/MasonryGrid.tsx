@@ -9,9 +9,10 @@ import type { ClipIndex } from "@/lib/types";
 
 interface MasonryGridProps {
   clips: ClipIndex[];
+  onOpenQuickView?: (clipId: string) => void;
 }
 
-export function MasonryGrid({ clips }: MasonryGridProps) {
+export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const thumbnailSize = useUIStore((s) => s.thumbnailSize);
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
@@ -48,6 +49,7 @@ export function MasonryGrid({ clips }: MasonryGridProps) {
           clips={colClips}
           scrollElement={scrollElement}
           usePreview={usePreview}
+          onOpenQuickView={onOpenQuickView}
         />
       ))}
     </div>
@@ -58,10 +60,12 @@ function MasonryColumn({
   clips,
   scrollElement,
   usePreview,
+  onOpenQuickView,
 }: {
   clips: ClipIndex[];
   scrollElement: HTMLElement | null;
   usePreview: boolean;
+  onOpenQuickView?: (clipId: string) => void;
 }) {
   // TanStack Virtual intentionally returns imperative helpers.
   // React Compiler skips memoization here, which is acceptable for this grid.
@@ -102,7 +106,11 @@ function MasonryColumn({
               }}
               className="pb-3"
             >
-              <ClipCard clip={clip} enablePreview={usePreview} />
+              <ClipCard
+                clip={clip}
+                enablePreview={usePreview}
+                onOpenQuickView={onOpenQuickView}
+              />
             </div>
           );
         })}

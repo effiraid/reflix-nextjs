@@ -1,4 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Reflix
+
+Reflix is a Next.js 16 clip browser backed by Eagle exports. The app keeps clip JSON media paths relative (`/videos/...`, `/previews/...`, `/thumbnails/...`) so the same data works in local dev, Vercel preview, and production hosted-media deployments.
+
+## Environment
+
+Copy `.env.local.example` to `.env.local` and fill in the pieces you need.
+
+- Local dev and Vercel preview: leave `NEXT_PUBLIC_MEDIA_URL` unset so the app reads media from same-origin static assets.
+- Production: set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.app` after the R2 custom domain is live.
+- R2 upload commands require `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME`.
 
 ## Getting Started
 
@@ -14,23 +24,41 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Media Export Workflow
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Reflix media is generated locally first, then optionally uploaded to Cloudflare R2.
 
-## Learn More
+```bash
+# Generate local media assets into public/
+npm run export:local
 
-To learn more about Next.js, take a look at the following resources:
+# Generate locally, then upload the same assets to R2
+npm run export:r2
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Preview work without writing files
+node scripts/export.mjs --dry-run
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Preview planned R2 uploads without real credentials
+node scripts/export.mjs --dry-run --r2
+```
 
-## Deploy on Vercel
+Generated media contract:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `public/videos/{id}.mp4`
+- `public/previews/{id}.mp4`
+- `public/thumbnails/{id}.webp`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The exported JSON continues to reference these assets as relative paths.
+
+## Deployment Notes
+
+- Vercel preview deployments should not set `NEXT_PUBLIC_MEDIA_URL`.
+- Production should set `NEXT_PUBLIC_MEDIA_URL` only after `media.reflix.app` points to the R2 custom domain.
+- The app derives remote Next Image configuration from `NEXT_PUBLIC_MEDIA_URL`, so preview builds stay same-origin by default.
+
+## Eagle Thumbnail Ops
+
+- Pilot batch: `npm run eagle:thumbs:pilot`
+- Remaining batch: `npm run eagle:thumbs:remaining`

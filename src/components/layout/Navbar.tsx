@@ -4,6 +4,7 @@ import { MoonStarIcon, SunMediumIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { SearchBar } from "@/components/common/SearchBar";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 
@@ -34,6 +35,7 @@ export function Navbar({ lang, dict }: NavbarProps) {
   const allPanelsOpen = leftPanelOpen && rightPanelOpen;
   const otherLang = lang === "ko" ? "en" : "ko";
   const query = searchParams.toString();
+  const currentSearchQuery = searchParams.get("q") ?? "";
   const switchedPath =
     pathname.replace(`/${lang}`, `/${otherLang}`) + (query ? `?${query}` : "");
   const themeLabel = isDarkTheme
@@ -58,6 +60,18 @@ export function Navbar({ lang, dict }: NavbarProps) {
     setRightPanelOpen(nextPanelsOpen);
   }
 
+  function handleSearch(nextQuery: string) {
+    const params = new URLSearchParams();
+    if (nextQuery) {
+      params.set("q", nextQuery);
+    }
+
+    const nextPath = params.toString()
+      ? `/${lang}/search?${params.toString()}`
+      : `/${lang}/search`;
+    router.push(nextPath);
+  }
+
   return (
     <header className="h-12 border-b border-border flex items-center px-4 gap-3 shrink-0">
       <Link href={`/${lang}`} className="font-bold text-lg tracking-tight">
@@ -73,7 +87,15 @@ export function Navbar({ lang, dict }: NavbarProps) {
         </Link>
       </nav>
 
-      <div className="flex-1" />
+      <div className="mx-4 hidden max-w-md flex-1 md:block">
+        <SearchBar
+          initialQuery={currentSearchQuery}
+          placeholder={dict.nav.searchPlaceholder}
+          onSearch={handleSearch}
+        />
+      </div>
+
+      <div className="flex-1 md:hidden" />
 
       {/* Language toggle */}
       <button

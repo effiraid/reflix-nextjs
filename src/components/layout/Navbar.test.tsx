@@ -45,6 +45,20 @@ vi.mock("@/stores/uiStore", () => ({
   }),
 }));
 
+vi.mock("@/components/common/SearchBar", () => ({
+  SearchBar: ({
+    initialQuery,
+    onSearch,
+  }: {
+    initialQuery: string;
+    onSearch: (value: string) => void;
+  }) => (
+    <button type="button" onClick={() => onSearch(initialQuery || "boss fight")}>
+      Search mock
+    </button>
+  ),
+}));
+
 const dict = {
   nav: {
     home: "홈",
@@ -107,5 +121,13 @@ describe("Navbar", () => {
 
     expect(setLeftPanelOpen).toHaveBeenCalledWith(true);
     expect(setRightPanelOpen).toHaveBeenCalledWith(true);
+  });
+
+  it("pushes the shared search route when the search bar submits", () => {
+    render(<Navbar lang="ko" dict={dict} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Search mock" }));
+
+    expect(push).toHaveBeenCalledWith("/ko/search?q=search");
   });
 });

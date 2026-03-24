@@ -6,8 +6,13 @@ import path from "node:path";
 
 import {
   generateAnimatedThumbnail,
+  generatePreview,
   inspectWebP,
 } from "./media-processor.mjs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const exec = promisify(execFile);
 
 function createChunk(name, payload) {
   const header = Buffer.alloc(8);
@@ -135,4 +140,28 @@ test("generateAnimatedThumbnail rejects non-animated output", async () => {
     }),
     /animated WebP/
   );
+});
+
+test("generatePreview succeeds for source videos whose scaled height would otherwise be odd", async () => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "preview-generator-test-"));
+  const inputPath = path.join(tmpRoot, "source.mp4");
+  const outputPath = path.join(tmpRoot, "preview.mp4");
+
+  await exec("ffmpeg", [
+    "-y",
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=black:s=1920x804:d=1",
+    "-c:v",
+    "libx264",
+    "-pix_fmt",
+    "yuv420p",
+    inputPath,
+  ]);
+
+  const created = await generatePreview(inputPath, outputPath);
+
+  assert.equal(created, true);
+  assert.equal(fs.existsSync(outputPath), true);
 });

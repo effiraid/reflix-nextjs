@@ -144,7 +144,7 @@ export async function generatePreview(inputPath, outputPath) {
   try {
     await exec("ffmpeg", [
       "-y", "-i", inputPath,
-      "-vf", "scale=480:-1,fps=15",
+      "-vf", "scale=480:-2,fps=15",
       "-c:v", "libx264", "-crf", "28", "-preset", "fast",
       "-an",
       "-movflags", "+faststart",

@@ -19,7 +19,8 @@
         "괴로움"
       ],
       "folders": [
-        "L475K68YP1NH3"
+        "L475K68YP1NH3",
+        "MN34RZ0I1OSKP"
       ],
       "star": 3,
       "category": "direction-video",
@@ -44,7 +45,8 @@
         "연출"
       ],
       "folders": [
-        "L475K68YP1NH3"
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
@@ -69,7 +71,8 @@
         "연출"
       ],
       "folders": [
-        "L475K68YP1NH3"
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
@@ -89,11 +92,11 @@
         "심호흡",
         "지침",
         "힘겨움",
-        "연출",
-        "유튜브_업로드_완료"
+        "연출"
       ],
       "folders": [
-        "L475K68YP1NH3"
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
@@ -131,8 +134,154 @@
       "previewUrl": "/previews/L3TR52T2F47S1.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2F47S1.webp",
       "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABYAAEBAQEBAAAAAAAAAAAAAAAABQQHAwEBAQEBAAAAAAAAAAAAAAAAAAIDARABAQADAQEBAAAAAAAAAAAAAAECEhEDE1ERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDnE88VX5Y/jBvHlv1bNnywkR9YpdiXa4I4CVgAP//Z"
+    },
+    {
+      "id": "L3TR52T2K3FY9",
+      "name": "연출 아케인 힘듦 충격 가쁜 호흡",
+      "tags": [
+        "아케인",
+        "힘듦",
+        "호흡",
+        "지침",
+        "힘겨움",
+        "연출"
+      ],
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
+      ],
+      "star": 3,
+      "category": "direction-video",
+      "width": 640,
+      "height": 360,
+      "duration": 3.477334,
+      "previewUrl": "/previews/L3TR52T2K3FY9.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T2K3FY9.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABUAAEBAQEBAAAAAAAAAAAAAAAABAUCBwEBAQEBAAAAAAAAAAAAAAAAAAMCARABAQEBAAAAAAAAAAAAAAAAAAERAhEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APD8irIzVGqJK7zHNkURm6OoAE2wAH//2Q=="
+    },
+    {
+      "id": "L3TR52T2RH4G6",
+      "name": "연출 아케인 힘듦 가쁜 호흡 전투 달리기 날라차기 발차기",
+      "tags": [
+        "아케인",
+        "달리기",
+        "힘듦",
+        "호흡",
+        "발차기",
+        "지침",
+        "힘겨움",
+        "연출",
+        "뛰기",
+        "공격",
+        "날라차기",
+        "점프",
+        "전투",
+        "게임",
+        "교전",
+        "일대일"
+      ],
+      "folders": [
+        "L475K68YP1NH3",
+        "L951Y2DCQ8GH0",
+        "L951Y2DB121ZU",
+        "LNPMWX908R1NR",
+        "LI1OBKZ059SGS",
+        "MN34S7XS08AQ1"
+      ],
+      "star": 3,
+      "category": "direction-video",
+      "width": 640,
+      "height": 360,
+      "duration": 6.336,
+      "previewUrl": "/previews/L3TR52T2RH4G6.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T2RH4G6.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABVAAEBAQEAAAAAAAAAAAAAAAAABAUHAQEBAQEAAAAAAAAAAAAAAAACAAQBEAEBAAMBAAAAAAAAAAAAAAAAEQESQSERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDjeuEUbPEd8BqTRNGuzyZ2cAhAHU//2Q=="
+    },
+    {
+      "id": "L3TR52T2S1A9X",
+      "name": "연출 아케인 힘듦 지침 괴로움 고뇌",
+      "tags": [
+        "아케인",
+        "힘듦",
+        "괴로움",
+        "고뇌",
+        "지침",
+        "힘겨움",
+        "걱정",
+        "고민",
+        "연출",
+        "한숨",
+        "불안",
+        "두려움",
+        "무서움",
+        "공포",
+        "겁먹음",
+        "고통",
+        "아픔"
+      ],
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34RZ0I1OSKP"
+      ],
+      "star": 3,
+      "category": "direction-video",
+      "width": 640,
+      "height": 360,
+      "duration": 13.209,
+      "previewUrl": "/previews/L3TR52T2S1A9X.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T2S1A9X.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABeAAEBAQEBAQAAAAAAAAAAAAAABQMCBAYBAQADAQEAAAAAAAAAAAAAAAQBAAMCBRABAAMBAQEBAAAAAAAAAAAAAAECERKhURMRAQEBAQAAAAAAAAAAAAAAAAABESH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD4L864y4r89TO3fQvXrbGE0hKnFibahS2CuPEA7FAFS//Z"
+    },
+    {
+      "id": "L3TR52T2VXUHO",
+      "name": "연출 아케인 힘듦 올라감 고통",
+      "tags": [
+        "아케인",
+        "고통",
+        "힘듦",
+        "올라가기",
+        "지침",
+        "힘겨움",
+        "오르기",
+        "연출",
+        "아픔",
+        "괴로움"
+      ],
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34RZ0I1OSKP"
+      ],
+      "star": 3,
+      "category": "direction-video",
+      "width": 640,
+      "height": 360,
+      "duration": 5.292,
+      "previewUrl": "/previews/L3TR52T2VXUHO.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T2VXUHO.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABUAAEBAQEBAQAAAAAAAAAAAAAAAwQHAgUBAQEBAAAAAAAAAAAAAAAAAAABAhABAQEBAAAAAAAAAAAAAAAAAAEREhEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AOPcxXmJyvetMpcxkyNusiK+UAgAA//Z"
+    },
+    {
+      "id": "L3TR52T302BJZ",
+      "name": "연출 소울 페이셜 디테일 감동",
+      "tags": [
+        "소울",
+        "감동",
+        "연출"
+      ],
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34RZ0O4BJF5"
+      ],
+      "star": 3,
+      "category": "direction-video",
+      "width": 640,
+      "height": 268,
+      "duration": 2.601,
+      "previewUrl": "/previews/L3TR52T302BJZ.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T302BJZ.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAQQBDAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABeAAABBQEAAAAAAAAAAAAAAAABAgADBwQFAQEBAAAAAAAAAAAAAAAAAAAEBRAAAgICAgMBAAAAAAAAAAAAAQACAyExwZGhgREEEQEBAQAAAAAAAAAAAAAAAAAAARH/wAARCAANACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwAfmGFMaon6JD3y1mL5jXblnbKzfhRan5XDOCWBaU6g/9k="
     }
   ],
-  "totalCount": 5,
-  "generatedAt": "2026-03-23T09:54:22.313Z"
+  "totalCount": 10,
+  "generatedAt": "2026-03-24T01:51:24.801Z"
 }

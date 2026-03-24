@@ -1,8 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { RightPanelInspector } from "./RightPanelInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip } from "@/lib/types";
+
+const { getMediaUrlMock } = vi.hoisted(() => ({
+  getMediaUrlMock: vi.fn((path: string) => path),
+}));
+
+vi.mock("@/lib/mediaUrl", () => ({
+  getMediaUrl: getMediaUrlMock,
+}));
 
 const categories: CategoryTree = {
   combat: {
@@ -78,6 +86,11 @@ const dict: Pick<Dictionary, "clip"> = {
 };
 
 describe("RightPanelInspector", () => {
+  beforeEach(() => {
+    getMediaUrlMock.mockClear();
+    getMediaUrlMock.mockImplementation((path: string) => path);
+  });
+
   it("renders the localized inspector fields without deprecated metadata", () => {
     render(
       <RightPanelInspector
@@ -95,6 +108,8 @@ describe("RightPanelInspector", () => {
     expect(screen.queryByText("MP4")).not.toBeInTheDocument();
     expect(screen.queryByText("규격")).not.toBeInTheDocument();
     expect(screen.queryByText("파일 크기")).not.toBeInTheDocument();
+    expect(getMediaUrlMock).toHaveBeenCalledWith(clip.thumbnailUrl);
+    expect(getMediaUrlMock).toHaveBeenCalledWith(clip.previewUrl);
   });
 
   it("renders blank memo and link as muted placeholders while keeping the share CTA enabled", () => {
@@ -144,5 +159,6 @@ describe("RightPanelInspector", () => {
     expect(screen.getAllByText("이미지")).toHaveLength(2);
     expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
     expect(screen.queryByText("PNG")).not.toBeInTheDocument();
+    expect(getMediaUrlMock).toHaveBeenCalledWith("/thumbs/clip-1.png");
   });
 });
