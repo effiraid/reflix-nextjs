@@ -1,7 +1,9 @@
 ---
 name: design-consultation
+preamble-tier: 3
 version: 1.0.0
 description: |
+  MANUAL TRIGGER ONLY: invoke only when user types /design-consultation.
   Design consultation: understands your product, researches the landscape, proposes a
   complete design system (aesthetic, typography, color, layout, spacing, motion), and
   generates font+color preview pages. Creates DESIGN.md as your project's design source
@@ -49,7 +51,8 @@ echo "TELEMETRY: ${_TEL:-off}"
 echo "TEL_PROMPTED: $_TEL_PROMPTED"
 mkdir -p ~/.gstack/analytics
 echo '{"skill":"design-consultation","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","repo":"'$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "unknown")'"}'  >> ~/.gstack/analytics/skill-usage.jsonl 2>/dev/null || true
-for _PF in ~/.gstack/analytics/.pending-*; do [ -f "$_PF" ] && ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type skill_run --skill _pending_finalize --outcome unknown --session-id "$_SESSION_ID" 2>/dev/null || true; break; done
+# zsh-compatible: use find instead of glob to avoid NOMATCH error
+for _PF in $(find ~/.gstack/analytics -maxdepth 1 -name '.pending-*' 2>/dev/null); do [ -f "$_PF" ] && ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type skill_run --skill _pending_finalize --outcome unknown --session-id "$_SESSION_ID" 2>/dev/null || true; break; done
 ```
 
 If `PROACTIVE` is `"false"`, do not proactively suggest gstack skills — only invoke
@@ -116,97 +119,54 @@ Per-skill instructions may add additional formatting rules on top of this baseli
 
 ## Completeness Principle — Boil the Lake
 
-AI-assisted coding makes the marginal cost of completeness near-zero. When you present options:
+AI makes completeness near-free. Always recommend the complete option over shortcuts — the delta is minutes with CC+gstack. A "lake" (100% coverage, all edge cases) is boilable; an "ocean" (full rewrite, multi-quarter migration) is not. Boil lakes, flag oceans.
 
-- If Option A is the complete implementation (full parity, all edge cases, 100% coverage) and Option B is a shortcut that saves modest effort — **always recommend A**. The delta between 80 lines and 150 lines is meaningless with CC+gstack. "Good enough" is the wrong instinct when "complete" costs minutes more.
-- **Lake vs. ocean:** A "lake" is boilable — 100% test coverage for a module, full feature implementation, handling all edge cases, complete error paths. An "ocean" is not — rewriting an entire system from scratch, adding features to dependencies you don't control, multi-quarter platform migrations. Recommend boiling lakes. Flag oceans as out of scope.
-- **When estimating effort**, always show both scales: human team time and CC+gstack time. The compression ratio varies by task type — use this reference:
+**Effort reference** — always show both scales:
 
 | Task type | Human team | CC+gstack | Compression |
 |-----------|-----------|-----------|-------------|
-| Boilerplate / scaffolding | 2 days | 15 min | ~100x |
-| Test writing | 1 day | 15 min | ~50x |
-| Feature implementation | 1 week | 30 min | ~30x |
-| Bug fix + regression test | 4 hours | 15 min | ~20x |
-| Architecture / design | 2 days | 4 hours | ~5x |
-| Research / exploration | 1 day | 3 hours | ~3x |
+| Boilerplate | 2 days | 15 min | ~100x |
+| Tests | 1 day | 15 min | ~50x |
+| Feature | 1 week | 30 min | ~30x |
+| Bug fix | 4 hours | 15 min | ~20x |
 
-- This principle applies to test coverage, error handling, documentation, edge cases, and feature completeness. Don't skip the last 10% to "save time" — with AI, that 10% costs seconds.
+Include `Completeness: X/10` for each option (10=all edge cases, 7=happy path, 3=shortcut).
 
-**Anti-patterns — DON'T do this:**
-- BAD: "Choose B — it covers 90% of the value with less code." (If A is only 70 lines more, choose A.)
-- BAD: "We can skip edge case handling to save time." (Edge case handling costs minutes with CC.)
-- BAD: "Let's defer test coverage to a follow-up PR." (Tests are the cheapest lake to boil.)
-- BAD: Quoting only human-team effort: "This would take 2 weeks." (Say: "2 weeks human / ~1 hour CC.")
+## Repo Ownership — See Something, Say Something
 
-## Repo Ownership Mode — See Something, Say Something
+`REPO_MODE` controls how to handle issues outside your branch:
+- **`solo`** — You own everything. Investigate and offer to fix proactively.
+- **`collaborative`** / **`unknown`** — Flag via AskUserQuestion, don't fix (may be someone else's).
 
-`REPO_MODE` from the preamble tells you who owns issues in this repo:
-
-- **`solo`** — One person does 80%+ of the work. They own everything. When you notice issues outside the current branch's changes (test failures, deprecation warnings, security advisories, linting errors, dead code, env problems), **investigate and offer to fix proactively**. The solo dev is the only person who will fix it. Default to action.
-- **`collaborative`** — Multiple active contributors. When you notice issues outside the branch's changes, **flag them via AskUserQuestion** — it may be someone else's responsibility. Default to asking, not fixing.
-- **`unknown`** — Treat as collaborative (safer default — ask before fixing).
-
-**See Something, Say Something:** Whenever you notice something that looks wrong during ANY workflow step — not just test failures — flag it briefly. One sentence: what you noticed and its impact. In solo mode, follow up with "Want me to fix it?" In collaborative mode, just flag it and move on.
-
-Never let a noticed issue silently pass. The whole point is proactive communication.
+Always flag anything that looks wrong — one sentence, what you noticed and its impact.
 
 ## Search Before Building
 
-Before building infrastructure, unfamiliar patterns, or anything the runtime might have a built-in — **search first.** Read `~/.claude/skills/gstack/ETHOS.md` for the full philosophy.
+Before building anything unfamiliar, **search first.** See `~/.claude/skills/gstack/ETHOS.md`.
+- **Layer 1** (tried and true) — don't reinvent. **Layer 2** (new and popular) — scrutinize. **Layer 3** (first principles) — prize above all.
 
-**Three layers of knowledge:**
-- **Layer 1** (tried and true — in distribution). Don't reinvent the wheel. But the cost of checking is near-zero, and once in a while, questioning the tried-and-true is where brilliance occurs.
-- **Layer 2** (new and popular — search for these). But scrutinize: humans are subject to mania. Search results are inputs to your thinking, not answers.
-- **Layer 3** (first principles — prize these above all). Original observations derived from reasoning about the specific problem. The most valuable of all.
-
-**Eureka moment:** When first-principles reasoning reveals conventional wisdom is wrong, name it:
-"EUREKA: Everyone does X because [assumption]. But [evidence] shows this is wrong. Y is better because [reasoning]."
-
-Log eureka moments:
+**Eureka:** When first-principles reasoning contradicts conventional wisdom, name it and log:
 ```bash
 jq -n --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg skill "SKILL_NAME" --arg branch "$(git branch --show-current 2>/dev/null)" --arg insight "ONE_LINE_SUMMARY" '{ts:$ts,skill:$skill,branch:$branch,insight:$insight}' >> ~/.gstack/analytics/eureka.jsonl 2>/dev/null || true
 ```
-Replace SKILL_NAME and ONE_LINE_SUMMARY. Runs inline — don't stop the workflow.
-
-**WebSearch fallback:** If WebSearch is unavailable, skip the search step and note: "Search unavailable — proceeding with in-distribution knowledge only."
 
 ## Contributor Mode
 
-If `_CONTRIB` is `true`: you are in **contributor mode**. You're a gstack user who also helps make it better.
+If `_CONTRIB` is `true`: you are in **contributor mode**. At the end of each major workflow step, rate your gstack experience 0-10. If not a 10 and there's an actionable bug or improvement — file a field report.
 
-**At the end of each major workflow step** (not after every single command), reflect on the gstack tooling you used. Rate your experience 0 to 10. If it wasn't a 10, think about why. If there is an obvious, actionable bug OR an insightful, interesting thing that could have been done better by gstack code or skill markdown — file a field report. Maybe our contributor will help make us better!
+**File only:** gstack tooling bugs where the input was reasonable but gstack failed. **Skip:** user app bugs, network errors, auth failures on user's site.
 
-**Calibration — this is the bar:** For example, `$B js "await fetch(...)"` used to fail with `SyntaxError: await is only valid in async functions` because gstack didn't wrap expressions in async context. Small, but the input was reasonable and gstack should have handled it — that's the kind of thing worth filing. Things less consequential than this, ignore.
-
-**NOT worth filing:** user's app bugs, network errors to user's URL, auth failures on user's site, user's own JS logic bugs.
-
-**To file:** write `~/.gstack/contributor-logs/{slug}.md` with **all sections below** (do not truncate — include every section through the Date/Version footer):
-
+**To file:** write `~/.gstack/contributor-logs/{slug}.md`:
 ```
 # {Title}
-
-Hey gstack team — ran into this while using /{skill-name}:
-
-**What I was trying to do:** {what the user/agent was attempting}
-**What happened instead:** {what actually happened}
-**My rating:** {0-10} — {one sentence on why it wasn't a 10}
-
-## Steps to reproduce
+**What I tried:** {action} | **What happened:** {result} | **Rating:** {0-10}
+## Repro
 1. {step}
-
-## Raw output
-```
-{paste the actual error or unexpected output here}
-```
-
 ## What would make this a 10
-{one sentence: what gstack should have done differently}
-
-**Date:** {YYYY-MM-DD} | **Version:** {gstack version} | **Skill:** /{skill}
+{one sentence}
+**Date:** {YYYY-MM-DD} | **Version:** {version} | **Skill:** /{skill}
 ```
-
-Slug: lowercase, hyphens, max 60 chars (e.g. `browse-js-no-await`). Skip if file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell user: "Filed gstack field report: {title}"
+Slug: lowercase hyphens, max 60 chars. Skip if exists. Max 3/session. File inline, don't stop.
 
 ## Completion Status Protocol
 
@@ -327,7 +287,7 @@ ls src/ app/ pages/ components/ 2>/dev/null | head -30
 Look for office-hours output:
 
 ```bash
-source <(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)
+eval "$(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)"
 ls ~/.gstack/projects/$SLUG/*office-hours* 2>/dev/null | head -5
 ls .context/*office-hours* .context/attachments/*office-hours* 2>/dev/null | head -5
 ```
@@ -422,6 +382,71 @@ Summarize conversationally:
 If the user said no research, skip entirely and proceed to Phase 3 using your built-in design knowledge.
 
 ---
+
+## Design Outside Voices (parallel)
+
+Use AskUserQuestion:
+> "Want outside design voices? Codex evaluates against OpenAI's design hard rules + litmus checks; Claude subagent does an independent design direction proposal."
+>
+> A) Yes — run outside design voices
+> B) No — proceed without
+
+If user chooses B, skip this step and continue.
+
+**Check Codex availability:**
+```bash
+which codex 2>/dev/null && echo "CODEX_AVAILABLE" || echo "CODEX_NOT_AVAILABLE"
+```
+
+**If Codex is available**, launch both voices simultaneously:
+
+1. **Codex design voice** (via Bash):
+```bash
+TMPERR_DESIGN=$(mktemp /tmp/codex-design-XXXXXXXX)
+codex exec "Given this product context, propose a complete design direction:
+- Visual thesis: one sentence describing mood, material, and energy
+- Typography: specific font names (not defaults — no Inter/Roboto/Arial/system) + hex colors
+- Color system: CSS variables for background, surface, primary text, muted text, accent
+- Layout: composition-first, not component-first. First viewport as poster, not document
+- Differentiation: 2 deliberate departures from category norms
+- Anti-slop: no purple gradients, no 3-column icon grids, no centered everything, no decorative blobs
+
+Be opinionated. Be specific. Do not hedge. This is YOUR design direction — own it." -s read-only -c 'model_reasoning_effort="medium"' --enable web_search_cached 2>"$TMPERR_DESIGN"
+```
+Use a 5-minute timeout (`timeout: 300000`). After the command completes, read stderr:
+```bash
+cat "$TMPERR_DESIGN" && rm -f "$TMPERR_DESIGN"
+```
+
+2. **Claude design subagent** (via Agent tool):
+Dispatch a subagent with this prompt:
+"Given this product context, propose a design direction that would SURPRISE. What would the cool indie studio do that the enterprise UI team wouldn't?
+- Propose an aesthetic direction, typography stack (specific font names), color palette (hex values)
+- 2 deliberate departures from category norms
+- What emotional reaction should the user have in the first 3 seconds?
+
+Be bold. Be specific. No hedging."
+
+**Error handling (all non-blocking):**
+- **Auth failure:** If stderr contains "auth", "login", "unauthorized", or "API key": "Codex authentication failed. Run `codex login` to authenticate."
+- **Timeout:** "Codex timed out after 5 minutes."
+- **Empty response:** "Codex returned no response."
+- On any Codex error: proceed with Claude subagent output only, tagged `[single-model]`.
+- If Claude subagent also fails: "Outside voices unavailable — continuing with primary review."
+
+Present Codex output under a `CODEX SAYS (design direction):` header.
+Present subagent output under a `CLAUDE SUBAGENT (design direction):` header.
+
+**Synthesis:** Claude main references both Codex and subagent proposals in the Phase 3 proposal. Present:
+- Areas of agreement between all three voices (Claude main + Codex + subagent)
+- Genuine divergences as creative alternatives for the user to choose from
+- "Codex and I agree on X. Codex suggested Y where I'm proposing Z — here's why..."
+
+**Log the result:**
+```bash
+~/.claude/skills/gstack/bin/gstack-review-log '{"skill":"design-outside-voices","timestamp":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","status":"STATUS","source":"SOURCE","commit":"'"$(git rev-parse --short HEAD)"'"}'
+```
+Replace STATUS with "clean" or "issues_found", SOURCE with "codex+subagent", "codex-only", "subagent-only", or "unavailable".
 
 ## Phase 3: The Complete Proposal
 

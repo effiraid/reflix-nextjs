@@ -139,6 +139,25 @@ describe('gen-skill-docs', () => {
     }
   });
 
+  test(`every Codex SKILL.md description stays within ${MAX_SKILL_DESCRIPTION_LENGTH} chars`, () => {
+    const agentsDir = path.join(ROOT, '.agents', 'skills');
+    if (!fs.existsSync(agentsDir)) return; // skip if not generated
+    for (const entry of fs.readdirSync(agentsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const skillMd = path.join(agentsDir, entry.name, 'SKILL.md');
+      if (!fs.existsSync(skillMd)) continue;
+      const content = fs.readFileSync(skillMd, 'utf-8');
+      const description = extractDescription(content);
+      expect(description.length).toBeLessThanOrEqual(MAX_SKILL_DESCRIPTION_LENGTH);
+    }
+  });
+
+  test('package.json version matches VERSION file', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf-8'));
+    const version = fs.readFileSync(path.join(ROOT, 'VERSION'), 'utf-8').trim();
+    expect(pkg.version).toBe(version);
+  });
+
   test('generated files are fresh (match --dry-run)', () => {
     const result = Bun.spawnSync(['bun', 'run', 'scripts/gen-skill-docs.ts', '--dry-run'], {
       cwd: ROOT,
@@ -194,16 +213,35 @@ describe('gen-skill-docs', () => {
     expect(content).toContain('git branch --show-current');
   });
 
-  test('generated SKILL.md contains ELI16 simplification rules', () => {
-    const content = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf-8');
+  test('tier 2+ skills contain ELI16 simplification rules (AskUserQuestion format)', () => {
+    // Root SKILL.md is tier 1 (no AskUserQuestion format). Check a tier 2+ skill instead.
+    const content = fs.readFileSync(path.join(ROOT, 'cso', 'SKILL.md'), 'utf-8');
     expect(content).toContain('No raw function names');
     expect(content).toContain('plain English');
+  });
+
+  test('tier 1 skills do NOT contain AskUserQuestion format', () => {
+    // Use benchmark (tier 1) instead of root — root SKILL.md gets overwritten by Codex test setup
+    const content = fs.readFileSync(path.join(ROOT, 'benchmark', 'SKILL.md'), 'utf-8');
+    expect(content).not.toContain('## AskUserQuestion Format');
+    expect(content).not.toContain('## Completeness Principle');
   });
 
   test('generated SKILL.md contains telemetry line', () => {
     const content = fs.readFileSync(path.join(ROOT, 'SKILL.md'), 'utf-8');
     expect(content).toContain('skill-usage.jsonl');
     expect(content).toContain('~/.gstack/analytics');
+  });
+
+  test('preamble .pending-* glob is zsh-safe (uses find, not shell glob)', () => {
+    for (const skill of ALL_SKILLS) {
+      const content = fs.readFileSync(path.join(ROOT, skill.dir, 'SKILL.md'), 'utf-8');
+      if (!content.includes('.pending-')) continue;
+      // Must NOT have a bare shell glob ".pending-*" outside of find's -name argument
+      expect(content).not.toMatch(/for _PF in [^\n]*\/\.pending-\*/);
+      // Must use find to avoid zsh NOMATCH error on glob expansion
+      expect(content).toContain("find ~/.gstack/analytics -maxdepth 1 -name '.pending-*'");
+    }
   });
 
   test('preamble-using skills have correct skill name in telemetry', () => {
@@ -397,6 +435,20 @@ describe('REVIEW_DASHBOARD resolver', () => {
     const content = fs.readFileSync(path.join(ROOT, 'ship', 'SKILL.md'), 'utf-8');
     expect(content).toContain('reviews.jsonl');
     expect(content).toContain('REVIEW READINESS DASHBOARD');
+  });
+
+  test('dashboard treats review as a valid Eng Review source', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'ship', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('plan-eng-review, review, plan-design-review');
+    expect(content).toContain('`review` (diff-scoped pre-landing review)');
+    expect(content).toContain('`plan-eng-review` (plan-stage architecture review)');
+    expect(content).toContain('from either \\`review\\` or \\`plan-eng-review\\`');
+  });
+
+  test('shared dashboard propagates review source to plan-eng-review', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-eng-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('plan-eng-review, review, plan-design-review');
+    expect(content).toContain('`review` (diff-scoped pre-landing review)');
   });
 
   test('resolver output contains key dashboard elements', () => {
@@ -705,6 +757,50 @@ describe('DESIGN_SKETCH resolver', () => {
   });
 });
 
+// --- {{CODEX_SECOND_OPINION}} resolver tests ---
+
+describe('CODEX_SECOND_OPINION resolver', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'office-hours', 'SKILL.md'), 'utf-8');
+  const codexContent = fs.readFileSync(path.join(ROOT, '.agents', 'skills', 'gstack-office-hours', 'SKILL.md'), 'utf-8');
+
+  test('Phase 3.5 section appears in office-hours SKILL.md', () => {
+    expect(content).toContain('Phase 3.5: Cross-Model Second Opinion');
+  });
+
+  test('contains codex exec invocation', () => {
+    expect(content).toContain('codex exec');
+  });
+
+  test('contains opt-in AskUserQuestion text', () => {
+    expect(content).toContain('second opinion from a different AI model');
+  });
+
+  test('contains cross-model synthesis instructions', () => {
+    expect(content).toMatch(/[Ss]ynthesis/);
+    expect(content).toContain('Where Claude agrees with Codex');
+  });
+
+  test('contains premise revision check', () => {
+    expect(content).toContain('Codex challenged premise');
+  });
+
+  test('contains error handling for auth, timeout, and empty', () => {
+    expect(content).toMatch(/[Aa]uth.*fail/);
+    expect(content).toMatch(/[Tt]imeout/);
+    expect(content).toMatch(/[Ee]mpty response/);
+  });
+
+  test('Codex host variant does NOT contain the Phase 3.5 resolver output', () => {
+    // The resolver returns '' for codex host, so the interactive section is stripped.
+    // Static template references to "Phase 3.5" in prose/conditionals are fine.
+    // Other resolvers (design review lite) may contain CODEX_NOT_AVAILABLE, so we
+    // check for Phase 3.5-specific markers only.
+    expect(codexContent).not.toContain('Phase 3.5: Cross-Model Second Opinion');
+    expect(codexContent).not.toContain('TMPERR_OH');
+    expect(codexContent).not.toContain('gstack-codex-oh-');
+  });
+});
+
 // --- {{BENEFITS_FROM}} resolver tests ---
 
 describe('BENEFITS_FROM resolver', () => {
@@ -729,12 +825,137 @@ describe('BENEFITS_FROM resolver', () => {
     const qaContent = fs.readFileSync(path.join(ROOT, 'qa', 'SKILL.md'), 'utf-8');
     expect(qaContent).not.toContain('Prerequisite Skill Offer');
   });
+
+  test('inline invocation — no "another window" language', () => {
+    expect(ceoContent).not.toContain('another window');
+    expect(engContent).not.toContain('another window');
+  });
+
+  test('inline invocation — read-and-follow path present', () => {
+    expect(ceoContent).toContain('office-hours/SKILL.md');
+    expect(engContent).toContain('office-hours/SKILL.md');
+  });
+});
+
+// --- {{DESIGN_OUTSIDE_VOICES}} resolver tests ---
+
+describe('DESIGN_OUTSIDE_VOICES resolver', () => {
+  test('plan-design-review contains outside voices section', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Design Outside Voices');
+    expect(content).toContain('CODEX_AVAILABLE');
+    expect(content).toContain('LITMUS SCORECARD');
+  });
+
+  test('design-review contains outside voices section', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Design Outside Voices');
+    expect(content).toContain('source audit');
+  });
+
+  test('design-consultation contains outside voices section', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'design-consultation', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Design Outside Voices');
+    expect(content).toContain('design direction');
+  });
+
+  test('branches correctly per skillName — different prompts', () => {
+    const planContent = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    const consultContent = fs.readFileSync(path.join(ROOT, 'design-consultation', 'SKILL.md'), 'utf-8');
+    // plan-design-review uses analytical prompt (high reasoning)
+    expect(planContent).toContain('model_reasoning_effort="high"');
+    // design-consultation uses creative prompt (medium reasoning)
+    expect(consultContent).toContain('model_reasoning_effort="medium"');
+  });
+});
+
+// --- {{DESIGN_HARD_RULES}} resolver tests ---
+
+describe('DESIGN_HARD_RULES resolver', () => {
+  test('plan-design-review Pass 4 contains hard rules', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Design Hard Rules');
+    expect(content).toContain('Classifier');
+    expect(content).toContain('MARKETING/LANDING PAGE');
+    expect(content).toContain('APP UI');
+  });
+
+  test('design-review contains hard rules', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Design Hard Rules');
+  });
+
+  test('includes all 3 rule sets', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Landing page rules');
+    expect(content).toContain('App UI rules');
+    expect(content).toContain('Universal rules');
+  });
+
+  test('references shared AI slop blacklist items', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('3-column feature grid');
+    expect(content).toContain('Purple/violet/indigo');
+  });
+
+  test('includes OpenAI hard rejection criteria', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Generic SaaS card grid');
+    expect(content).toContain('Carousel with no narrative purpose');
+  });
+
+  test('includes OpenAI litmus checks', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'plan-design-review', 'SKILL.md'), 'utf-8');
+    expect(content).toContain('Brand/product unmistakable');
+    expect(content).toContain('premium with all decorative shadows removed');
+  });
+});
+
+// --- Extended DESIGN_SKETCH resolver tests ---
+
+describe('DESIGN_SKETCH extended with outside voices', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'office-hours', 'SKILL.md'), 'utf-8');
+
+  test('contains outside design voices step', () => {
+    expect(content).toContain('Outside design voices');
+  });
+
+  test('offers opt-in via AskUserQuestion', () => {
+    expect(content).toContain('outside design perspectives');
+  });
+
+  test('still contains original wireframe steps', () => {
+    expect(content).toContain('wireframe');
+    expect(content).toContain('$B goto');
+  });
+});
+
+// --- Extended DESIGN_REVIEW_LITE resolver tests ---
+
+describe('DESIGN_REVIEW_LITE extended with Codex', () => {
+  const content = fs.readFileSync(path.join(ROOT, 'ship', 'SKILL.md'), 'utf-8');
+
+  test('contains Codex design voice block', () => {
+    expect(content).toContain('Codex design voice');
+    expect(content).toContain('CODEX (design)');
+  });
+
+  test('still contains original checklist steps', () => {
+    expect(content).toContain('design-checklist.md');
+    expect(content).toContain('SCOPE_FRONTEND');
+  });
+
 });
 
 // ─── Codex Generation Tests ─────────────────────────────────
 
 describe('Codex generation (--host codex)', () => {
   const AGENTS_DIR = path.join(ROOT, '.agents', 'skills');
+
+  // .agents/ is gitignored (v0.11.2.0) — generate on demand for tests
+  Bun.spawnSync(['bun', 'run', 'scripts/gen-skill-docs.ts', '--host', 'codex'], {
+    cwd: ROOT, stdout: 'pipe', stderr: 'pipe',
+  });
 
   // Dynamic discovery of expected Codex skills: all templates except /codex
   const CODEX_SKILLS = (() => {
@@ -757,6 +978,14 @@ describe('Codex generation (--host codex)', () => {
       const skillMd = path.join(AGENTS_DIR, skill.codexName, 'SKILL.md');
       expect(fs.existsSync(skillMd)).toBe(true);
     }
+  });
+
+  test('root gstack bundle has OpenAI metadata for Codex skill browsing', () => {
+    const rootMetadata = path.join(ROOT, 'agents', 'openai.yaml');
+    expect(fs.existsSync(rootMetadata)).toBe(true);
+    const content = fs.readFileSync(rootMetadata, 'utf-8');
+    expect(content).toContain('display_name: "gstack"');
+    expect(content).toContain('Use $gstack to locate the bundled gstack skills.');
   });
 
   test('codexSkillName mapping: root is gstack, others are gstack-{dir}', () => {
@@ -785,6 +1014,17 @@ describe('Codex generation (--host codex)', () => {
       expect(frontmatter).not.toContain('allowed-tools:');
       expect(frontmatter).not.toContain('version:');
       expect(frontmatter).not.toContain('hooks:');
+    }
+  });
+
+  test('all Codex skills have agents/openai.yaml metadata', () => {
+    for (const skill of CODEX_SKILLS) {
+      const metadata = path.join(AGENTS_DIR, skill.codexName, 'agents', 'openai.yaml');
+      expect(fs.existsSync(metadata)).toBe(true);
+      const content = fs.readFileSync(metadata, 'utf-8');
+      expect(content).toContain(`display_name: "${skill.codexName}"`);
+      expect(content).toContain('short_description:');
+      expect(content).toContain('allow_implicit_invocation: true');
     }
   });
 
@@ -986,6 +1226,18 @@ describe('Codex generation (--host codex)', () => {
         expect(content).not.toContain('.agents/skills');
       }
     }
+  });
+
+  // ─── Design outside voices: Codex host guard ─────────────────
+
+  test('codex host produces empty outside voices in design-review', () => {
+    const codexContent = fs.readFileSync(path.join(AGENTS_DIR, 'gstack-design-review', 'SKILL.md'), 'utf-8');
+    expect(codexContent).not.toContain('Design Outside Voices');
+  });
+
+  test('codex host does not include Codex design block in ship', () => {
+    const codexContent = fs.readFileSync(path.join(AGENTS_DIR, 'gstack-ship', 'SKILL.md'), 'utf-8');
+    expect(codexContent).not.toContain('Codex design voice');
   });
 });
 

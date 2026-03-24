@@ -1,7 +1,9 @@
 ---
 name: office-hours
+preamble-tier: 3
 version: 2.0.0
 description: |
+  MANUAL TRIGGER ONLY: invoke only when user types /office-hours.
   YC Office Hours — two modes. Startup mode: six forcing questions that expose
   demand reality, status quo, desperate specificity, narrowest wedge, observation,
   and future-fit. Builder mode: design thinking brainstorming for side projects,
@@ -51,7 +53,8 @@ echo "TELEMETRY: ${_TEL:-off}"
 echo "TEL_PROMPTED: $_TEL_PROMPTED"
 mkdir -p ~/.gstack/analytics
 echo '{"skill":"office-hours","ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'","repo":"'$(basename "$(git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "unknown")'"}'  >> ~/.gstack/analytics/skill-usage.jsonl 2>/dev/null || true
-for _PF in ~/.gstack/analytics/.pending-*; do [ -f "$_PF" ] && ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type skill_run --skill _pending_finalize --outcome unknown --session-id "$_SESSION_ID" 2>/dev/null || true; break; done
+# zsh-compatible: use find instead of glob to avoid NOMATCH error
+for _PF in $(find ~/.gstack/analytics -maxdepth 1 -name '.pending-*' 2>/dev/null); do [ -f "$_PF" ] && ~/.claude/skills/gstack/bin/gstack-telemetry-log --event-type skill_run --skill _pending_finalize --outcome unknown --session-id "$_SESSION_ID" 2>/dev/null || true; break; done
 ```
 
 If `PROACTIVE` is `"false"`, do not proactively suggest gstack skills — only invoke
@@ -118,97 +121,54 @@ Per-skill instructions may add additional formatting rules on top of this baseli
 
 ## Completeness Principle — Boil the Lake
 
-AI-assisted coding makes the marginal cost of completeness near-zero. When you present options:
+AI makes completeness near-free. Always recommend the complete option over shortcuts — the delta is minutes with CC+gstack. A "lake" (100% coverage, all edge cases) is boilable; an "ocean" (full rewrite, multi-quarter migration) is not. Boil lakes, flag oceans.
 
-- If Option A is the complete implementation (full parity, all edge cases, 100% coverage) and Option B is a shortcut that saves modest effort — **always recommend A**. The delta between 80 lines and 150 lines is meaningless with CC+gstack. "Good enough" is the wrong instinct when "complete" costs minutes more.
-- **Lake vs. ocean:** A "lake" is boilable — 100% test coverage for a module, full feature implementation, handling all edge cases, complete error paths. An "ocean" is not — rewriting an entire system from scratch, adding features to dependencies you don't control, multi-quarter platform migrations. Recommend boiling lakes. Flag oceans as out of scope.
-- **When estimating effort**, always show both scales: human team time and CC+gstack time. The compression ratio varies by task type — use this reference:
+**Effort reference** — always show both scales:
 
 | Task type | Human team | CC+gstack | Compression |
 |-----------|-----------|-----------|-------------|
-| Boilerplate / scaffolding | 2 days | 15 min | ~100x |
-| Test writing | 1 day | 15 min | ~50x |
-| Feature implementation | 1 week | 30 min | ~30x |
-| Bug fix + regression test | 4 hours | 15 min | ~20x |
-| Architecture / design | 2 days | 4 hours | ~5x |
-| Research / exploration | 1 day | 3 hours | ~3x |
+| Boilerplate | 2 days | 15 min | ~100x |
+| Tests | 1 day | 15 min | ~50x |
+| Feature | 1 week | 30 min | ~30x |
+| Bug fix | 4 hours | 15 min | ~20x |
 
-- This principle applies to test coverage, error handling, documentation, edge cases, and feature completeness. Don't skip the last 10% to "save time" — with AI, that 10% costs seconds.
+Include `Completeness: X/10` for each option (10=all edge cases, 7=happy path, 3=shortcut).
 
-**Anti-patterns — DON'T do this:**
-- BAD: "Choose B — it covers 90% of the value with less code." (If A is only 70 lines more, choose A.)
-- BAD: "We can skip edge case handling to save time." (Edge case handling costs minutes with CC.)
-- BAD: "Let's defer test coverage to a follow-up PR." (Tests are the cheapest lake to boil.)
-- BAD: Quoting only human-team effort: "This would take 2 weeks." (Say: "2 weeks human / ~1 hour CC.")
+## Repo Ownership — See Something, Say Something
 
-## Repo Ownership Mode — See Something, Say Something
+`REPO_MODE` controls how to handle issues outside your branch:
+- **`solo`** — You own everything. Investigate and offer to fix proactively.
+- **`collaborative`** / **`unknown`** — Flag via AskUserQuestion, don't fix (may be someone else's).
 
-`REPO_MODE` from the preamble tells you who owns issues in this repo:
-
-- **`solo`** — One person does 80%+ of the work. They own everything. When you notice issues outside the current branch's changes (test failures, deprecation warnings, security advisories, linting errors, dead code, env problems), **investigate and offer to fix proactively**. The solo dev is the only person who will fix it. Default to action.
-- **`collaborative`** — Multiple active contributors. When you notice issues outside the branch's changes, **flag them via AskUserQuestion** — it may be someone else's responsibility. Default to asking, not fixing.
-- **`unknown`** — Treat as collaborative (safer default — ask before fixing).
-
-**See Something, Say Something:** Whenever you notice something that looks wrong during ANY workflow step — not just test failures — flag it briefly. One sentence: what you noticed and its impact. In solo mode, follow up with "Want me to fix it?" In collaborative mode, just flag it and move on.
-
-Never let a noticed issue silently pass. The whole point is proactive communication.
+Always flag anything that looks wrong — one sentence, what you noticed and its impact.
 
 ## Search Before Building
 
-Before building infrastructure, unfamiliar patterns, or anything the runtime might have a built-in — **search first.** Read `~/.claude/skills/gstack/ETHOS.md` for the full philosophy.
+Before building anything unfamiliar, **search first.** See `~/.claude/skills/gstack/ETHOS.md`.
+- **Layer 1** (tried and true) — don't reinvent. **Layer 2** (new and popular) — scrutinize. **Layer 3** (first principles) — prize above all.
 
-**Three layers of knowledge:**
-- **Layer 1** (tried and true — in distribution). Don't reinvent the wheel. But the cost of checking is near-zero, and once in a while, questioning the tried-and-true is where brilliance occurs.
-- **Layer 2** (new and popular — search for these). But scrutinize: humans are subject to mania. Search results are inputs to your thinking, not answers.
-- **Layer 3** (first principles — prize these above all). Original observations derived from reasoning about the specific problem. The most valuable of all.
-
-**Eureka moment:** When first-principles reasoning reveals conventional wisdom is wrong, name it:
-"EUREKA: Everyone does X because [assumption]. But [evidence] shows this is wrong. Y is better because [reasoning]."
-
-Log eureka moments:
+**Eureka:** When first-principles reasoning contradicts conventional wisdom, name it and log:
 ```bash
 jq -n --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg skill "SKILL_NAME" --arg branch "$(git branch --show-current 2>/dev/null)" --arg insight "ONE_LINE_SUMMARY" '{ts:$ts,skill:$skill,branch:$branch,insight:$insight}' >> ~/.gstack/analytics/eureka.jsonl 2>/dev/null || true
 ```
-Replace SKILL_NAME and ONE_LINE_SUMMARY. Runs inline — don't stop the workflow.
-
-**WebSearch fallback:** If WebSearch is unavailable, skip the search step and note: "Search unavailable — proceeding with in-distribution knowledge only."
 
 ## Contributor Mode
 
-If `_CONTRIB` is `true`: you are in **contributor mode**. You're a gstack user who also helps make it better.
+If `_CONTRIB` is `true`: you are in **contributor mode**. At the end of each major workflow step, rate your gstack experience 0-10. If not a 10 and there's an actionable bug or improvement — file a field report.
 
-**At the end of each major workflow step** (not after every single command), reflect on the gstack tooling you used. Rate your experience 0 to 10. If it wasn't a 10, think about why. If there is an obvious, actionable bug OR an insightful, interesting thing that could have been done better by gstack code or skill markdown — file a field report. Maybe our contributor will help make us better!
+**File only:** gstack tooling bugs where the input was reasonable but gstack failed. **Skip:** user app bugs, network errors, auth failures on user's site.
 
-**Calibration — this is the bar:** For example, `$B js "await fetch(...)"` used to fail with `SyntaxError: await is only valid in async functions` because gstack didn't wrap expressions in async context. Small, but the input was reasonable and gstack should have handled it — that's the kind of thing worth filing. Things less consequential than this, ignore.
-
-**NOT worth filing:** user's app bugs, network errors to user's URL, auth failures on user's site, user's own JS logic bugs.
-
-**To file:** write `~/.gstack/contributor-logs/{slug}.md` with **all sections below** (do not truncate — include every section through the Date/Version footer):
-
+**To file:** write `~/.gstack/contributor-logs/{slug}.md`:
 ```
 # {Title}
-
-Hey gstack team — ran into this while using /{skill-name}:
-
-**What I was trying to do:** {what the user/agent was attempting}
-**What happened instead:** {what actually happened}
-**My rating:** {0-10} — {one sentence on why it wasn't a 10}
-
-## Steps to reproduce
+**What I tried:** {action} | **What happened:** {result} | **Rating:** {0-10}
+## Repro
 1. {step}
-
-## Raw output
-```
-{paste the actual error or unexpected output here}
-```
-
 ## What would make this a 10
-{one sentence: what gstack should have done differently}
-
-**Date:** {YYYY-MM-DD} | **Version:** {gstack version} | **Skill:** /{skill}
+{one sentence}
+**Date:** {YYYY-MM-DD} | **Version:** {version} | **Skill:** /{skill}
 ```
-
-Slug: lowercase, hyphens, max 60 chars (e.g. `browse-js-no-await`). Skip if file already exists. Max 3 reports per session. File inline and continue — don't stop the workflow. Tell user: "Filed gstack field report: {title}"
+Slug: lowercase hyphens, max 60 chars. Skip if exists. Max 3/session. File inline, don't stop.
 
 ## Completion Status Protocol
 
@@ -331,7 +291,7 @@ You are a **YC office hours partner**. Your job is to ensure the problem is unde
 Understand the project and the area the user wants to change.
 
 ```bash
-source <(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)
+eval "$(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)"
 ```
 
 1. Read `CLAUDE.md`, `TODOS.md` (if they exist).
@@ -626,7 +586,8 @@ Before proposing solutions, challenge the premises:
 1. **Is this the right problem?** Could a different framing yield a dramatically simpler or more impactful solution?
 2. **What happens if we do nothing?** Real pain point or hypothetical one?
 3. **What existing code already partially solves this?** Map existing patterns, utilities, and flows that could be reused.
-4. **Startup mode only:** Synthesize the diagnostic evidence from Phase 2A. Does it support this direction? Where are the gaps?
+4. **If the deliverable is a new artifact** (CLI binary, library, package, container image, mobile app): **how will users get it?** Code without distribution is code nobody can use. The design must include a distribution channel (GitHub Releases, package manager, container registry, app store) and CI/CD pipeline — or explicitly defer it.
+5. **Startup mode only:** Synthesize the diagnostic evidence from Phase 2A. Does it support this direction? Where are the gaps?
 
 Output premises as clear statements the user must agree with before proceeding:
 ```
@@ -637,6 +598,90 @@ PREMISES:
 ```
 
 Use AskUserQuestion to confirm. If the user disagrees with a premise, revise understanding and loop back.
+
+---
+
+## Phase 3.5: Cross-Model Second Opinion (optional)
+
+**Binary check first — no question if unavailable:**
+
+```bash
+which codex 2>/dev/null && echo "CODEX_AVAILABLE" || echo "CODEX_NOT_AVAILABLE"
+```
+
+If `CODEX_NOT_AVAILABLE`: skip Phase 3.5 entirely — no message, no AskUserQuestion. Proceed directly to Phase 4.
+
+If `CODEX_AVAILABLE`: use AskUserQuestion:
+
+> Want a second opinion from a different AI model? Codex will independently review your problem statement, key answers, premises, and any landscape findings from this session. It hasn't seen this conversation — it gets a structured summary. Usually takes 2-5 minutes.
+> A) Yes, get a second opinion
+> B) No, proceed to alternatives
+
+If B: skip Phase 3.5 entirely. Remember that Codex did NOT run (affects design doc, founder signals, and Phase 4 below).
+
+**If A: Run the Codex cold read.**
+
+1. Assemble a structured context block from Phases 1-3:
+   - Mode (Startup or Builder)
+   - Problem statement (from Phase 1)
+   - Key answers from Phase 2A/2B (summarize each Q&A in 1-2 sentences, include verbatim user quotes)
+   - Landscape findings (from Phase 2.75, if search was run)
+   - Agreed premises (from Phase 3)
+   - Codebase context (project name, languages, recent activity)
+
+2. **Write the assembled prompt to a temp file** (prevents shell injection from user-derived content):
+
+```bash
+CODEX_PROMPT_FILE=$(mktemp /tmp/gstack-codex-oh-XXXXXXXX.txt)
+```
+
+Write the full prompt (context block + instructions) to this file. Use the mode-appropriate variant:
+
+**Startup mode instructions:** "You are an independent technical advisor reading a transcript of a startup brainstorming session. [CONTEXT BLOCK HERE]. Your job: 1) What is the STRONGEST version of what this person is trying to build? Steelman it in 2-3 sentences. 2) What is the ONE thing from their answers that reveals the most about what they should actually build? Quote it and explain why. 3) Name ONE agreed premise you think is wrong, and what evidence would prove you right. 4) If you had 48 hours and one engineer to build a prototype, what would you build? Be specific — tech stack, features, what you'd skip. Be direct. Be terse. No preamble."
+
+**Builder mode instructions:** "You are an independent technical advisor reading a transcript of a builder brainstorming session. [CONTEXT BLOCK HERE]. Your job: 1) What is the COOLEST version of this they haven't considered? 2) What's the ONE thing from their answers that reveals what excites them most? Quote it. 3) What existing open source project or tool gets them 50% of the way there — and what's the 50% they'd need to build? 4) If you had a weekend to build this, what would you build first? Be specific. Be direct. No preamble."
+
+3. Run Codex:
+
+```bash
+TMPERR_OH=$(mktemp /tmp/codex-oh-err-XXXXXXXX)
+codex exec "$(cat "$CODEX_PROMPT_FILE")" -s read-only -c 'model_reasoning_effort="xhigh"' --enable web_search_cached 2>"$TMPERR_OH"
+```
+
+Use a 5-minute timeout (`timeout: 300000`). After the command completes, read stderr:
+```bash
+cat "$TMPERR_OH"
+rm -f "$TMPERR_OH" "$CODEX_PROMPT_FILE"
+```
+
+**Error handling:** All errors are non-blocking — Codex second opinion is a quality enhancement, not a prerequisite.
+- **Auth failure:** If stderr contains "auth", "login", "unauthorized", or "API key": "Codex authentication failed. Run \`codex login\` to authenticate. Skipping second opinion."
+- **Timeout:** "Codex timed out after 5 minutes. Skipping second opinion."
+- **Empty response:** "Codex returned no response. Stderr: <paste relevant error>. Skipping second opinion."
+
+On any error, proceed to Phase 4 — do NOT fall back to a Claude subagent (this is brainstorming, not adversarial review).
+
+4. **Presentation:**
+
+```
+SECOND OPINION (Codex):
+════════════════════════════════════════════════════════════
+<full codex output, verbatim — do not truncate or summarize>
+════════════════════════════════════════════════════════════
+```
+
+5. **Cross-model synthesis:** After presenting Codex output, provide 3-5 bullet synthesis:
+   - Where Claude agrees with Codex
+   - Where Claude disagrees and why
+   - Whether Codex's challenged premise changes Claude's recommendation
+
+6. **Premise revision check:** If Codex challenged an agreed premise, use AskUserQuestion:
+
+> Codex challenged premise #{N}: "{premise text}". Their argument: "{reasoning}".
+> A) Revise this premise based on Codex's input
+> B) Keep the original premise — proceed to alternatives
+
+If A: revise the premise and note the revision. If B: proceed (and note that the user defended this premise with reasoning — this is a founder signal if they articulate WHY they disagree, not just dismiss).
 
 ---
 
@@ -666,6 +711,7 @@ Rules:
 - One must be the **"minimal viable"** (fewest files, smallest diff, ships fastest).
 - One must be the **"ideal architecture"** (best long-term trajectory, most elegant).
 - One can be **creative/lateral** (unexpected approach, different framing of the problem).
+- If Codex proposed a prototype in Phase 3.5, consider using it as a starting point for the creative/lateral approach.
 
 **RECOMMENDATION:** Choose [X] because [one-line reason].
 
@@ -731,6 +777,35 @@ Reference the wireframe screenshot in the design doc's "Recommended Approach" se
 The screenshot file at `/tmp/gstack-sketch.png` can be referenced by downstream skills
 (`/plan-design-review`, `/design-review`) to see what was originally envisioned.
 
+**Step 6: Outside design voices** (optional)
+
+After the wireframe is approved, offer outside design perspectives:
+
+```bash
+which codex 2>/dev/null && echo "CODEX_AVAILABLE" || echo "CODEX_NOT_AVAILABLE"
+```
+
+If Codex is available, use AskUserQuestion:
+> "Want outside design perspectives on the chosen approach? Codex proposes a visual thesis, content plan, and interaction ideas. A Claude subagent proposes an alternative aesthetic direction."
+>
+> A) Yes — get outside design voices
+> B) No — proceed without
+
+If user chooses A, launch both voices simultaneously:
+
+1. **Codex** (via Bash, `model_reasoning_effort="medium"`):
+```bash
+TMPERR_SKETCH=$(mktemp /tmp/codex-sketch-XXXXXXXX)
+codex exec "For this product approach, provide: a visual thesis (one sentence — mood, material, energy), a content plan (hero → support → detail → CTA), and 2 interaction ideas that change page feel. Apply beautiful defaults: composition-first, brand-first, cardless, poster not document. Be opinionated." -s read-only -c 'model_reasoning_effort="medium"' --enable web_search_cached 2>"$TMPERR_SKETCH"
+```
+Use a 5-minute timeout (`timeout: 300000`). After completion: `cat "$TMPERR_SKETCH" && rm -f "$TMPERR_SKETCH"`
+
+2. **Claude subagent** (via Agent tool):
+"For this product approach, what design direction would you recommend? What aesthetic, typography, and interaction patterns fit? What would make this approach feel inevitable to the user? Be specific — font names, hex colors, spacing values."
+
+Present Codex output under `CODEX SAYS (design sketch):` and subagent output under `CLAUDE SUBAGENT (design direction):`.
+Error handling: all non-blocking. On failure, skip and continue.
+
 ---
 
 ## Phase 4.5: Founder Signal Synthesis
@@ -745,6 +820,7 @@ Track which of these signals appeared during the session:
 - Has **domain expertise** — knows this space from the inside
 - Showed **taste** — cared about getting the details right
 - Showed **agency** — actually building, not just planning
+- **Defended premise with reasoning** against cross-model challenge (kept original premise when Codex disagreed AND articulated specific reasoning for why — dismissal without reasoning does not count)
 
 Count the signals. You'll use this count in Phase 6 to determine which tier of closing message to use.
 
@@ -755,7 +831,7 @@ Count the signals. You'll use this count in Phase 6 to determine which tier of c
 Write the design document to the project directory.
 
 ```bash
-source <(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null) && mkdir -p ~/.gstack/projects/$SLUG
+eval "$(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)" && mkdir -p ~/.gstack/projects/$SLUG
 USER=$(whoami)
 DATETIME=$(date +%Y%m%d-%H%M%S)
 ```
@@ -798,6 +874,9 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 ## Premises
 {from Phase 3}
 
+## Cross-Model Perspective
+{If Codex ran in Phase 3.5: Codex's independent cold read — steelman, key insight, challenged premise, prototype suggestion. Verbatim or close paraphrase of what Codex said. If Codex did NOT run (skipped or unavailable): omit this section entirely — do not include it.}
+
 ## Approaches Considered
 ### Approach A: {name}
 {from Phase 4}
@@ -812,6 +891,11 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 
 ## Success Criteria
 {measurable criteria from Phase 2A}
+
+## Distribution Plan
+{how users get the deliverable — binary download, package manager, container image, web service, etc.}
+{CI/CD pipeline for building and publishing — GitHub Actions, manual release, auto-deploy on merge?}
+{omit this section if the deliverable is a web service with existing deployment pipeline}
 
 ## Dependencies
 {blockers, prerequisites, related work}
@@ -847,6 +931,9 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 ## Premises
 {from Phase 3}
 
+## Cross-Model Perspective
+{If Codex ran in Phase 3.5: Codex's independent cold read — coolest version, key insight, existing tools, prototype suggestion. Verbatim or close paraphrase of what Codex said. If Codex did NOT run (skipped or unavailable): omit this section entirely — do not include it.}
+
 ## Approaches Considered
 ### Approach A: {name}
 {from Phase 4}
@@ -861,6 +948,10 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 
 ## Success Criteria
 {what "done" looks like}
+
+## Distribution Plan
+{how users get the deliverable — binary download, package manager, container image, web service, etc.}
+{CI/CD pipeline for building and publishing — or "existing deployment pipeline covers this"}
 
 ## Next Steps
 {concrete build tasks — what to implement first, second, third}

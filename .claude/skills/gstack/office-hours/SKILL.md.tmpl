@@ -1,5 +1,6 @@
 ---
 name: office-hours
+preamble-tier: 3
 version: 2.0.0
 description: |
   YC Office Hours — two modes. Startup mode: six forcing questions that expose
@@ -39,7 +40,7 @@ You are a **YC office hours partner**. Your job is to ensure the problem is unde
 Understand the project and the area the user wants to change.
 
 ```bash
-source <(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null)
+{{SLUG_EVAL}}
 ```
 
 1. Read `CLAUDE.md`, `TODOS.md` (if they exist).
@@ -334,7 +335,8 @@ Before proposing solutions, challenge the premises:
 1. **Is this the right problem?** Could a different framing yield a dramatically simpler or more impactful solution?
 2. **What happens if we do nothing?** Real pain point or hypothetical one?
 3. **What existing code already partially solves this?** Map existing patterns, utilities, and flows that could be reused.
-4. **Startup mode only:** Synthesize the diagnostic evidence from Phase 2A. Does it support this direction? Where are the gaps?
+4. **If the deliverable is a new artifact** (CLI binary, library, package, container image, mobile app): **how will users get it?** Code without distribution is code nobody can use. The design must include a distribution channel (GitHub Releases, package manager, container registry, app store) and CI/CD pipeline — or explicitly defer it.
+5. **Startup mode only:** Synthesize the diagnostic evidence from Phase 2A. Does it support this direction? Where are the gaps?
 
 Output premises as clear statements the user must agree with before proceeding:
 ```
@@ -345,6 +347,10 @@ PREMISES:
 ```
 
 Use AskUserQuestion to confirm. If the user disagrees with a premise, revise understanding and loop back.
+
+---
+
+{{CODEX_SECOND_OPINION}}
 
 ---
 
@@ -374,6 +380,7 @@ Rules:
 - One must be the **"minimal viable"** (fewest files, smallest diff, ships fastest).
 - One must be the **"ideal architecture"** (best long-term trajectory, most elegant).
 - One can be **creative/lateral** (unexpected approach, different framing of the problem).
+- If Codex proposed a prototype in Phase 3.5, consider using it as a starting point for the creative/lateral approach.
 
 **RECOMMENDATION:** Choose [X] because [one-line reason].
 
@@ -397,6 +404,7 @@ Track which of these signals appeared during the session:
 - Has **domain expertise** — knows this space from the inside
 - Showed **taste** — cared about getting the details right
 - Showed **agency** — actually building, not just planning
+- **Defended premise with reasoning** against cross-model challenge (kept original premise when Codex disagreed AND articulated specific reasoning for why — dismissal without reasoning does not count)
 
 Count the signals. You'll use this count in Phase 6 to determine which tier of closing message to use.
 
@@ -407,7 +415,7 @@ Count the signals. You'll use this count in Phase 6 to determine which tier of c
 Write the design document to the project directory.
 
 ```bash
-source <(~/.claude/skills/gstack/bin/gstack-slug 2>/dev/null) && mkdir -p ~/.gstack/projects/$SLUG
+{{SLUG_SETUP}}
 USER=$(whoami)
 DATETIME=$(date +%Y%m%d-%H%M%S)
 ```
@@ -450,6 +458,9 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 ## Premises
 {from Phase 3}
 
+## Cross-Model Perspective
+{If Codex ran in Phase 3.5: Codex's independent cold read — steelman, key insight, challenged premise, prototype suggestion. Verbatim or close paraphrase of what Codex said. If Codex did NOT run (skipped or unavailable): omit this section entirely — do not include it.}
+
 ## Approaches Considered
 ### Approach A: {name}
 {from Phase 4}
@@ -464,6 +475,11 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 
 ## Success Criteria
 {measurable criteria from Phase 2A}
+
+## Distribution Plan
+{how users get the deliverable — binary download, package manager, container image, web service, etc.}
+{CI/CD pipeline for building and publishing — GitHub Actions, manual release, auto-deploy on merge?}
+{omit this section if the deliverable is a web service with existing deployment pipeline}
 
 ## Dependencies
 {blockers, prerequisites, related work}
@@ -499,6 +515,9 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 ## Premises
 {from Phase 3}
 
+## Cross-Model Perspective
+{If Codex ran in Phase 3.5: Codex's independent cold read — coolest version, key insight, existing tools, prototype suggestion. Verbatim or close paraphrase of what Codex said. If Codex did NOT run (skipped or unavailable): omit this section entirely — do not include it.}
+
 ## Approaches Considered
 ### Approach A: {name}
 {from Phase 4}
@@ -513,6 +532,10 @@ Supersedes: {prior filename — omit this line if first design on this branch}
 
 ## Success Criteria
 {what "done" looks like}
+
+## Distribution Plan
+{how users get the deliverable — binary download, package manager, container image, web service, etc.}
+{CI/CD pipeline for building and publishing — or "existing deployment pipeline covers this"}
 
 ## Next Steps
 {concrete build tasks — what to implement first, second, third}
