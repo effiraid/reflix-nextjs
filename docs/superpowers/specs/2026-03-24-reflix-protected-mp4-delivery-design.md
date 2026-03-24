@@ -24,6 +24,7 @@
 - production에서는 `videos/*`와 `previews/*`를 private R2에만 둔다.
 - `media.reflix.dev`는 Cloudflare Worker 앞단으로 둔다.
 - Worker는 `videos/*`와 `previews/*` 요청에 대해서만 짧은 수명의 signed session cookie를 검증한 뒤 private R2에서 파일을 읽어 응답한다.
+- Worker는 브라우저 비디오 재생이 깨지지 않도록 `Range` 요청과 `HEAD` 요청을 올바르게 처리한다.
 - `thumbnails/*`는 계속 공개 자산으로 유지한다.
 - 앱은 기존처럼 media URL을 직접 요청한다. 카드별 signer API 호출은 없다.
 - session cookie는 앱 HTML 응답 시점에 Next 쪽에서 심는다.
@@ -105,11 +106,13 @@
 - Worker
   - cookie 없음, 만료, 위조, 잘못된 path, 잘못된 method를 차단하는지 검증
   - 유효한 cookie로 `videos/*`와 `previews/*`를 읽을 수 있는지 검증
+  - `Range` 요청이 정상적으로 부분 응답으로 처리되는지 검증
 
 ## Manual Verification
 
 - 일반 브라우저 세션에서 browse motion preview가 기존처럼 유지되는지 확인
 - 일반 브라우저 세션에서 quick view/detail playback이 유지되는지 확인
+- seek/replay 시 `Range` 기반 재생이 깨지지 않는지 확인
 - cookie 없이 `curl https://media.reflix.dev/previews/<id>.mp4` 요청 시 차단되는지 확인
 - cookie 없이 `curl https://media.reflix.dev/videos/<id>.mp4` 요청 시 차단되는지 확인
 - DevTools에서 복사한 media URL을 새 시크릿 창에서 열었을 때 차단되는지 확인
