@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LOCALES } from "@/lib/constants";
 import type { Locale } from "@/lib/types";
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
         <ThemeProvider>
           {children}
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
