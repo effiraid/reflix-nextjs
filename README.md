@@ -2,13 +2,16 @@
 
 Reflix is a Next.js 16 clip browser backed by Eagle exports. The app keeps clip JSON media paths relative (`/videos/...`, `/previews/...`, `/thumbnails/...`) so the same data works in local dev, Vercel preview, and production hosted-media deployments.
 
+The active publish scope is defined by [`config/release-batch.json`](./config/release-batch.json). Durable publish history is recorded in [`config/published-state.json`](./config/published-state.json). Local and production are considered aligned only when they are generated from the same release batch and history state.
+
 ## Environment
 
 Copy `.env.local.example` to `.env.local` and fill in the pieces you need.
 
 - Local dev and Vercel preview: leave `NEXT_PUBLIC_MEDIA_URL` unset so the app reads media from same-origin static assets.
-- Production: set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.app` after the R2 custom domain is live.
+- Production: set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.dev` after the R2 custom domain is live.
 - R2 upload commands require `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME`.
+- Local Eagle source defaults to `/Users/macbook/Desktop/라이브러리/레퍼런스 - 게임,연출.library`; move to NAS later by changing `EAGLE_LIBRARY_PATH`.
 
 ## Getting Started
 
@@ -28,17 +31,32 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Media Export Workflow
 
-Reflix media is generated locally first, then optionally uploaded to Cloudflare R2.
+Reflix media is generated from the active release batch first, then optionally uploaded to Cloudflare R2.
 
 ```bash
-# Generate local media assets into public/
-npm run export:local
+# Generate the active release batch from config/release-batch.json
+# and remove stale local artifacts outside the batch
+npm run export:batch
 
-# Generate locally, then upload the same assets to R2
-npm run export:r2
+# Preview the active batch without writing files
+npm run export:batch:dry
 
-# Preview work without writing files
-node scripts/export.mjs --dry-run
+# Generate the active batch, prune stale local artifacts,
+# then upload the same assets to R2
+npm run export:batch:r2
+
+# Explicit full-library export (dangerous; requires opt-in)
+npm run export:full
+```
+
+You can still override the active batch when needed:
+
+```bash
+# Export specific clip ids
+node scripts/export.mjs --ids ID1,ID2
+
+# Export a different batch file
+node scripts/export.mjs --batch config/some-other-batch.json
 
 # Preview planned R2 uploads without real credentials
 node scripts/export.mjs --dry-run --r2
@@ -52,10 +70,33 @@ Generated media contract:
 
 The exported JSON continues to reference these assets as relative paths.
 
+## Release Approval Workflow
+
+The release commands and Eagle tags form the operator flow for Phase 2:
+
+1. Run `npm run release:scan` to generate the proposed batch and proposal report for the current active batch under `.tmp/release-approval/<timestamp>/`.
+2. Run `npm run release:review` to generate deterministic metadata-based review hints and mark review-needed Eagle items with `reflix:review-requested`.
+3. Review the items in Eagle, editing names and content tags manually, then tag the chosen items with `reflix:approved`; tag items to exclude with `reflix:hold`.
+4. Run `npm run release:approve` to promote the approved proposal into `config/release-batch.json`.
+5. Run `npm run export:batch:dry` to verify the active batch before export.
+6. Run `npm run export:batch` to materialize the active batch.
+7. If export and verification succeed, run `npm run release:mark-published`.
+8. If export or verification fails, run `npm run release:mark-failed`.
+
+The active batch lives in `config/release-batch.json`, and `config/published-state.json` is the durable history of successful publishes.
+
+Transitional note:
+
+- `config/release-batch.json` remains the active input for export, but it should be updated through `npm run release:scan` and `npm run release:approve`, not by hand.
+- `npm run release:scan` is canary-safe and scans only the current active batch. Use `npm run release:scan:all` only when you intentionally want a full eligible-library proposal.
+- `reflix:review-requested` means Reflix wants a human to inspect the Eagle item before approval; it does not mean the item is already approved.
+- After approval, run `npm run export:batch:dry`, then `npm run export:batch`, then verify browse/detail and the browse search flow (`/browse?q=...`) locally.
+- Only then consider `npm run export:batch:r2` or production deployment.
+
 ## Deployment Notes
 
 - Vercel preview deployments should not set `NEXT_PUBLIC_MEDIA_URL`.
-- Production should set `NEXT_PUBLIC_MEDIA_URL` only after `media.reflix.app` points to the R2 custom domain.
+- Production should set `NEXT_PUBLIC_MEDIA_URL` only after `media.reflix.dev` points to the R2 custom domain.
 - The app derives remote Next Image configuration from `NEXT_PUBLIC_MEDIA_URL`, so preview builds stay same-origin by default.
 
 ## Eagle Thumbnail Ops

@@ -4,10 +4,12 @@
  * Eagle → Reflix Export Pipeline
  *
  * Usage:
- *   node scripts/export.mjs --full              # Full export
- *   node scripts/export.mjs                     # Incremental (default)
+ *   node scripts/export.mjs                     # Active release batch (default)
+ *   node scripts/export.mjs --batch path.json   # Explicit release batch
+ *   node scripts/export.mjs --full --confirm-full-export
  *   node scripts/export.mjs --dry-run           # Preview export changes
  *   node scripts/export.mjs --dry-run --r2      # Preview planned R2 uploads
+ *   node scripts/export.mjs --prune             # Remove stale local artifacts outside the batch
  *   node scripts/export.mjs --ids ID1,ID2       # Specific items
  *   node scripts/export.mjs --limit 5           # First N items
  *   node scripts/export.mjs --local             # Legacy alias; local generation is now default
@@ -20,6 +22,8 @@ import { fileURLToPath } from "node:url";
 
 import { resolveEagleLibraryPath } from "./lib/eagle-library-path.mjs";
 import { readEagleLibrary } from "./lib/eagle-reader.mjs";
+import { prunePublishedArtifacts } from "./lib/published-artifacts.mjs";
+import { loadReleaseBatch, resolveReleaseBatchPath } from "./lib/release-batch.mjs";
 import { generateLQIP, generatePreview, processThumbnail, processVideo } from "./lib/media-processor.mjs";
 import { loadCategoryMap, buildClipIndex, buildFullClip, writeOutputFiles } from "./lib/index-builder.mjs";
 import { uploadBatch } from "./lib/r2-uploader.mjs";
@@ -33,15 +37,25 @@ export { resolveEagleLibraryPath };
 
 export function parseFlags(args) {
   const idsIdx = args.indexOf("--ids");
+  const batchIdx = args.indexOf("--batch");
   const limitIdx = args.indexOf("--limit");
   const parsedLimit = limitIdx !== -1 && args[limitIdx + 1] ? Number.parseInt(args[limitIdx + 1], 10) : null;
 
   return {
     full: args.includes("--full"),
+    confirmFullExport: args.includes("--confirm-full-export"),
     dryRun: args.includes("--dry-run"),
+    prune: args.includes("--prune"),
     local: args.includes("--local"),
     r2: args.includes("--r2"),
-    ids: idsIdx !== -1 && args[idsIdx + 1] ? args[idsIdx + 1].split(",") : null,
+    batchPath: batchIdx !== -1 && args[batchIdx + 1] ? args[batchIdx + 1] : null,
+    ids:
+      idsIdx !== -1 && args[idsIdx + 1]
+        ? args[idsIdx + 1]
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        : null,
     limit: Number.isNaN(parsedLimit) ? null : parsedLimit,
   };
 }
@@ -71,11 +85,54 @@ function ensureMediaDirectories(mediaRoot) {
   fs.mkdirSync(path.join(mediaRoot, "thumbnails"), { recursive: true });
 }
 
-function readItems(flags, eagleLibraryPath) {
+function readItems(flags, eagleLibraryPath, requestedIds = null) {
   return readEagleLibrary(eagleLibraryPath, {
-    ids: flags.ids,
+    ids: requestedIds,
     limit: flags.limit,
   });
+}
+
+export function resolveRequestedClipIds(
+  flags,
+  { projectRoot = DEFAULT_PROJECT_ROOT, loadBatch = loadReleaseBatch } = {}
+) {
+  if (flags.ids?.length) {
+    return {
+      ids: flags.ids,
+      source: "ids",
+      label: `--ids override (${flags.ids.length} ids)`,
+      batchName: null,
+      batchPath: null,
+    };
+  }
+
+  if (flags.full) {
+    if (!flags.confirmFullExport) {
+      throw new Error("Full export requires --confirm-full-export");
+    }
+
+    return {
+      ids: null,
+      source: "full",
+      label: "full library",
+      batchName: null,
+      batchPath: null,
+    };
+  }
+
+  const explicitBatchPath = flags.batchPath?.trim() || null;
+  const configuredBatchPath =
+    explicitBatchPath || resolveReleaseBatchPath({ projectRoot });
+  const batch = loadBatch(configuredBatchPath);
+  const displayBatchPath = explicitBatchPath || "config/release-batch.json";
+
+  return {
+    ids: batch.ids,
+    source: "batch",
+    label: `${displayBatchPath} (${batch.ids.length} ids)`,
+    batchName: batch.name,
+    batchPath: batch.path,
+  };
 }
 
 function logDryRunItems(items) {
@@ -176,6 +233,11 @@ export async function runExport(
     console.log("ℹ️  --local is retained for compatibility; local media generation is now the default.");
   }
 
+  const requestedClipIds = resolveRequestedClipIds(flags, {
+    projectRoot,
+  });
+  console.log(`🧾 Batch source: ${requestedClipIds.label}`);
+
   const categoriesPath = path.join(projectRoot, "src", "data", "categories.json");
   if (fs.existsSync(categoriesPath)) {
     loadCategoryMap(categoriesPath);
@@ -185,17 +247,28 @@ export async function runExport(
   }
 
   console.log("\n🔍 Reading Eagle library...");
-  const items = readItems(flags, eagleLibraryPath);
+  const items = readItems(flags, eagleLibraryPath, requestedClipIds.ids);
   console.log(`   Found ${items.length} items`);
 
   if (flags.dryRun) {
     logDryRunItems(items);
     const uploadSummary = flags.r2 ? await logDryRunUploads(items, projectRoot) : null;
+    const pruneSummary = flags.prune
+      ? await prunePublishedArtifacts({
+          keepIds: items.map((item) => item.id),
+          projectRoot,
+          dryRun: true,
+        })
+      : null;
+    if (pruneSummary) {
+      console.log(`\n🧹 Planned stale local removals: ${pruneSummary.planned}`);
+    }
     console.log(`\nTotal: ${items.length} items would be processed`);
     return {
       dryRun: true,
       items: items.length,
       uploadSummary,
+      pruneSummary,
     };
   }
 
@@ -214,11 +287,10 @@ export async function runExport(
     thumbnails: 0,
   };
   let processed = 0;
-  let failed = 0;
 
   for (const item of items) {
     try {
-      console.log(`\n[${processed + failed + 1}/${items.length}] ${item.id} — ${item.name}`);
+      console.log(`\n[${processed + generationSummary.failed + 1}/${items.length}] ${item.id} — ${item.name}`);
 
       console.log("  → Generating LQIP...");
       const lqipBase64 = await generateLQIP(item._mediaPath);
@@ -235,7 +307,6 @@ export async function runExport(
     } catch (error) {
       console.error(`  ❌ FAILED: ${error.message}`);
       generationSummary.failed += 1;
-      failed += 1;
     }
   }
 
@@ -248,6 +319,18 @@ export async function runExport(
   console.log("\n💾 Writing output files...");
   writeOutputFiles(clips, clipIndexEntries, projectRoot);
 
+  let pruneSummary = null;
+  if (flags.prune) {
+    if (generationSummary.failed > 0) {
+      console.warn("\n⚠️  Skipping prune because some items failed during export.");
+    } else {
+      pruneSummary = await prunePublishedArtifacts({
+        keepIds: clipIds,
+        projectRoot,
+      });
+    }
+  }
+
   let uploadSummary = null;
   if (flags.r2) {
     console.log("\n☁️ Uploading generated media to R2...");
@@ -258,11 +341,14 @@ export async function runExport(
 
   console.log("\n✅ Export complete!");
   console.log(`   Processed items: ${processed}`);
-  console.log(`   Item failures: ${failed}`);
+  console.log(`   Item failures: ${generationSummary.failed}`);
   console.log(
     `   Generated files: ${generationSummary.generated} (${generationSummary.videos} videos, ${generationSummary.previews} previews, ${generationSummary.thumbnails} thumbnails)`
   );
   console.log(`   Local skipped: ${generationSummary.skipped}`);
+  if (pruneSummary) {
+    console.log(`   Stale local files removed: ${pruneSummary.removed}`);
+  }
   if (uploadSummary) {
     console.log(`   Uploaded: ${uploadSummary.uploaded}`);
     console.log(`   Upload failed: ${uploadSummary.failed}`);
@@ -273,8 +359,9 @@ export async function runExport(
 
   return {
     processed,
-    failed,
+    failed: generationSummary.failed,
     generationSummary,
+    pruneSummary,
     uploadSummary,
   };
 }

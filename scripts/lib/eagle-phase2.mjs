@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { writeMetadataWithBackup } from "./eagle-metadata.mjs";
 import { readEagleLibrary } from "./eagle-reader.mjs";
 
 const DEFAULT_USAGE = `Usage:
@@ -780,48 +781,6 @@ function createNameReviewArtifact({ libraryPath, entries, targetCount, outputDir
   };
 }
 
-function writeMetadataWithBackup(entry, mutation, backupDir) {
-  const originalRaw = fs.readFileSync(entry.metadataPath, "utf8");
-  const originalMetadata = JSON.parse(originalRaw);
-  const absoluteBackupDir = path.isAbsolute(backupDir)
-    ? backupDir
-    : resolveProjectPath(backupDir);
-  const backupPath = path.join(absoluteBackupDir, `${entry.id}-metadata.json`);
-  const nextMetadata = {
-    ...originalMetadata,
-    name: mutation.name,
-    tags: mutation.tags,
-    folders: mutation.folders,
-  };
-  const tempMetadataPath = `${entry.metadataPath}.tmp`;
-  const restoreMetadataPath = `${entry.metadataPath}.restore`;
-
-  fs.mkdirSync(absoluteBackupDir, { recursive: true });
-  fs.writeFileSync(backupPath, originalRaw);
-
-  try {
-    fs.writeFileSync(tempMetadataPath, JSON.stringify(nextMetadata, null, 2));
-    fs.renameSync(tempMetadataPath, entry.metadataPath);
-  } catch (error) {
-    try {
-      fs.rmSync(tempMetadataPath, { force: true });
-      fs.writeFileSync(restoreMetadataPath, originalRaw);
-      fs.renameSync(restoreMetadataPath, entry.metadataPath);
-    } catch (restoreError) {
-      error.message = `${error.message}; restore failed: ${restoreError.message}`;
-    } finally {
-      fs.rmSync(restoreMetadataPath, { force: true });
-    }
-
-    throw error;
-  }
-
-  return {
-    backupPath,
-    metadataPath: entry.metadataPath,
-  };
-}
-
 function writeApplyReport(outputPath, report) {
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   const tempPath = `${outputPath}.tmp`;
@@ -1184,7 +1143,15 @@ export function runPhase2Apply(parsed) {
     const mutation = buildApplyMutation(targetItem, reviewData, rulesConfig);
 
     try {
-      writeMetadataWithBackup(targetItem, mutation, parsed.artifacts.backupDir);
+      writeMetadataWithBackup(
+        targetItem,
+        {
+          name: mutation.name,
+          tags: mutation.tags,
+          folders: mutation.folders,
+        },
+        parsed.artifacts.backupDir
+      );
     } catch (error) {
       entries.push({
         id: targetItem.id,

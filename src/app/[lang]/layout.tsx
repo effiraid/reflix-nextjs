@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LOCALES } from "@/lib/constants";
 import type { Locale } from "@/lib/types";
@@ -48,6 +49,7 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
           {children}
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>

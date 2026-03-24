@@ -128,6 +128,6 @@ describe("Navbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Search mock" }));
 
-    expect(push).toHaveBeenCalledWith("/ko/search?q=search");
+    expect(push).toHaveBeenCalledWith("/ko/browse?q=search");
   });
 });

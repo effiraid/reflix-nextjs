@@ -67,8 +67,8 @@ export function Navbar({ lang, dict }: NavbarProps) {
     }
 
     const nextPath = params.toString()
-      ? `/${lang}/search?${params.toString()}`
-      : `/${lang}/search`;
+      ? `/${lang}/browse?${params.toString()}`
+      : `/${lang}/browse`;
     router.push(nextPath);
   }
 

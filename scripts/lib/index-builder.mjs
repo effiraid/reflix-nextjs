@@ -17,6 +17,17 @@ export function buildCategoryTree() {
  * Get category slug for a given folder ID.
  */
 const FOLDER_TO_CATEGORY = {};
+const REFLIX_TAG_PREFIX = "reflix:";
+
+function toPublicTags(tags) {
+  if (!Array.isArray(tags)) {
+    return [];
+  }
+
+  return tags.filter(
+    (tag) => typeof tag === "string" && !tag.startsWith(REFLIX_TAG_PREFIX)
+  );
+}
 
 export function loadCategoryMap(categoriesPath) {
   const data = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
@@ -45,7 +56,7 @@ export function buildClipIndex(meta, lqipBase64) {
   return {
     id: meta.id,
     name: meta.name,
-    tags: meta.tags || [],
+    tags: toPublicTags(meta.tags),
     folders: meta.folders || [],
     star: meta.star || 0,
     category: getCategoryForFolders(meta.folders || []),
@@ -75,7 +86,7 @@ export function buildFullClip(meta, lqipBase64) {
     width: meta.width || 640,
     height: meta.height || 360,
     duration: meta.duration || 0,
-    tags: meta.tags || [],
+    tags: toPublicTags(meta.tags),
     folders: meta.folders || [],
     star: meta.star || 0,
     annotation: meta.annotation || "",
