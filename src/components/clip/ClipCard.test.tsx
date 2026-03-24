@@ -4,18 +4,22 @@ import { ClipCard } from "./ClipCard";
 import type { ClipIndex } from "@/lib/types";
 
 const setSelectedClipIdMock = vi.fn();
-const { getMediaUrlMock, clipStoreState } = vi.hoisted(() => ({
+const { getMediaUrlMock, clipStoreState, intersectionState } = vi.hoisted(() => ({
   getMediaUrlMock: vi.fn((path: string) => path),
   clipStoreState: {
     selectedClipId: null as string | null,
+  },
+  intersectionState: {
+    stage: "thumbnail" as "lqip" | "thumbnail" | "webp",
+    isInView: false,
   },
 }));
 
 vi.mock("@/hooks/useIntersectionLoader", () => ({
   useIntersectionLoader: () => ({
     ref: { current: null },
-    stage: "thumbnail" as const,
-    isInView: false,
+    stage: intersectionState.stage,
+    isInView: intersectionState.isInView,
   }),
 }));
 
@@ -48,6 +52,8 @@ const clip: ClipIndex = {
 describe("ClipCard", () => {
   beforeEach(() => {
     clipStoreState.selectedClipId = null;
+    intersectionState.stage = "thumbnail";
+    intersectionState.isInView = false;
     setSelectedClipIdMock.mockReset();
     getMediaUrlMock.mockClear();
     getMediaUrlMock.mockImplementation((path: string) => path);
@@ -71,6 +77,20 @@ describe("ClipCard", () => {
     expect(overlay?.className).toContain("bg-gradient-to-t");
     expect(overlay?.className).not.toContain("opacity-0");
     expect(overlay?.className).not.toContain("hover:opacity-100");
+  });
+
+  it("applies the requested opacity to the clip text row", () => {
+    const props = {
+      clip,
+      infoOpacity: 0.2,
+    } as unknown as Parameters<typeof ClipCard>[0];
+
+    render(<ClipCard {...props} />);
+
+    const infoRow = screen.getByText(clip.name).closest("div");
+
+    expect(infoRow).not.toBeNull();
+    expect(infoRow).toHaveStyle({ opacity: "0.2" });
   });
 
   it("resolves the thumbnail path through the shared media URL helper", () => {
@@ -100,5 +120,45 @@ describe("ClipCard", () => {
 
     expect(setSelectedClipIdMock).not.toHaveBeenCalled();
     expect(onOpenQuickView).toHaveBeenCalledWith(clip.id);
+  });
+
+  it("only plays the preview on hover when hover playback is enabled", () => {
+    intersectionState.stage = "webp";
+    intersectionState.isInView = true;
+
+    const { container } = render(<ClipCard clip={clip} previewOnHover />);
+    const card = container.firstElementChild as HTMLElement;
+
+    expect(container.querySelector("video")).not.toBeInTheDocument();
+
+    fireEvent.mouseEnter(card);
+
+    expect(container.querySelector("video")).toBeInTheDocument();
+
+    fireEvent.mouseLeave(card);
+
+    expect(container.querySelector("video")).not.toBeInTheDocument();
+  });
+
+  it("drops the preview video overlay after a preview load error", () => {
+    intersectionState.stage = "webp";
+    intersectionState.isInView = true;
+
+    const { container } = render(<ClipCard clip={clip} />);
+    const preview = container.querySelector("video");
+
+    expect(preview).not.toBeNull();
+
+    fireEvent.error(preview!);
+
+    expect(container.querySelector("video")).not.toBeInTheDocument();
+    expect(screen.getByAltText(clip.name)).toBeInTheDocument();
+  });
+
+  it("hides the clip info overlay when text display is disabled", () => {
+    render(<ClipCard clip={clip} showInfo={false} />);
+
+    expect(screen.queryByText(clip.name)).not.toBeInTheDocument();
+    expect(screen.queryByText("8.6s")).not.toBeInTheDocument();
   });
 });

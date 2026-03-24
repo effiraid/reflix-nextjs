@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
@@ -23,6 +24,7 @@ export function RightPanelInspector({
   const title = clip.i18n.title[lang] || clip.name;
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const mediaKindKey = getClipMediaKind(clip.ext);
   const mediaKind =
     mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
@@ -35,13 +37,17 @@ export function RightPanelInspector({
   const hasLink = Boolean(clip.url);
   const hasMemo = Boolean(clip.annotation);
 
+  useEffect(() => {
+    setPreviewFailed(false);
+  }, [previewUrl]);
+
   return (
     <div className="space-y-5 p-4 text-sm text-foreground">
       <div className="relative h-48 overflow-hidden rounded-2xl border border-border bg-surface/60">
         <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
           {mediaKind}
         </div>
-        {mediaKindKey === "video" ? (
+        {mediaKindKey === "video" && !previewFailed ? (
           <video
             src={previewUrl}
             poster={thumbnailUrl}
@@ -50,6 +56,7 @@ export function RightPanelInspector({
             playsInline
             autoPlay
             className="h-full w-full object-cover"
+            onError={() => setPreviewFailed(true)}
           />
         ) : (
           <Image

@@ -1,0 +1,13 @@
+name = "reflix-media-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-03-24"
+workers_dev = false
+
+[[routes]]
+pattern = "media.reflix.dev"
+custom_domain = true
+
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "reflix-media"
+preview_bucket_name = "reflix-media"

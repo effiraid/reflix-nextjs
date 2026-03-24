@@ -9,6 +9,7 @@ interface VideoPlayerProps {
   duration: number;
   compact?: boolean;
   playbackToggleCount?: number;
+  autoPlayMuted?: boolean;
 }
 
 const PLAYBACK_SPEEDS = [0.5, 1, 1.5, 2];
@@ -29,12 +30,14 @@ export function VideoPlayer({
   duration,
   compact = false,
   playbackToggleCount = 0,
+  autoPlayMuted = false,
 }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const previousPlaybackToggleCount = useRef(playbackToggleCount);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
   const resolvedVideoUrl = getMediaUrl(videoUrl);
   const resolvedThumbnailUrl = getMediaUrl(thumbnailUrl);
   const totalDuration = Math.max(0, duration);
@@ -42,7 +45,7 @@ export function VideoPlayer({
 
   const togglePlayback = useCallback(async () => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || hasPlaybackError) return;
 
     if (video.paused) {
       setIsPlaying(true);
@@ -57,7 +60,7 @@ export function VideoPlayer({
 
     video.pause();
     setIsPlaying(false);
-  }, []);
+  }, [hasPlaybackError]);
 
   const handleSeek = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -83,6 +86,10 @@ export function VideoPlayer({
   }, []);
 
   const cyclePlaybackRate = useCallback(() => {
+    if (hasPlaybackError) {
+      return;
+    }
+
     const video = videoRef.current;
     const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackRate);
     const nextRate = PLAYBACK_SPEEDS[(currentIndex + 1) % PLAYBACK_SPEEDS.length];
@@ -90,7 +97,17 @@ export function VideoPlayer({
     if (video) {
       video.playbackRate = nextRate;
     }
-  }, [playbackRate]);
+  }, [hasPlaybackError, playbackRate]);
+
+  const handlePlaybackError = useCallback(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.pause();
+    }
+
+    setIsPlaying(false);
+    setHasPlaybackError(true);
+  }, []);
 
   useEffect(() => {
     if (playbackToggleCount === previousPlaybackToggleCount.current) {
@@ -103,7 +120,42 @@ export function VideoPlayer({
     });
   }, [playbackToggleCount, togglePlayback]);
 
-  const toggleLabel = isPlaying ? "Pause video" : "Play video";
+  useEffect(() => {
+    setHasPlaybackError(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }, [resolvedVideoUrl]);
+
+  useEffect(() => {
+    if (!autoPlayMuted) {
+      return;
+    }
+
+    if (hasPlaybackError) {
+      return;
+    }
+
+    const video = videoRef.current;
+    if (!video) {
+      return;
+    }
+
+    video.muted = true;
+    setIsPlaying(true);
+
+    const playAttempt = video.play();
+    if (playAttempt && typeof playAttempt.catch === "function") {
+      playAttempt.catch(() => {
+        setIsPlaying(false);
+      });
+    }
+  }, [autoPlayMuted, hasPlaybackError, resolvedVideoUrl]);
+
+  const toggleLabel = hasPlaybackError
+    ? "Video unavailable"
+    : isPlaying
+      ? "Pause video"
+      : "Play video";
 
   return (
     <div className="space-y-3">
@@ -112,7 +164,7 @@ export function VideoPlayer({
         onContextMenu={(event) => event.preventDefault()}
       >
         <div
-          className="absolute inset-0 z-10 cursor-pointer"
+          className={`absolute inset-0 z-10 ${hasPlaybackError ? "cursor-default" : "cursor-pointer"}`}
           onClick={() => {
             void togglePlayback();
           }}
@@ -123,7 +175,7 @@ export function VideoPlayer({
           src={resolvedVideoUrl}
           poster={resolvedThumbnailUrl}
           loop
-          muted={compact}
+          muted={compact || autoPlayMuted}
           playsInline
           controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture
@@ -133,6 +185,7 @@ export function VideoPlayer({
           onContextMenu={(event) => event.preventDefault()}
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
+          onError={handlePlaybackError}
           className="aspect-video w-full object-cover"
         />
       </div>
@@ -140,13 +193,14 @@ export function VideoPlayer({
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium hover:bg-surface/80"
+          className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium hover:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => {
             void togglePlayback();
           }}
           aria-label={toggleLabel}
+          disabled={hasPlaybackError}
         >
-          {isPlaying ? "Pause" : "Play"}
+          {hasPlaybackError ? "Unavailable" : isPlaying ? "Pause" : "Play"}
         </button>
 
         <div
@@ -167,9 +221,10 @@ export function VideoPlayer({
         {!compact && (
           <button
             type="button"
-            className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium hover:bg-surface/80"
+            className="rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium hover:bg-surface/80 disabled:cursor-not-allowed disabled:opacity-60"
             onClick={cyclePlaybackRate}
             aria-label="Speed"
+            disabled={hasPlaybackError}
           >
             {playbackRate}x
           </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
@@ -10,20 +10,33 @@ import type { ClipIndex } from "@/lib/types";
 interface ClipCardProps {
   clip: ClipIndex;
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
+  previewOnHover?: boolean;
+  showInfo?: boolean;
+  infoOpacity?: number;
   onOpenQuickView?: (clipId: string) => void;
 }
 
 export function ClipCard({
   clip,
   enablePreview = true,
+  previewOnHover = false,
+  showInfo = true,
+  infoOpacity = 1,
   onOpenQuickView,
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
   const { selectedClipId, setSelectedClipId } = useClipStore();
   const isSelected = selectedClipId === clip.id;
+  const [isHovered, setIsHovered] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
 
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
+  const clampedInfoOpacity = Math.min(1, Math.max(0, infoOpacity));
+
+  useEffect(() => {
+    setPreviewFailed(false);
+  }, [previewUrl]);
 
   const handleClick = useCallback(() => {
     if (isSelected) {
@@ -39,7 +52,12 @@ export function ClipCard({
     onOpenQuickView?.(clip.id);
   }, [clip.id, onOpenQuickView, setSelectedClipId]);
 
-  const showPreview = enablePreview && stage === "webp" && isInView;
+  const showPreview =
+    enablePreview &&
+    stage === "webp" &&
+    isInView &&
+    (!previewOnHover || isHovered) &&
+    !previewFailed;
 
   return (
     <div
@@ -50,6 +68,8 @@ export function ClipCard({
       style={{ aspectRatio: `${clip.width}/${clip.height}` }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Stage 1: LQIP blur placeholder */}
       {clip.lqipBase64 && (
@@ -75,7 +95,7 @@ export function ClipCard({
         />
       )}
 
-      {/* Stage 3: Short MP4 loop preview — only when the grid is zoomed in to 1-3 columns */}
+      {/* Stage 3: Short MP4 loop preview — immediate when zoomed in, hover-triggered when zoomed out */}
       {showPreview && (
         <video
           src={previewUrl}
@@ -85,16 +105,21 @@ export function ClipCard({
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
           onContextMenu={(e) => e.preventDefault()}
+          onError={() => setPreviewFailed(true)}
         />
       )}
 
-      {/* Always-visible overlay with clip info */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-        <div className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white">
-          <span className="truncate">{clip.name}</span>
-          <span>{clip.duration.toFixed(1)}s</span>
+      {showInfo && (
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+          <div
+            className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white"
+            style={{ opacity: clampedInfoOpacity }}
+          >
+            <span className="truncate">{clip.name}</span>
+            <span>{clip.duration.toFixed(1)}s</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

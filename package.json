@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/prepare-protected-public-build.mjs && next build",
     "start": "next start",
     "lint": "eslint",
+    "worker:media:dev": "wrangler dev --config workers/media-gateway/wrangler.toml",
+    "worker:media:deploy": "wrangler deploy --config workers/media-gateway/wrangler.toml",
     "export:batch": "node scripts/export.mjs --prune",
     "export:batch:dry": "node scripts/export.mjs --dry-run",
     "export:batch:r2": "node scripts/export.mjs --prune --r2",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1015.0",
+    "@cloudflare/workers-types": "^4.20260317.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -48,6 +51,7 @@
     "server-only": "^0.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.0",
+    "wrangler": "^4.77.0"
   }
 }

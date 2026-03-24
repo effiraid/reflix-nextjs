@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { RightPanelInspector } from "./RightPanelInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip } from "@/lib/types";
@@ -160,5 +160,25 @@ describe("RightPanelInspector", () => {
     expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
     expect(screen.queryByText("PNG")).not.toBeInTheDocument();
     expect(getMediaUrlMock).toHaveBeenCalledWith("/thumbs/clip-1.png");
+  });
+
+  it("falls back to the inspector thumbnail when the preview video errors", () => {
+    const { container } = render(
+      <RightPanelInspector
+        clip={clip}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const preview = container.querySelector("video");
+
+    expect(preview).not.toBeNull();
+
+    fireEvent.error(preview!);
+
+    expect(container.querySelector("video")).toBeNull();
+    expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
   });
 });

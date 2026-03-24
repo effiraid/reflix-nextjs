@@ -9,7 +9,9 @@ The active publish scope is defined by [`config/release-batch.json`](./config/re
 Copy `.env.local.example` to `.env.local` and fill in the pieces you need.
 
 - Local dev and Vercel preview: leave `NEXT_PUBLIC_MEDIA_URL` unset so the app reads media from same-origin static assets.
-- Production: set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.dev` after the R2 custom domain is live.
+- Production: set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.dev` after the `media.reflix.dev` Worker route is live.
+- Production protected media also requires `MEDIA_SESSION_SECRET`, `MEDIA_SESSION_COOKIE_DOMAIN=.reflix.dev`, and optionally `MEDIA_SESSION_TTL_SECONDS` (default `21600`).
+- Set `PROTECT_MP4_PUBLIC_ASSETS=true` only for production app builds that should prune same-origin `public/videos` and `public/previews`.
 - R2 upload commands require `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME`.
 - Local Eagle source defaults to `/Users/macbook/Desktop/라이브러리/레퍼런스 - 게임,연출.library`; move to NAS later by changing `EAGLE_LIBRARY_PATH`.
 
@@ -96,7 +98,11 @@ Transitional note:
 ## Deployment Notes
 
 - Vercel preview deployments should not set `NEXT_PUBLIC_MEDIA_URL`.
-- Production should set `NEXT_PUBLIC_MEDIA_URL` only after `media.reflix.dev` points to the R2 custom domain.
+- Vercel preview deployments should not set `PROTECT_MP4_PUBLIC_ASSETS`.
+- Production should set `NEXT_PUBLIC_MEDIA_URL=https://media.reflix.dev`.
+- Production should set `PROTECT_MP4_PUBLIC_ASSETS=true` only after the Cloudflare Worker on `media.reflix.dev` is deployed and `MEDIA_SESSION_SECRET` matches the app secret.
+- Protected production builds intentionally prune `public/videos` and `public/previews` before `next build`; `thumbnails` and JSON stay public.
+- The app issues a media session cookie from `src/proxy.ts`, and the Worker gates only `videos/*` plus `previews/*`.
 - The app derives remote Next Image configuration from `NEXT_PUBLIC_MEDIA_URL`, so preview builds stay same-origin by default.
 
 ## Eagle Thumbnail Ops

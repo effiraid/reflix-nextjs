@@ -1,7 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LOCALES, DEFAULT_LOCALE } from "@/lib/constants";
+import {
+  getMediaSessionConfig,
+  MEDIA_SESSION_COOKIE_NAME,
+  signMediaSessionToken,
+} from "@/lib/mediaSession";
 
-export function proxy(request: NextRequest) {
+async function withMediaSession(
+  request: NextRequest,
+  response: NextResponse
+): Promise<NextResponse> {
+  const config = getMediaSessionConfig(process.env);
+  if (!config.enabled) {
+    return response;
+  }
+
+  const now = Date.now();
+  const token = await signMediaSessionToken(
+    {
+      v: 1,
+      host: request.nextUrl.hostname,
+      exp: now + config.ttlSeconds * 1000,
+    },
+    config.secret
+  );
+
+  response.cookies.set({
+    name: MEDIA_SESSION_COOKIE_NAME,
+    value: token,
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    domain: config.domain,
+    path: "/",
+    maxAge: config.ttlSeconds,
+  });
+
+  return response;
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip internal paths and static files
@@ -19,17 +57,22 @@ export function proxy(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
-  if (pathnameHasLocale) return NextResponse.next();
+  if (pathnameHasLocale) {
+    return withMediaSession(request, NextResponse.next());
+  }
 
   // Detect preferred locale from Accept-Language header
   const acceptLanguage = request.headers.get("accept-language") ?? "";
   const preferred = acceptLanguage.includes("ko") ? "ko" : DEFAULT_LOCALE;
 
   // Redirect to locale-prefixed path
-  return NextResponse.redirect(
-    new URL(
-      `/${preferred}${pathname === "/" ? "" : pathname}`,
-      request.url
+  return withMediaSession(
+    request,
+    NextResponse.redirect(
+      new URL(
+        `/${preferred}${pathname === "/" ? "" : pathname}`,
+        request.url
+      )
     )
   );
 }

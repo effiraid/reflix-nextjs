@@ -1,6 +1,6 @@
 # Reflix 미디어 전략
 
-> 최종 업데이트: 2026-03-23
+> 최종 업데이트: 2026-03-25
 
 ## 3단계 로딩 파이프라인
 
@@ -76,6 +76,14 @@ reflix-media/
 └── previews/{id}.mp4        (MP4 루프, 평균 ~70KB)
 # LQIP는 R2에 저장 안 함 — index.json에 base64로 인라인
 ```
+
+## Production 전달 정책
+
+- `preview mp4`는 browse 성능 때문에 계속 유지한다.
+- production의 `videos/*`와 `previews/*`는 private R2 + `media.reflix.dev` Worker를 통해서만 서빙한다.
+- 앱은 `src/proxy.ts`에서 짧은 수명의 media session cookie를 발급한다.
+- `thumbnails/*`와 clip JSON은 계속 공개 자산으로 남긴다.
+- 보호가 실패하면 browse/inspector는 정적 썸네일로, full player는 poster만 남기고 재생은 막는다.
 
 ## 용량 프로젝션
 

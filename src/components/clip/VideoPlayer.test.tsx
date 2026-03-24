@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoPlayer } from "./VideoPlayer";
 
 const { getMediaUrlMock } = vi.hoisted(() => ({
@@ -13,6 +13,10 @@ vi.mock("@/lib/mediaUrl", () => ({
 describe("VideoPlayer", () => {
   beforeEach(() => {
     getMediaUrlMock.mockClear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("toggles play and pause from the custom button", async () => {
@@ -123,6 +127,105 @@ describe("VideoPlayer", () => {
     expect(video.getAttribute("poster")).toBe(
       "https://media.reflix.app/thumbnails/clip-1.webp"
     );
+  });
+
+  it("starts muted autoplay when autoPlayMuted is enabled", async () => {
+    const play = vi.fn(async () => undefined);
+    Object.defineProperty(HTMLMediaElement.prototype, "play", {
+      configurable: true,
+      value: play,
+    });
+
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+        autoPlayMuted
+      />
+    );
+
+    const video = document.querySelector("video") as HTMLVideoElement;
+    expect(video.muted).toBe(true);
+
+    await waitFor(() => {
+      expect(play).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("falls back to a paused state when muted autoplay fails", async () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "play", {
+      configurable: true,
+      value: vi.fn(() => Promise.reject(new Error("autoplay blocked"))),
+    });
+
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+        autoPlayMuted
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
+    });
+  });
+
+  it("keeps the protected media URL and disables playback after a load error", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+      configurable: true,
+      value: vi.fn(() => undefined),
+    });
+
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+      />
+    );
+
+    const video = document.querySelector("video") as HTMLVideoElement;
+
+    fireEvent.error(video);
+
+    expect(video.getAttribute("src")).toBe("https://media.reflix.app/videos/clip-1.mp4");
+    expect(
+      screen.getByRole("button", { name: "Video unavailable" })
+    ).toBeDisabled();
+  });
+
+  it("restores playback controls when the protected video URL changes", () => {
+    Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+      configurable: true,
+      value: vi.fn(() => undefined),
+    });
+
+    const { rerender } = render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+      />
+    );
+
+    fireEvent.error(document.querySelector("video") as HTMLVideoElement);
+
+    expect(
+      screen.getByRole("button", { name: "Video unavailable" })
+    ).toBeDisabled();
+
+    rerender(
+      <VideoPlayer
+        videoUrl="/videos/clip-2.mp4"
+        thumbnailUrl="/thumbnails/clip-2.webp"
+        duration={12}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Play video" })).toBeEnabled();
   });
 
   it("toggles playback when the external playback signal changes", async () => {
