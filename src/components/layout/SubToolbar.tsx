@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useFilterStore } from "@/stores/filterStore";
@@ -25,7 +25,14 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
   } = useUIStore();
   const searchQuery = useFilterStore((state) => state.searchQuery);
   const { updateURL } = useFilterSync();
+  const [localSearch, setLocalSearch] = useState(searchQuery);
   const isComposingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isComposingRef.current) {
+      setLocalSearch(searchQuery);
+    }
+  }, [searchQuery]);
 
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
@@ -98,8 +105,9 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
           <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
-            value={searchQuery}
+            value={localSearch}
             onChange={(e) => {
+              setLocalSearch(e.target.value);
               if (!isComposingRef.current) {
                 updateURL({ searchQuery: e.target.value });
               }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface SearchBarProps {
   initialQuery?: string;
@@ -14,7 +14,6 @@ export function SearchBar({
   onSearch,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
-  const isComposingRef = useRef(false);
 
   useEffect(() => {
     setQuery(initialQuery);
@@ -31,18 +30,7 @@ export function SearchBar({
       <input
         type="search"
         value={query}
-        onChange={(event) => {
-          if (!isComposingRef.current) {
-            setQuery(event.target.value);
-          }
-        }}
-        onCompositionStart={() => {
-          isComposingRef.current = true;
-        }}
-        onCompositionEnd={(event) => {
-          isComposingRef.current = false;
-          setQuery(event.currentTarget.value);
-        }}
+        onChange={(event) => setQuery(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
         className="h-10 w-full rounded-full border border-border bg-surface px-4 text-sm outline-none transition-colors focus:border-foreground/40"
