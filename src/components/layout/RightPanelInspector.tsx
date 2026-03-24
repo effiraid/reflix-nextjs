@@ -55,6 +55,11 @@ export function RightPanelInspector({
             loop
             playsInline
             autoPlay
+            controlsList="nodownload nofullscreen noremoteplayback"
+            disablePictureInPicture
+            draggable={false}
+            onDragStart={(event) => event.preventDefault()}
+            onContextMenu={(event) => event.preventDefault()}
             className="h-full w-full object-cover"
             onError={() => setPreviewFailed(true)}
           />

@@ -181,4 +181,29 @@ describe("RightPanelInspector", () => {
     expect(container.querySelector("video")).toBeNull();
     expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
   });
+
+  it("suppresses native download affordances on preview videos", () => {
+    const { container } = render(
+      <RightPanelInspector
+        clip={clip}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const preview = container.querySelector("video") as HTMLVideoElement;
+    const event = new MouseEvent("contextmenu", {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    preview.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(preview.getAttribute("controlsList")).toBe(
+      "nodownload nofullscreen noremoteplayback"
+    );
+    expect(preview.hasAttribute("disablePictureInPicture")).toBe(true);
+  });
 });
