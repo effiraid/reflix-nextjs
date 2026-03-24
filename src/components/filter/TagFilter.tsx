@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { TagGroupData, Locale } from "@/lib/types";
 import { useFilterStore } from "@/stores/filterStore";
 
@@ -13,6 +13,7 @@ interface TagFilterProps {
 export function TagFilter({ tagGroups, lang, onTagClick }: TagFilterProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { selectedTags } = useFilterStore();
+  const isComposingRef = useRef(false);
 
   return (
     <div className="space-y-2">
@@ -20,7 +21,16 @@ export function TagFilter({ tagGroups, lang, onTagClick }: TagFilterProps) {
         type="text"
         placeholder={lang === "ko" ? "태그 검색..." : "Search tags..."}
         value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        onChange={(e) => {
+          if (!isComposingRef.current) {
+            setSearchQuery(e.target.value);
+          }
+        }}
+        onCompositionStart={() => { isComposingRef.current = true; }}
+        onCompositionEnd={(e) => {
+          isComposingRef.current = false;
+          setSearchQuery(e.currentTarget.value);
+        }}
         className="w-full px-2 py-1 text-xs rounded border border-border bg-background focus:outline-none focus:border-accent"
       />
       {tagGroups.parentGroups.map((parent) => (

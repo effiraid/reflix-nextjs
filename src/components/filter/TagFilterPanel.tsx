@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -25,6 +25,7 @@ export function TagFilterPanel({
 }: TagFilterPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const isComposingRef = useRef(false);
   const { selectedTags } = useFilterStore();
   const { setActiveFilterTab } = useUIStore();
   const getDisplayTag = useCallback(
@@ -125,7 +126,16 @@ export function TagFilterPanel({
           type="text"
           placeholder={dict.browse.tagSearchPlaceholder}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            if (!isComposingRef.current) {
+              setSearchQuery(e.target.value);
+            }
+          }}
+          onCompositionStart={() => { isComposingRef.current = true; }}
+          onCompositionEnd={(e) => {
+            isComposingRef.current = false;
+            setSearchQuery(e.currentTarget.value);
+          }}
           autoFocus
           className="flex-1 h-7 px-2 text-sm rounded border border-border bg-surface focus:outline-none focus:border-accent"
         />

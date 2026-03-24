@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useFilterStore } from "@/stores/filterStore";
@@ -24,6 +25,7 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
   } = useUIStore();
   const searchQuery = useFilterStore((state) => state.searchQuery);
   const { updateURL } = useFilterSync();
+  const isComposingRef = useRef(false);
 
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
@@ -97,7 +99,16 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => updateURL({ searchQuery: e.target.value })}
+            onChange={(e) => {
+              if (!isComposingRef.current) {
+                updateURL({ searchQuery: e.target.value });
+              }
+            }}
+            onCompositionStart={() => { isComposingRef.current = true; }}
+            onCompositionEnd={(e) => {
+              isComposingRef.current = false;
+              updateURL({ searchQuery: e.currentTarget.value });
+            }}
             placeholder={dict.nav.searchPlaceholder}
             aria-label={dict.nav.search}
             className="w-40 h-7 pl-7 pr-2 text-sm rounded border border-border bg-background focus:outline-none focus:border-accent"
