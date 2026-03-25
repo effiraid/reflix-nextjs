@@ -10,6 +10,45 @@ vi.mock("@/lib/mediaUrl", () => ({
   getMediaUrl: getMediaUrlMock,
 }));
 
+vi.mock("./SeekBar", () => ({
+  SeekBar: ({
+    onSeek,
+    onDragStart,
+    onDragEnd,
+    onInPointChange,
+    onOutPointChange,
+    disabled,
+  }: {
+    currentTime: number;
+    duration: number;
+    inPoint: number;
+    outPoint: number;
+    onSeek: (time: number) => void;
+    onDragStart: () => void;
+    onDragEnd: () => void;
+    onInPointChange: (time: number) => void;
+    onOutPointChange: (time: number) => void;
+    disabled?: boolean;
+  }) => (
+    <div
+      data-testid="seekbar"
+      data-disabled={disabled}
+      onClick={() => onSeek(5)}
+      onPointerDown={() => {
+        onDragStart();
+        onDragEnd();
+      }}
+    >
+      <button onClick={() => onInPointChange(1)}>set-in</button>
+      <button onClick={() => onOutPointChange(9)}>set-out</button>
+    </div>
+  ),
+}));
+
+vi.mock("./useVideoKeyboard", () => ({
+  useVideoKeyboard: vi.fn(),
+}));
+
 describe("VideoPlayer", () => {
   beforeEach(() => {
     getMediaUrlMock.mockClear();
@@ -57,21 +96,6 @@ describe("VideoPlayer", () => {
     expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
   });
 
-  it("hides the speed control and starts muted in compact mode", () => {
-    render(
-      <VideoPlayer
-        videoUrl="/videos/clip-1.mp4"
-        thumbnailUrl="/thumbnails/clip-1.webp"
-        duration={12}
-        compact
-      />
-    );
-
-    const video = document.querySelector("video") as HTMLVideoElement;
-    expect(video.muted).toBe(true);
-    expect(screen.queryByRole("button", { name: "Speed" })).not.toBeInTheDocument();
-  });
-
   it("renders current progress time and total duration", () => {
     render(
       <VideoPlayer
@@ -89,7 +113,7 @@ describe("VideoPlayer", () => {
 
     fireEvent.timeUpdate(video);
 
-    expect(screen.getByText("00:32 / 02:05")).toBeInTheDocument();
+    expect(screen.getByText("0:32 / 2:05")).toBeInTheDocument();
   });
 
   it("prevents the default context menu on the video surface", () => {
@@ -280,5 +304,43 @@ describe("VideoPlayer", () => {
     await waitFor(() => {
       expect(video.pause).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("toggles mute state when mute button is clicked", () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+    const muteBtn = screen.getByRole("button", { name: "Mute" });
+    expect(muteBtn).toBeInTheDocument();
+    fireEvent.click(muteBtn);
+    expect(screen.getByRole("button", { name: "Unmute" })).toBeInTheDocument();
+  });
+
+  it("renders the frame counter based on current time", async () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+    const video = document.querySelector("video") as HTMLVideoElement;
+    Object.defineProperty(video, "currentTime", { configurable: true, get: () => 2 });
+    fireEvent.timeUpdate(video);
+    await waitFor(() => {
+      expect(screen.getByText("F:30")).toBeInTheDocument();
+    });
+  });
+
+  it("toggles loop state when loop button is clicked", () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+    const loopBtn = screen.getByRole("button", { name: "Disable loop" });
+    fireEvent.click(loopBtn);
+    expect(screen.getByRole("button", { name: "Enable loop" })).toBeInTheDocument();
+  });
+
+  it("starts muted with mute button in compact mode", () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} compact />
+    );
+    expect(screen.getByRole("button", { name: "Unmute" })).toBeInTheDocument();
   });
 });
