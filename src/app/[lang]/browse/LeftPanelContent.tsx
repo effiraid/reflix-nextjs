@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
-import { collectExpandableFolderIds } from "@/lib/categories";
-import type { CategoryTree, ClipIndex, Locale } from "@/lib/types";
+import { useClipData } from "./ClipDataProvider";
+import { collectExpandableFolderIds, findNode } from "@/lib/categories";
+import type { CategoryTree, Locale } from "@/lib/types";
 
 interface LeftPanelContentProps {
   categories: CategoryTree;
-  clips: ClipIndex[];
   lang: Locale;
   dict: {
     browse: {
@@ -31,10 +31,10 @@ interface LeftPanelContentProps {
 
 export function LeftPanelContent({
   categories,
-  clips,
   lang,
   dict,
 }: LeftPanelContentProps) {
+  const clips = useClipData();
   const { updateURL } = useFilterSync();
   const { reshuffleClips, setFilterBarOpen, setActiveFilterTab } = useUIStore();
   const [foldersExpanded, setFoldersExpanded] = useState(true);
@@ -50,6 +50,19 @@ export function LeftPanelContent({
   const folderTreeActionLabel = allFoldersExpanded
     ? dict.browse.collapseAllFolders
     : dict.browse.expandAllFolders;
+
+  // Pre-compute folder counts: folderId → number of clips in that folder
+  const folderCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const clip of clips) {
+      if (clip.folders) {
+        for (const folderId of clip.folders) {
+          counts[folderId] = (counts[folderId] || 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }, [clips]);
 
   function setAllFoldersExpanded(expanded: boolean) {
     setFoldersExpanded(true);
@@ -141,7 +154,7 @@ export function LeftPanelContent({
           <div className="pt-1">
             <FolderTree
               categories={categories}
-              clips={clips}
+              folderCounts={folderCounts}
               lang={lang}
               expandedFolderIds={expandedFolderIds}
               onFolderClick={({ folderId, metaKey, ctrlKey, altKey }) => {
@@ -152,12 +165,23 @@ export function LeftPanelContent({
                   return;
                 }
 
+                // 하위 폴더가 있으면 클릭 시 자동으로 펼치기
+                const node = findNode(folderId, categories);
+                const hasChildren = node?.children && Object.keys(node.children).length > 0;
+                if (hasChildren) {
+                  setExpandedFolderIds((current) =>
+                    current.includes(folderId) ? current : [...current, folderId]
+                  );
+                }
+
                 const current = useFilterStore.getState().selectedFolders;
                 const next = usesMultiSelect
                   ? current.includes(folderId)
                     ? current.filter((f) => f !== folderId)
                     : [...current, folderId]
-                  : [folderId];
+                  : current.length === 1 && current[0] === folderId
+                    ? []
+                    : [folderId];
 
                 updateURL({ selectedFolders: next });
               }}

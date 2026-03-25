@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { LeftPanelContent } from "./LeftPanelContent";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
-import type { CategoryTree, ClipIndex } from "@/lib/types";
+import type { CategoryTree } from "@/lib/types";
 
 const updateURL = vi.fn((updates: Partial<ReturnType<typeof useFilterStore.getState>>) => {
   useFilterStore.setState((state) => ({ ...state, ...updates }));
@@ -13,6 +13,10 @@ vi.mock("@/hooks/useFilterSync", () => ({
   useFilterSync: () => ({
     updateURL,
   }),
+}));
+
+vi.mock("./ClipDataProvider", () => ({
+  useClipData: () => clips,
 }));
 
 const categories: CategoryTree = {
@@ -38,7 +42,7 @@ const categories: CategoryTree = {
   },
 };
 
-const clips: ClipIndex[] = [
+const clips = [
   {
     id: "clip-1",
     name: "Clip 1",
@@ -92,7 +96,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -114,7 +118,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -130,7 +134,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -146,7 +150,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -165,7 +169,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -183,7 +187,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -199,7 +203,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -219,7 +223,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />
@@ -243,7 +247,7 @@ describe("LeftPanelContent", () => {
     render(
       <LeftPanelContent
         categories={categories}
-        clips={clips}
+
         lang="ko"
         dict={dict}
       />

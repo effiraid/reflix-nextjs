@@ -76,6 +76,7 @@ export function RightPanelContent({
       })
       .catch((e) => {
         if (e.name !== "AbortError") {
+          console.error("[RightPanelContent] Failed to load clip:", selectedClipId, e);
           dispatch({ type: "error" });
         }
       });

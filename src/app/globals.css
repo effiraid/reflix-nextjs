@@ -6,7 +6,7 @@
   --surface: #f5f5f5;
   --surface-hover: #e5e5e5;
   --border: #e5e5e5;
-  --muted: #737373;
+  --muted: #636363;
   --accent: #3b82f6;
   --accent-hover: #2563eb;
 }
@@ -41,7 +41,17 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Focus visibility for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Scrollbar styling for panels */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
 }

@@ -150,8 +150,21 @@ export async function generatePreview(inputPath, outputPath) {
       "-movflags", "+faststart",
       outputPath,
     ]);
+    // Delete 0-byte output (ffmpeg can create empty files on some failures)
+    if (fs.existsSync(outputPath)) {
+      const stat = fs.statSync(outputPath);
+      if (stat.size === 0) {
+        fs.unlinkSync(outputPath);
+        console.warn(`  Preview generated 0-byte file, removed: ${outputPath}`);
+        return false;
+      }
+    }
     return true;
   } catch (err) {
+    // Clean up residual 0-byte file on failure
+    if (fs.existsSync(outputPath)) {
+      fs.unlinkSync(outputPath);
+    }
     console.warn(`  Preview generation failed: ${err.message}`);
     return false;
   }
@@ -261,6 +274,25 @@ export async function generateAnimatedThumbnail(inputPath, outputPath, options =
   } finally {
     fs.rmSync(framesDir, { recursive: true, force: true });
   }
+}
+
+/**
+ * Get actual video resolution via ffprobe.
+ * Eagle often reports thumbnail resolution (640px) instead of actual.
+ */
+export async function getVideoResolution(inputPath) {
+  const { stdout } = await exec("ffprobe", [
+    "-v", "error",
+    "-select_streams", "v:0",
+    "-show_entries", "stream=width,height",
+    "-of", "csv=p=0",
+    inputPath,
+  ]);
+  const [w, h] = stdout.trim().split(",").map(Number);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    throw new Error(`ffprobe returned invalid resolution: "${stdout.trim()}"`);
+  }
+  return { width: w, height: h };
 }
 
 /**

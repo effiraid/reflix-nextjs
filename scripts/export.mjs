@@ -24,7 +24,7 @@ import { resolveEagleLibraryPath } from "./lib/eagle-library-path.mjs";
 import { readEagleLibrary } from "./lib/eagle-reader.mjs";
 import { prunePublishedArtifacts } from "./lib/published-artifacts.mjs";
 import { loadReleaseBatch, resolveReleaseBatchPath } from "./lib/release-batch.mjs";
-import { generateLQIP, generatePreview, processThumbnail, processVideo } from "./lib/media-processor.mjs";
+import { generateLQIP, generatePreview, processThumbnail, processVideo, getVideoResolution } from "./lib/media-processor.mjs";
 import { loadCategoryMap, buildClipIndex, buildFullClip, writeOutputFiles } from "./lib/index-builder.mjs";
 import { uploadBatch } from "./lib/r2-uploader.mjs";
 import { computeRelatedClips } from "./lib/similarity.mjs";
@@ -216,6 +216,11 @@ async function materializeClipAssets(item, mediaRoot, generationSummary) {
     if (!fs.existsSync(requiredOutput)) {
       throw new Error(`Missing generated output: ${path.basename(requiredOutput)}`);
     }
+    const stat = fs.statSync(requiredOutput);
+    if (stat.size === 0) {
+      fs.unlinkSync(requiredOutput);
+      throw new Error(`Generated output is 0 bytes: ${path.basename(requiredOutput)}`);
+    }
   }
 }
 
@@ -291,6 +296,11 @@ export async function runExport(
   for (const item of items) {
     try {
       console.log(`\n[${processed + generationSummary.failed + 1}/${items.length}] ${item.id} — ${item.name}`);
+
+      // Override Eagle's thumbnail resolution with actual video resolution
+      const resolution = await getVideoResolution(item._mediaPath);
+      item.width = resolution.width;
+      item.height = resolution.height;
 
       console.log("  → Generating LQIP...");
       const lqipBase64 = await generateLQIP(item._mediaPath);

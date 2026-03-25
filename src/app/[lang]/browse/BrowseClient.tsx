@@ -46,7 +46,14 @@ export function BrowseClient({
       category: s.category,
     }))
   );
-  const { quickViewOpen, setQuickViewOpen, thumbnailSize, setThumbnailSize, shuffleSeed } = useUIStore();
+  const { quickViewOpen, setQuickViewOpen, stepThumbnailSize, shuffleSeed } = useUIStore(
+    useShallow((s) => ({
+      quickViewOpen: s.quickViewOpen,
+      setQuickViewOpen: s.setQuickViewOpen,
+      stepThumbnailSize: s.stepThumbnailSize,
+      shuffleSeed: s.shuffleSeed,
+    }))
+  );
 
   // Sync URL → Zustand filters
   useFilterSync();
@@ -81,24 +88,24 @@ export function BrowseClient({
       },
       {
         key: "-",
-        action: () => setThumbnailSize(thumbnailSize - 1),
+        action: () => stepThumbnailSize(-1),
         allowRepeat: true,
         enabled: !quickViewOpen,
       },
       {
         key: "+",
-        action: () => setThumbnailSize(thumbnailSize + 1),
+        action: () => stepThumbnailSize(1),
         allowRepeat: true,
         enabled: !quickViewOpen,
       },
       {
         key: "=",
-        action: () => setThumbnailSize(thumbnailSize + 1),
+        action: () => stepThumbnailSize(1),
         allowRepeat: true,
         enabled: !quickViewOpen,
       },
     ],
-    [quickViewOpen, selectedClip, setQuickViewOpen, thumbnailSize, setThumbnailSize]
+    [quickViewOpen, selectedClip, setQuickViewOpen, stepThumbnailSize]
   );
   useKeyboardShortcuts(shortcuts);
 

@@ -5,7 +5,7 @@ import type {
   Clip,
 } from "./types";
 
-function getDeploymentOrigin(): string | null {
+export function getDeploymentOrigin(): string | null {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.VERCEL_PROJECT_PRODUCTION_URL ||
@@ -28,7 +28,8 @@ async function getClipFromPublicAsset(id: string): Promise<Clip | null> {
 
     if (!response.ok) return null;
     return (await response.json()) as Clip;
-  } catch {
+  } catch (e) {
+    console.error("[data] Failed to fetch clip from public asset:", id, e);
     return null;
   }
 }
@@ -52,7 +53,8 @@ export async function getTagI18n(): Promise<Record<string, string>> {
   try {
     const data = await import("@/data/tag-i18n.json");
     return data.default as Record<string, string>;
-  } catch {
+  } catch (e) {
+    console.error("[data] Failed to load tag-i18n.json:", e);
     return {};
   }
 }
@@ -71,7 +73,8 @@ export async function getClip(id: string): Promise<Clip | null> {
     );
     const raw = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(raw) as Clip;
-  } catch {
+  } catch (e) {
+    console.warn("[data] Local clip file not found, falling back to public asset:", id, e);
     return getClipFromPublicAsset(id);
   }
 }

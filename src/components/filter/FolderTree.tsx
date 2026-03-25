@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
-import type { CategoryNode, CategoryTree, ClipIndex, Locale } from "@/lib/types";
+import type { CategoryNode, CategoryTree, Locale } from "@/lib/types";
 import { useFilterStore } from "@/stores/filterStore";
 import { collectDescendantIds } from "@/lib/categories";
 import type { LucideProps } from "lucide-react";
@@ -128,7 +128,7 @@ const FOLDER_ICONS: Record<string, ComponentType<LucideProps>> = {
 
 interface FolderTreeProps {
   categories: CategoryTree;
-  clips: ClipIndex[];
+  folderCounts: Record<string, number>;
   lang: Locale;
   expandedFolderIds: string[];
   onFolderClick: (selection: {
@@ -142,7 +142,7 @@ interface FolderTreeProps {
 
 export function FolderTree({
   categories,
-  clips,
+  folderCounts,
   lang,
   expandedFolderIds,
   onFolderClick,
@@ -156,7 +156,7 @@ export function FolderTree({
           id={id}
           node={node}
           categories={categories}
-          clips={clips}
+          folderCounts={folderCounts}
           lang={lang}
           depth={0}
           expandedFolderIds={expandedFolderIds}
@@ -172,7 +172,7 @@ function FolderNode({
   id,
   node,
   categories,
-  clips,
+  folderCounts,
   lang,
   depth,
   expandedFolderIds,
@@ -182,7 +182,7 @@ function FolderNode({
   id: string;
   node: CategoryNode;
   categories: CategoryTree;
-  clips: ClipIndex[];
+  folderCounts: Record<string, number>;
   lang: Locale;
   depth: number;
   expandedFolderIds: string[];
@@ -199,7 +199,7 @@ function FolderNode({
   const expanded = expandedFolderIds.includes(id);
   const allIds = collectDescendantIds(id, categories);
   const isSelected = allIds.some((fid) => selectedFolders.includes(fid));
-  const count = clips.filter((c) => c.folders.some((f) => allIds.includes(f))).length;
+  const count = allIds.reduce((sum, fid) => sum + (folderCounts[fid] || 0), 0);
   const Icon = FOLDER_ICONS[node.slug];
 
   return (
@@ -253,7 +253,7 @@ function FolderNode({
               id={childId}
               node={childNode}
               categories={categories}
-              clips={clips}
+              folderCounts={folderCounts}
               lang={lang}
               depth={depth + 1}
               expandedFolderIds={expandedFolderIds}

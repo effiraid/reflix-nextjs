@@ -1,5 +1,6 @@
-import type { CategoryTree, ClipIndex, SortBy } from "./types";
+import type { CategoryTree, ClipIndex, Locale, SortBy } from "./types";
 import { collectDescendantIds } from "./categories";
+import { createMatcher } from "./search";
 
 export interface FilterState {
   selectedFolders: string[];
@@ -14,7 +15,8 @@ export function filterClips(
   clips: ClipIndex[],
   filters: FilterState,
   categories?: CategoryTree,
-  tagI18n: Record<string, string> = {}
+  tagI18n: Record<string, string> = {},
+  lang: Locale = "ko"
 ): ClipIndex[] {
   let result = clips;
 
@@ -43,13 +45,14 @@ export function filterClips(
   }
 
   if (filters.searchQuery) {
-    const q = filters.searchQuery.toLowerCase();
+    const match = createMatcher(lang, filters.searchQuery);
+
     result = result.filter(
       (c) =>
-        c.name.toLowerCase().includes(q) ||
+        match(c.name) ||
         c.tags.some((t) => {
-          const translated = tagI18n[t]?.toLowerCase() ?? "";
-          return t.toLowerCase().includes(q) || translated.includes(q);
+          const translated = tagI18n[t] ?? "";
+          return match(t) || (translated && match(translated));
         })
     );
   }

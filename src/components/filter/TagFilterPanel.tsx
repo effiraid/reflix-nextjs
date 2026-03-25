@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
+import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { createMatcher } from "@/lib/search";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { TagGroupData, ClipIndex, Locale } from "@/lib/types";
+import type { TagGroupData, Locale } from "@/lib/types";
 
 interface TagFilterPanelProps {
   tagGroups: TagGroupData;
-  clips: ClipIndex[];
   lang: Locale;
   tagI18n: Record<string, string>;
   dict: Pick<Dictionary, "browse" | "clip" | "common">;
@@ -17,16 +18,19 @@ interface TagFilterPanelProps {
 
 export function TagFilterPanel({
   tagGroups,
-  clips,
   lang,
   tagI18n,
   dict,
   updateURL,
 }: TagFilterPanelProps) {
+  const clips = useClipData();
   const [searchQuery, setSearchQuery] = useState("");
+  const [localTagSearch, setLocalTagSearch] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const { selectedTags } = useFilterStore();
   const { setActiveFilterTab } = useUIStore();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const isComposingRef = useRef(false);
   const getDisplayTag = useCallback(
     (tag: string) => (lang === "en" ? tagI18n[tag] ?? tag : tag),
     [lang, tagI18n]
@@ -54,35 +58,32 @@ export function TagFilterPanel({
     return Array.from(set).sort();
   }, [tagGroups]);
 
+  // Matcher for tag search (shared across memos)
+  const matchTag = useMemo(
+    () => searchQuery ? (t: string) => createMatcher(lang, searchQuery)(getDisplayTag(t)) : null,
+    [searchQuery, lang, getDisplayTag]
+  );
+
   // 현재 선택된 그룹의 태그 목록
   const currentTags = useMemo(() => {
     const baseTags = selectedGroupId
       ? tagGroups.groups.find((g) => g.id === selectedGroupId)?.tags ?? []
       : allTags;
 
-    if (!searchQuery) return baseTags;
-    const q = searchQuery.toLowerCase();
-    return baseTags.filter((t) => getDisplayTag(t).toLowerCase().includes(q));
-  }, [selectedGroupId, tagGroups, allTags, searchQuery, getDisplayTag]);
+    return matchTag ? baseTags.filter(matchTag) : baseTags;
+  }, [selectedGroupId, tagGroups, allTags, matchTag]);
 
-  // 그룹별 태그 수 (검색 반영)
-  const groupTagCounts = useMemo(() => {
+  // 그룹별 태그 수 + 전체 태그 수 (검색 반영, 한 번에 계산)
+  const { groupTagCounts, totalTagCount } = useMemo(() => {
     const counts: Record<string, number> = {};
-    const q = searchQuery.toLowerCase();
     for (const group of tagGroups.groups) {
-      counts[group.id] = searchQuery
-        ? group.tags.filter((t) => getDisplayTag(t).toLowerCase().includes(q)).length
+      counts[group.id] = matchTag
+        ? group.tags.filter(matchTag).length
         : group.tags.length;
     }
-    return counts;
-  }, [tagGroups, searchQuery, getDisplayTag]);
-
-  // 전체 태그 수 (검색 반영)
-  const totalTagCount = useMemo(() => {
-    if (!searchQuery) return allTags.length;
-    const q = searchQuery.toLowerCase();
-    return allTags.filter((t) => getDisplayTag(t).toLowerCase().includes(q)).length;
-  }, [allTags, searchQuery, getDisplayTag]);
+    const total = matchTag ? allTags.filter(matchTag).length : allTags.length;
+    return { groupTagCounts: counts, totalTagCount: total };
+  }, [tagGroups, allTags, matchTag]);
 
   // 태그 토글 핸들러
   const handleTagToggle = useCallback(
@@ -99,10 +100,28 @@ export function TagFilterPanel({
   // ESC 키로 패널 닫기
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveFilterTab(null);
+      if (e.key === "Escape") {
+        setActiveFilterTab(null);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setActiveFilterTab]);
+
+  // 바깥 클릭으로 패널 닫기 (필터 탭 바 클릭은 제외 — 탭 자체 토글에 맡김)
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(target) &&
+        !target.closest("[data-filter-tabs]")
+      ) {
+        setActiveFilterTab(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [setActiveFilterTab]);
 
   // 태그가 속한 그룹의 색상 (북마크 아이콘용)
@@ -117,15 +136,29 @@ export function TagFilterPanel({
   }, [tagGroups]);
 
   return (
-    <div className="border-b border-border bg-background flex flex-col" style={{ height: "320px" }}>
+    <div
+      ref={panelRef}
+      className="absolute top-full left-0 right-0 border border-border rounded-b-lg bg-background shadow-lg flex flex-col"
+      style={{ height: "320px" }}
+    >
       {/* 상단: 검색바 */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
         <span className="text-xs font-semibold text-muted">{dict.clip.tags}</span>
         <input
           type="text"
           placeholder={dict.browse.tagSearchPlaceholder}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          value={localTagSearch}
+          onChange={(e) => {
+            setLocalTagSearch(e.target.value);
+            if (!isComposingRef.current) {
+              setSearchQuery(e.target.value);
+            }
+          }}
+          onCompositionStart={() => { isComposingRef.current = true; }}
+          onCompositionEnd={(e) => {
+            isComposingRef.current = false;
+            setSearchQuery(e.currentTarget.value);
+          }}
           autoFocus
           className="flex-1 h-7 px-2 text-sm rounded border border-border bg-surface focus:outline-none focus:border-accent"
         />

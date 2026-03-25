@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { VideoPlayer, PLAYBACK_SPEEDS } from "@/components/clip/VideoPlayer";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { formatClipDuration } from "@/lib/clipInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { ClipIndex, Locale } from "@/lib/types";
@@ -35,27 +37,16 @@ export function QuickViewModal({
     });
   }, []);
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
-      }
-
-      if (event.key === "-") {
-        event.preventDefault();
-        stepSpeed(-1);
-      }
-
-      if (event.key === "+" || event.key === "=") {
-        event.preventDefault();
-        stepSpeed(1);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, stepSpeed]);
+  const shortcuts = useMemo<Shortcut[]>(
+    () => [
+      { key: "Escape", action: onClose },
+      { key: "-", action: () => stepSpeed(-1), allowRepeat: true },
+      { key: "+", action: () => stepSpeed(1), allowRepeat: true },
+      { key: "=", action: () => stepSpeed(1), allowRepeat: true },
+    ],
+    [onClose, stepSpeed]
+  );
+  useKeyboardShortcuts(shortcuts);
 
   return (
     <div

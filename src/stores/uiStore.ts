@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { ViewMode } from "@/lib/types";
 import { clampThumbnailSize } from "@/lib/thumbnailSize";
 
@@ -21,34 +22,51 @@ interface UIStore {
   setFilterBarOpen: (open: boolean) => void;
   toggleFilterBar: () => void;
   setThumbnailSize: (size: number) => void;
+  stepThumbnailSize: (delta: number) => void;
   setActiveFilterTab: (tab: string | null) => void;
   reshuffleClips: () => void;
 }
 
-export const useUIStore = create<UIStore>((set) => ({
-  leftPanelOpen: true,
-  rightPanelOpen: true,
-  viewMode: "masonry",
-  quickViewOpen: false,
-  filterBarOpen: false,
-  thumbnailSize: 2,
-  activeFilterTab: null,
-  shuffleSeed: 0,
+export const useUIStore = create<UIStore>()(
+  persist(
+    (set) => ({
+      leftPanelOpen: true,
+      rightPanelOpen: true,
+      viewMode: "masonry",
+      quickViewOpen: false,
+      filterBarOpen: false,
+      thumbnailSize: 2,
+      activeFilterTab: null,
+      shuffleSeed: 0,
 
-  toggleLeftPanel: () =>
-    set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
-  toggleRightPanel: () =>
-    set((state) => ({ rightPanelOpen: !state.rightPanelOpen })),
-  setLeftPanelOpen: (open) => set({ leftPanelOpen: open }),
-  setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
-  setViewMode: (mode) => set({ viewMode: mode }),
-  setQuickViewOpen: (open) => set({ quickViewOpen: open }),
-  setFilterBarOpen: (open) => set({ filterBarOpen: open }),
-  toggleFilterBar: () =>
-    set((state) => ({ filterBarOpen: !state.filterBarOpen })),
-  setThumbnailSize: (size) =>
-    set({ thumbnailSize: clampThumbnailSize(size) }),
-  setActiveFilterTab: (tab) => set({ activeFilterTab: tab }),
-  reshuffleClips: () =>
-    set((state) => ({ shuffleSeed: state.shuffleSeed + 1 })),
-}));
+      toggleLeftPanel: () =>
+        set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
+      toggleRightPanel: () =>
+        set((state) => ({ rightPanelOpen: !state.rightPanelOpen })),
+      setLeftPanelOpen: (open) => set({ leftPanelOpen: open }),
+      setRightPanelOpen: (open) => set({ rightPanelOpen: open }),
+      setViewMode: (mode) => set({ viewMode: mode }),
+      setQuickViewOpen: (open) => set({ quickViewOpen: open }),
+      setFilterBarOpen: (open) => set({ filterBarOpen: open }),
+      toggleFilterBar: () =>
+        set((state) => ({ filterBarOpen: !state.filterBarOpen })),
+      setThumbnailSize: (size) =>
+        set({ thumbnailSize: clampThumbnailSize(size) }),
+      stepThumbnailSize: (delta) =>
+        set((state) => ({ thumbnailSize: clampThumbnailSize(state.thumbnailSize + delta) })),
+      setActiveFilterTab: (tab) => set({ activeFilterTab: tab }),
+      reshuffleClips: () =>
+        set((state) => ({ shuffleSeed: state.shuffleSeed + 1 })),
+    }),
+    {
+      name: "reflix-ui",
+      skipHydration: true,
+      partialize: (state) => ({
+        leftPanelOpen: state.leftPanelOpen,
+        rightPanelOpen: state.rightPanelOpen,
+        thumbnailSize: state.thumbnailSize,
+        viewMode: state.viewMode,
+      }),
+    }
+  )
+);

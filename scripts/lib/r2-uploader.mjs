@@ -122,23 +122,40 @@ export async function uploadBatch(
       continue;
     }
 
-    try {
-      const uploadedEntry = await uploadFile(
-        {
-          localPath: entry.localPath,
-          key,
-          contentType,
-        },
-        {
-          env,
-          client: resolvedClient,
-          bucketName,
-        }
-      );
+    let uploaded = false;
+    let lastError = null;
+    const MAX_RETRIES = 3;
 
-      summary.uploaded += 1;
-      summary.entries.push(uploadedEntry);
-    } catch (error) {
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const uploadedEntry = await uploadFile(
+          {
+            localPath: entry.localPath,
+            key,
+            contentType,
+          },
+          {
+            env,
+            client: resolvedClient,
+            bucketName,
+          }
+        );
+
+        summary.uploaded += 1;
+        summary.entries.push(uploadedEntry);
+        uploaded = true;
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < MAX_RETRIES - 1) {
+          const delay = 1000 * 2 ** attempt; // 1s, 2s, 4s
+          console.warn(`  ⚠️ Upload failed (attempt ${attempt + 1}/${MAX_RETRIES}): ${key} — retrying in ${delay / 1000}s`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    if (!uploaded) {
       summary.failed += 1;
       summary.entries.push({
         key,
@@ -146,7 +163,7 @@ export async function uploadBatch(
         contentType,
         dryRun: false,
         status: "failed",
-        error: error.message,
+        error: lastError.message,
       });
     }
   }

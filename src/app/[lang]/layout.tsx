@@ -24,11 +24,22 @@ function hasLocale(locale: string): locale is Locale {
   return LOCALES.includes(locale as Locale);
 }
 
-export const metadata = {
-  title: "Reflix — Game Animation Reference",
-  description:
-    "Explore 7,000+ game animation reference clips. Eagle-style browsing with animated thumbnails.",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang } = await params;
+  const isKo = lang === "ko";
+  return {
+    title: isKo
+      ? "Reflix — 게임 애니메이션 레퍼런스"
+      : "Reflix — Game Animation Reference",
+    description: isKo
+      ? "7,000개 이상의 게임 애니메이션 클립을 탐색하세요."
+      : "Explore 7,000+ game animation reference clips.",
+  };
+}
 
 export default async function LocaleLayout({
   children,

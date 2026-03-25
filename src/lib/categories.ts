@@ -35,7 +35,7 @@ export function collectExpandableFolderIds(tree: CategoryTree): string[] {
   return ids;
 }
 
-function findNode(
+export function findNode(
   id: string,
   tree: Record<string, CategoryNode>
 ): CategoryNode | null {

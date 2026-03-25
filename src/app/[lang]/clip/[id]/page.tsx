@@ -4,7 +4,7 @@ import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { ClipDetailView } from "@/components/clip/ClipDetailView";
 import { Navbar } from "@/components/layout/Navbar";
-import { getClip } from "@/lib/data";
+import { getClip, getDeploymentOrigin } from "@/lib/data";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "../../dictionaries";
 
@@ -35,12 +35,28 @@ export async function generateMetadata({
   const title = clip.i18n.title[locale] || clip.name;
   const description = clip.annotation || clip.tags.join(", ");
 
+  const origin = getDeploymentOrigin();
+  const thumbnailUrl = clip.thumbnailUrl.startsWith("http")
+    ? clip.thumbnailUrl
+    : origin
+      ? `${origin}${clip.thumbnailUrl}`
+      : null;
+
   return {
     title: `${title} | Reflix`,
     description,
     openGraph: {
       title,
       description,
+      images: thumbnailUrl
+        ? [{ url: thumbnailUrl, width: clip.width, height: clip.height }]
+        : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: thumbnailUrl ? [thumbnailUrl] : undefined,
     },
   };
 }

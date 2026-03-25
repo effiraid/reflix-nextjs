@@ -41,7 +41,7 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
   function handleFilterToggle() {
     const nextOpen = !filterBarOpen;
     setFilterBarOpen(nextOpen);
-    setActiveFilterTab(nextOpen ? "tags" : null);
+    if (!nextOpen) setActiveFilterTab(null);
   }
 
   return (
@@ -126,7 +126,7 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
 
       {/* Filter tabs row (toggled) */}
       {filterBarOpen && (
-        <div className="h-9 flex items-center px-3 gap-1 border-t border-border bg-surface/50">
+        <div data-filter-tabs className="h-9 flex items-center px-3 gap-1 border-t border-border bg-surface/50">
           {filterTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeFilterTab === tab.id;

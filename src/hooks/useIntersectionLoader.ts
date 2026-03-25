@@ -28,6 +28,7 @@ export function useIntersectionLoader() {
         if (entry.isIntersecting) {
           setIsInView(true);
           setStage((prev) => (prev === "lqip" ? "thumbnail" : prev));
+          if (timerRef.current) clearTimeout(timerRef.current);
           timerRef.current = setTimeout(() => {
             setStage("webp");
           }, 300);
