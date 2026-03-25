@@ -28,7 +28,7 @@
 - `thumbnails/*`는 계속 공개 자산으로 유지한다.
 - 앱은 기존처럼 media URL을 직접 요청한다. 카드별 signer API 호출은 없다.
 - session cookie는 앱 HTML 응답 시점에 Next 쪽에서 심는다.
-- session cookie는 `HttpOnly`, `Secure`, `SameSite=Lax`, `Domain=.reflix.dev`로 설정한다.
+- session cookie는 `HttpOnly`, `Secure`, `SameSite=None`, `Domain=.reflix.dev`로 설정한다. (`SameSite=None`은 cross-origin fetch에서 쿠키가 포함되기 위해 필요하다. `2026-03-26-clip-sharing-design.md` 참조.)
 - Worker와 Next는 동일한 `MEDIA_SESSION_SECRET`으로 쿠키를 서명/검증한다.
 
 ## Performance Guarantee
