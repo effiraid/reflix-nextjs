@@ -20,22 +20,20 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
   VideoPlayer: ({
     videoUrl,
     thumbnailUrl,
-    playbackToggleCount,
     autoPlayMuted,
   }: {
     videoUrl: string;
     thumbnailUrl: string;
-    playbackToggleCount?: number;
     autoPlayMuted?: boolean;
   }) => (
     <div
       data-testid="video-player"
       data-video-url={videoUrl}
       data-thumbnail-url={thumbnailUrl}
-      data-playback-toggle-count={String(playbackToggleCount ?? 0)}
       data-auto-play-muted={String(autoPlayMuted ?? false)}
     />
   ),
+  PLAYBACK_SPEEDS: [0.25, 0.5, 1, 1.5, 2],
 }));
 
 const clip: ClipIndex = {
@@ -76,8 +74,6 @@ describe("QuickViewModal", () => {
         lang="ko"
         dict={dict}
         onClose={onClose}
-        onNext={vi.fn()}
-        onPrevious={vi.fn()}
       />
     );
 
@@ -97,10 +93,8 @@ describe("QuickViewModal", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("maps keyboard navigation to the provided callbacks", () => {
+  it("closes on Escape key", () => {
     const onClose = vi.fn();
-    const onNext = vi.fn();
-    const onPrevious = vi.fn();
 
     render(
       <QuickViewModal
@@ -108,43 +102,10 @@ describe("QuickViewModal", () => {
         lang="ko"
         dict={dict}
         onClose={onClose}
-        onNext={onNext}
-        onPrevious={onPrevious}
       />
     );
 
-    fireEvent.keyDown(window, { key: "ArrowRight" });
-    fireEvent.keyDown(window, { key: "ArrowLeft" });
     fireEvent.keyDown(window, { key: "Escape" });
-
-    expect(onNext).toHaveBeenCalledTimes(1);
-    expect(onPrevious).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("uses Space to close the modal", () => {
-    const onClose = vi.fn();
-
-    render(
-      <QuickViewModal
-        clip={clip}
-        lang="ko"
-        dict={dict}
-        onClose={onClose}
-        onNext={vi.fn()}
-        onPrevious={vi.fn()}
-      />
-    );
-
-    const player = screen.getByTestId("video-player");
-    expect(player).toHaveAttribute("data-playback-toggle-count", "0");
-
-    fireEvent.keyDown(window, { key: " " });
-
-    expect(onClose).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId("video-player")).toHaveAttribute(
-      "data-playback-toggle-count",
-      "0"
-    );
   });
 });

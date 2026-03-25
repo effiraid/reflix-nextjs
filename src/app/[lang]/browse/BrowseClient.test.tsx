@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BrowseClient } from "./BrowseClient";
 import { useClipStore } from "@/stores/clipStore";
@@ -11,6 +11,10 @@ vi.mock("@/hooks/useFilterSync", () => ({
   useFilterSync: () => ({
     updateURL: vi.fn(),
   }),
+}));
+
+vi.mock("./ClipDataProvider", () => ({
+  useClipData: () => clips,
 }));
 
 vi.mock("@/components/clip/MasonryGrid", () => ({
@@ -41,6 +45,34 @@ vi.mock("next/link", () => ({
     <a href={href}>{children}</a>
   ),
 }));
+
+vi.mock("next/dynamic", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    default: (fn: () => Promise<unknown>) => {
+      let resolvedComp: React.ComponentType<any> | null = null;
+      fn().then((mod: any) => {
+        resolvedComp = typeof mod === "function" ? mod : mod?.default ?? mod;
+      });
+      return function DynamicMock(props: Record<string, unknown>) {
+        // Use arrow function to avoid React calling the component as a state initializer
+        const [Comp, setComp] = React.useState<React.ComponentType<any> | null>(() => resolvedComp);
+        React.useEffect(() => {
+          if (!Comp && resolvedComp) {
+            setComp(() => resolvedComp);
+          } else if (!resolvedComp) {
+            fn().then((mod: any) => {
+              resolvedComp = typeof mod === "function" ? mod : mod?.default ?? mod;
+              setComp(() => resolvedComp);
+            });
+          }
+        }, [Comp]);
+        return Comp ? React.createElement(Comp, props) : null;
+      };
+    },
+  };
+});
 
 vi.mock("@/components/clip/VideoPlayer", () => ({
   VideoPlayer: ({ videoUrl }: { videoUrl: string }) => (
@@ -117,8 +149,6 @@ describe("BrowseClient", () => {
     });
     useClipStore.setState({
       selectedClipId: null,
-      allClips: [],
-      isLoading: true,
     });
     useUIStore.setState({
       shuffleSeed: 0,
@@ -134,7 +164,6 @@ describe("BrowseClient", () => {
 
     render(
       <BrowseClient
-        initialClips={clips}
         categories={{}}
         lang="ko"
         dict={dict}
@@ -152,65 +181,50 @@ describe("BrowseClient", () => {
     randomSpy.mockRestore();
   });
 
-  it("opens quick view on Space, closes it on Space, and navigates the visible clip order with arrow keys", () => {
+  it("opens quick view on Space and closes it on Escape", async () => {
     useClipStore.setState({
       selectedClipId: "clip-a",
-      allClips: [],
-      isLoading: false,
     });
 
     render(
       <BrowseClient
-        initialClips={clips}
         categories={{}}
         lang="ko"
         dict={dict}
       />
     );
 
-    act(() => {
+    await act(async () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
     });
-    expect(screen.getByRole("dialog", { name: "Alpha" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Alpha" })).toBeInTheDocument();
     expect(screen.getByTestId("video-player")).toHaveAttribute(
       "data-video-url",
       "/videos/clip-a.mp4"
     );
 
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
-    });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
-    });
-    expect(screen.getByRole("dialog", { name: "Alpha" })).toBeInTheDocument();
-
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
-    });
-    expect(screen.getByRole("dialog", { name: "Beta" })).toBeInTheDocument();
-
-    act(() => {
+    await act(async () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
   });
 
-  it("opens quick view for the requested clip id from the grid", () => {
+  it("opens quick view for the requested clip id from the grid", async () => {
     render(
       <BrowseClient
-        initialClips={clips}
         categories={{}}
         lang="ko"
         dict={dict}
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Open clip-b" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Open clip-b" }));
+    });
 
-    expect(screen.getByRole("dialog", { name: "Beta" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Beta" })).toBeInTheDocument();
     expect(useClipStore.getState().selectedClipId).toBe("clip-b");
   });
 });

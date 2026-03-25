@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { MasonryGrid } from "@/components/clip/MasonryGrid";
-import { QuickViewModal } from "@/components/clip/QuickViewModal";
 import { useFilterSync } from "@/hooks/useFilterSync";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useFilterStore } from "@/stores/filterStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useUIStore } from "@/stores/uiStore";
+import { useClipData } from "./ClipDataProvider";
 import { filterClips, shuffleClips } from "@/lib/filter";
-import type { CategoryTree, ClipIndex, Locale } from "@/lib/types";
+import { useShallow } from "zustand/react/shallow";
+import type { CategoryTree, Locale } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 
+const QuickViewModal = dynamic(
+  () =>
+    import("@/components/clip/QuickViewModal").then((m) => m.QuickViewModal),
+  { ssr: false }
+);
+
 interface BrowseClientProps {
-  initialClips: ClipIndex[];
   categories: CategoryTree;
   tagI18n?: Record<string, string>;
   lang: Locale;
@@ -20,69 +29,91 @@ interface BrowseClientProps {
 }
 
 export function BrowseClient({
-  initialClips,
   categories,
   tagI18n = {},
   lang,
   dict,
 }: BrowseClientProps) {
-  const { selectedClipId, setSelectedClipId, setAllClips, setIsLoading } =
-    useClipStore();
-  const filters = useFilterStore();
-  const { quickViewOpen, setQuickViewOpen, shuffleSeed } = useUIStore();
+  const clips = useClipData();
+  const { selectedClipId, setSelectedClipId } = useClipStore();
+  const filters = useFilterStore(
+    useShallow((s) => ({
+      selectedFolders: s.selectedFolders,
+      selectedTags: s.selectedTags,
+      starFilter: s.starFilter,
+      searchQuery: s.searchQuery,
+      sortBy: s.sortBy,
+      category: s.category,
+    }))
+  );
+  const { quickViewOpen, setQuickViewOpen, thumbnailSize, setThumbnailSize, shuffleSeed } = useUIStore();
 
   // Sync URL → Zustand filters
   useFilterSync();
-
-  // Load initial data into store
-  useEffect(() => {
-    setAllClips(initialClips);
-    setIsLoading(false);
-  }, [initialClips, setAllClips, setIsLoading]);
 
   // Apply filters (useMemo only — no duplicate in store per eng review #5)
   const filtered = useMemo(
     () => {
       const visibleClips = filterClips(
-        initialClips,
+        clips,
         filters,
         categories,
-        tagI18n
+        tagI18n,
+        lang
       );
       return shuffleSeed === 0 ? visibleClips : shuffleClips(visibleClips);
     },
-    [initialClips, filters, categories, tagI18n, shuffleSeed]
+    [clips, filters, categories, tagI18n, shuffleSeed, lang]
   );
-  const selectedIndex = filtered.findIndex((clip) => clip.id === selectedClipId);
+  const indexMap = useMemo(
+    () => new Map(filtered.map((c, i) => [c.id, i])),
+    [filtered]
+  );
+  const selectedIndex = selectedClipId ? (indexMap.get(selectedClipId) ?? -1) : -1;
   const selectedClip = selectedIndex >= 0 ? filtered[selectedIndex] : null;
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      const isTypingTarget =
-        target?.tagName === "INPUT" ||
-        target?.tagName === "TEXTAREA" ||
-        target?.tagName === "SELECT" ||
-        target?.isContentEditable;
+  const shortcuts = useMemo<Shortcut[]>(
+    () => [
+      {
+        key: " ",
+        action: () => setQuickViewOpen(true),
+        enabled: !!selectedClip && !quickViewOpen,
+      },
+      {
+        key: "-",
+        action: () => setThumbnailSize(thumbnailSize - 1),
+        allowRepeat: true,
+        enabled: !quickViewOpen,
+      },
+      {
+        key: "+",
+        action: () => setThumbnailSize(thumbnailSize + 1),
+        allowRepeat: true,
+        enabled: !quickViewOpen,
+      },
+      {
+        key: "=",
+        action: () => setThumbnailSize(thumbnailSize + 1),
+        allowRepeat: true,
+        enabled: !quickViewOpen,
+      },
+    ],
+    [quickViewOpen, selectedClip, setQuickViewOpen, thumbnailSize, setThumbnailSize]
+  );
+  useKeyboardShortcuts(shortcuts);
 
-      if (isTypingTarget) {
-        return;
-      }
+  const handleCloseQuickView = useCallback(
+    () => setQuickViewOpen(false),
+    [setQuickViewOpen]
+  );
 
-      if (
-        (event.key === " " || event.code === "Space") &&
-        !event.repeat &&
-        selectedClip &&
-        !quickViewOpen
-      ) {
-        event.preventDefault();
-        setQuickViewOpen(true);
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [quickViewOpen, selectedClip, setQuickViewOpen]);
+  const openQuickViewForClip = useCallback(
+    (clipId: string) => {
+      setSelectedClipId(clipId);
+      setQuickViewOpen(true);
+    },
+    [setSelectedClipId, setQuickViewOpen]
+  );
 
   if (filtered.length === 0) {
     return (
@@ -90,23 +121,6 @@ export function BrowseClient({
         {dict.browse.noResults}
       </div>
     );
-  }
-
-  function moveSelection(offset: -1 | 1) {
-    if (selectedIndex < 0) {
-      return;
-    }
-
-    const nextIndex = Math.min(
-      filtered.length - 1,
-      Math.max(0, selectedIndex + offset)
-    );
-    setSelectedClipId(filtered[nextIndex]?.id ?? selectedClipId);
-  }
-
-  function openQuickViewForClip(clipId: string) {
-    setSelectedClipId(clipId);
-    setQuickViewOpen(true);
   }
 
   return (
@@ -117,9 +131,7 @@ export function BrowseClient({
           clip={selectedClip}
           lang={lang}
           dict={dict}
-          onClose={() => setQuickViewOpen(false)}
-          onNext={() => moveSelection(1)}
-          onPrevious={() => moveSelection(-1)}
+          onClose={handleCloseQuickView}
         />
       ) : null}
     </>

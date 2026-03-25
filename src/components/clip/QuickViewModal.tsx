@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { VideoPlayer } from "@/components/clip/VideoPlayer";
+import { VideoPlayer, PLAYBACK_SPEEDS } from "@/components/clip/VideoPlayer";
 import { formatClipDuration } from "@/lib/clipInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { ClipIndex, Locale } from "@/lib/types";
@@ -12,8 +12,6 @@ interface QuickViewModalProps {
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
   onClose: () => void;
-  onNext: () => void;
-  onPrevious: () => void;
 }
 
 export function QuickViewModal({
@@ -21,35 +19,43 @@ export function QuickViewModal({
   lang,
   dict,
   onClose,
-  onNext,
-  onPrevious,
 }: QuickViewModalProps) {
+  const [playbackRate, setPlaybackRate] = useState(1);
+
+  // Reset speed when clip changes
+  useEffect(() => {
+    setPlaybackRate(1);
+  }, [clip.id]);
+
+  const stepSpeed = useCallback((direction: 1 | -1) => {
+    setPlaybackRate((prev) => {
+      const idx = PLAYBACK_SPEEDS.indexOf(prev);
+      const nextIdx = Math.min(PLAYBACK_SPEEDS.length - 1, Math.max(0, idx + direction));
+      return PLAYBACK_SPEEDS[nextIdx];
+    });
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === " " || event.code === "Space") {
-        event.preventDefault();
-        onClose();
-      }
-
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
       }
 
-      if (event.key === "ArrowRight") {
+      if (event.key === "-") {
         event.preventDefault();
-        onNext();
+        stepSpeed(-1);
       }
 
-      if (event.key === "ArrowLeft") {
+      if (event.key === "+" || event.key === "=") {
         event.preventDefault();
-        onPrevious();
+        stepSpeed(1);
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, onNext, onPrevious]);
+  }, [onClose, stepSpeed]);
 
   return (
     <div
@@ -71,6 +77,8 @@ export function QuickViewModal({
               thumbnailUrl={clip.thumbnailUrl}
               duration={clip.duration}
               autoPlayMuted
+              playbackRate={playbackRate}
+              onPlaybackRateChange={setPlaybackRate}
             />
 
             <div className="flex items-center justify-between gap-3">
