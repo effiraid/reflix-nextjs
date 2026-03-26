@@ -6,7 +6,6 @@ import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
-import { Watermark } from "./Watermark";
 import type { ClipIndex } from "@/lib/types";
 
 interface ClipCardProps {
@@ -111,23 +110,20 @@ export function ClipCard({
 
       {/* Stage 3: Short MP4 loop preview — immediate when zoomed in, hover-triggered when zoomed out */}
       {showPreview && (
-        <>
-          <video
-            src={previewUrl}
-            muted
-            autoPlay
-            loop
-            playsInline
-            controlsList="nodownload nofullscreen noremoteplayback"
-            disablePictureInPicture
-            draggable={false}
-            onDragStart={(e) => e.preventDefault()}
-            className="absolute inset-0 w-full h-full object-contain"
-            onContextMenu={(e) => e.preventDefault()}
-            onError={() => setFailedPreviewUrl(previewUrl)}
-          />
-          <Watermark size="sm" />
-        </>
+        <video
+          src={previewUrl}
+          muted
+          autoPlay
+          loop
+          playsInline
+          controlsList="nodownload nofullscreen noremoteplayback"
+          disablePictureInPicture
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          className="absolute inset-0 w-full h-full object-contain"
+          onContextMenu={(e) => e.preventDefault()}
+          onError={() => setFailedPreviewUrl(previewUrl)}
+        />
       )}
 
       {showInfo && (

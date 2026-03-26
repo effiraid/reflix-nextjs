@@ -155,22 +155,4 @@ describe("ClipCard", () => {
     expect(screen.getByAltText(clip.name)).toHaveAttribute("loading", "eager");
   });
 
-  it("shows watermark only when video preview is playing", () => {
-    intersectionState.stage = "webp";
-    intersectionState.isInView = true;
-
-    const { container } = render(<ClipCard clip={clip} />);
-
-    expect(container.querySelector("video")).toBeInTheDocument();
-    expect(screen.getByText("reflix.dev")).toBeInTheDocument();
-  });
-
-  it("hides watermark when preview is not playing", () => {
-    intersectionState.stage = "thumbnail";
-    intersectionState.isInView = false;
-
-    render(<ClipCard clip={clip} />);
-
-    expect(screen.queryByText("reflix.dev")).not.toBeInTheDocument();
-  });
 });
