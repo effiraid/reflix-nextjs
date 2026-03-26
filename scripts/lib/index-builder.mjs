@@ -121,16 +121,25 @@ export function writeOutputFiles(clips, clipIndexEntries, outputDir) {
     fs.writeFileSync(clipPath, JSON.stringify(clip, null, 2));
   }
 
-  // Write index.json
+  // Merge with any existing index so batch exports are incremental by default.
+  const indexPath = path.join(outputDir, "src", "data", "index.json");
+  let existingEntries = [];
+  if (fs.existsSync(indexPath)) {
+    const existingIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+    existingEntries = existingIndex.clips || [];
+  }
+
+  const mergedEntries = new Map(existingEntries.map((entry) => [entry.id, entry]));
+  for (const entry of clipIndexEntries) {
+    mergedEntries.set(entry.id, entry);
+  }
+
   const indexData = {
-    clips: clipIndexEntries,
-    totalCount: clipIndexEntries.length,
+    clips: Array.from(mergedEntries.values()),
+    totalCount: mergedEntries.size,
     generatedAt: new Date().toISOString(),
   };
-  fs.writeFileSync(
-    path.join(outputDir, "src", "data", "index.json"),
-    JSON.stringify(indexData, null, 2)
-  );
+  fs.writeFileSync(indexPath, JSON.stringify(indexData, null, 2));
 
-  console.log(`Wrote ${clips.length} clip JSONs + index.json (${clipIndexEntries.length} entries)`);
+  console.log(`Wrote ${clips.length} clip JSONs + index.json (${mergedEntries.size} entries)`);
 }

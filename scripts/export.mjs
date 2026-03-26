@@ -9,7 +9,7 @@
  *   node scripts/export.mjs --full --confirm-full-export
  *   node scripts/export.mjs --dry-run           # Preview export changes
  *   node scripts/export.mjs --dry-run --r2      # Preview planned R2 uploads
- *   node scripts/export.mjs --prune             # Remove stale local artifacts outside the batch
+ *   node scripts/export.mjs --prune             # Remove stale local artifacts outside the merged index
  *   node scripts/export.mjs --ids ID1,ID2       # Specific items
  *   node scripts/export.mjs --limit 5           # First N items
  *   node scripts/export.mjs --local             # Legacy alias; local generation is now default
@@ -77,6 +77,39 @@ export function buildMediaUploadEntries(clipIds, projectRoot) {
       publicPath: `/thumbnails/${clipId}.webp`,
     },
   ]);
+}
+
+export function buildMergedKeepIds(existingIndex, batchItems) {
+  const existingIds = (existingIndex?.clips || []).map((clip) => clip.id);
+  const batchIds = batchItems.map((item) => item.id);
+  return [...new Set([...existingIds, ...batchIds])];
+}
+
+export function recomputePublishedRelatedClips(
+  indexEntries,
+  projectRoot,
+  { warn = console.warn } = {}
+) {
+  const allClips = [];
+
+  for (const entry of indexEntries) {
+    const clipPath = path.join(projectRoot, "public", "data", "clips", `${entry.id}.json`);
+    if (!fs.existsSync(clipPath)) {
+      warn(`  ⚠️ Missing clip JSON for ${entry.id}, skipping related computation`);
+      continue;
+    }
+
+    allClips.push(JSON.parse(fs.readFileSync(clipPath, "utf-8")));
+  }
+
+  const relatedMap = computeRelatedClips(allClips);
+  for (const clip of allClips) {
+    clip.relatedClips = relatedMap.get(clip.id) || [];
+    const clipPath = path.join(projectRoot, "public", "data", "clips", `${clip.id}.json`);
+    fs.writeFileSync(clipPath, JSON.stringify(clip, null, 2));
+  }
+
+  return allClips;
 }
 
 function ensureMediaDirectories(mediaRoot) {
@@ -258,9 +291,15 @@ export async function runExport(
   if (flags.dryRun) {
     logDryRunItems(items);
     const uploadSummary = flags.r2 ? await logDryRunUploads(items, projectRoot) : null;
+    const indexPath = path.join(projectRoot, "src", "data", "index.json");
     const pruneSummary = flags.prune
       ? await prunePublishedArtifacts({
-          keepIds: items.map((item) => item.id),
+          keepIds: buildMergedKeepIds(
+            fs.existsSync(indexPath)
+              ? JSON.parse(fs.readFileSync(indexPath, "utf-8"))
+              : { clips: [] },
+            items
+          ),
           projectRoot,
           dryRun: true,
         })
@@ -320,22 +359,23 @@ export async function runExport(
     }
   }
 
-  console.log("\n🔗 Computing related clips...");
-  const relatedMap = computeRelatedClips(clips);
-  for (const clip of clips) {
-    clip.relatedClips = relatedMap.get(clip.id) || [];
-  }
-
   console.log("\n💾 Writing output files...");
   writeOutputFiles(clips, clipIndexEntries, projectRoot);
 
+  const indexPath = path.join(projectRoot, "src", "data", "index.json");
+  const mergedIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+  console.log("\n🔗 Computing related clips for all clips...");
+  recomputePublishedRelatedClips(mergedIndex.clips, projectRoot);
+
   let pruneSummary = null;
+  const mergedClipIds = mergedIndex.clips.map((clip) => clip.id);
   if (flags.prune) {
     if (generationSummary.failed > 0) {
       console.warn("\n⚠️  Skipping prune because some items failed during export.");
     } else {
       pruneSummary = await prunePublishedArtifacts({
-        keepIds: clipIds,
+        keepIds: mergedClipIds,
         projectRoot,
       });
     }
@@ -364,7 +404,7 @@ export async function runExport(
     console.log(`   Upload failed: ${uploadSummary.failed}`);
     console.log(`   Upload skipped: ${uploadSummary.skipped}`);
   }
-  console.log(`   Index entries: ${clipIndexEntries.length}`);
+  console.log(`   Index entries: ${mergedClipIds.length}`);
   console.log(`   Clip JSONs: ${clips.length}`);
 
   return {

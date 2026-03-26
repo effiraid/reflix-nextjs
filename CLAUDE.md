@@ -25,9 +25,11 @@ npx vitest run                       # Single run (CI)
 npx vitest run src/lib/filter.test.ts  # Single test file
 
 # Export pipeline (Eagle → local JSON/media → optional R2 upload)
-npm run export:batch           # Export active release batch, prune stale artifacts
+npm run export:batch           # Export active release batch, merge into existing index
 npm run export:batch:dry       # Preview without writing
 npm run export:batch:r2        # Export + upload to R2
+npm run export:prune           # Remove stale local artifacts not in merged index
+npm run export:prune:dry       # Preview prune without deleting
 
 # Release workflow (scan → review → approve → export → mark-published)
 npm run release:scan           # Generate proposal from active batch

@@ -1,12 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  buildMergedKeepIds,
   buildMediaUploadEntries,
   parseFlags,
+  recomputePublishedRelatedClips,
   resolveEagleLibraryPath,
   resolveRequestedClipIds,
 } from "./export.mjs";
@@ -187,13 +190,71 @@ test("package scripts expose batch-first export commands with prune enabled", ()
     fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf-8")
   );
 
-  assert.equal(packageJson.scripts["export:batch"], "node scripts/export.mjs --prune");
+  assert.equal(packageJson.scripts["export:batch"], "node scripts/export.mjs");
   assert.equal(packageJson.scripts["export:batch:dry"], "node scripts/export.mjs --dry-run");
-  assert.equal(packageJson.scripts["export:batch:r2"], "node scripts/export.mjs --prune --r2");
+  assert.equal(packageJson.scripts["export:batch:r2"], "node scripts/export.mjs --r2");
+  assert.equal(packageJson.scripts["export:prune"], "node scripts/export.mjs --prune");
+  assert.equal(packageJson.scripts["export:prune:dry"], "node scripts/export.mjs --prune --dry-run");
   assert.equal(
     packageJson.scripts["export:full"],
     "node scripts/export.mjs --full --confirm-full-export"
   );
+});
+
+test("buildMergedKeepIds unions existing index ids with the incoming batch", () => {
+  const mergedKeepIds = buildMergedKeepIds(
+    {
+      clips: [{ id: "A" }, { id: "B" }],
+    },
+    [{ id: "B" }, { id: "C" }]
+  );
+
+  assert.deepEqual(mergedKeepIds, ["A", "B", "C"]);
+});
+
+test("recomputePublishedRelatedClips rewrites related clips for merged clips and skips missing files", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-export-"));
+  const clipsDir = path.join(tmpDir, "public", "data", "clips");
+  fs.mkdirSync(clipsDir, { recursive: true });
+
+  try {
+    fs.writeFileSync(
+      path.join(clipsDir, "A.json"),
+      JSON.stringify({
+        id: "A",
+        tags: ["combat"],
+        folders: ["f-1"],
+        relatedClips: [],
+      })
+    );
+    fs.writeFileSync(
+      path.join(clipsDir, "B.json"),
+      JSON.stringify({
+        id: "B",
+        tags: ["combat"],
+        folders: ["f-2"],
+        relatedClips: [],
+      })
+    );
+
+    const warnings = [];
+    recomputePublishedRelatedClips(
+      [{ id: "A" }, { id: "B" }, { id: "C" }],
+      tmpDir,
+      {
+        warn: (message) => warnings.push(message),
+      }
+    );
+
+    const clipA = JSON.parse(fs.readFileSync(path.join(clipsDir, "A.json"), "utf-8"));
+    const clipB = JSON.parse(fs.readFileSync(path.join(clipsDir, "B.json"), "utf-8"));
+
+    assert.deepEqual(clipA.relatedClips, ["B"]);
+    assert.deepEqual(clipB.relatedClips, ["A"]);
+    assert.deepEqual(warnings, ["  ⚠️ Missing clip JSON for C, skipping related computation"]);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
 });
 
 test(".env.local.example keeps Desktop Eagle defaults and same-origin local media", () => {
