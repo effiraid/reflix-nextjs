@@ -3,6 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { SearchBar } from "./SearchBar";
 
 describe("SearchBar", () => {
+  it("renders a leading search icon inside the field", () => {
+    const { container } = render(
+      <SearchBar
+        initialQuery=""
+        placeholder="Search clips"
+        onSearch={vi.fn()}
+      />
+    );
+
+    const form = container.querySelector("form");
+    expect(form?.querySelector("svg")).toBeInTheDocument();
+  });
+
   it("reflects the current query and emits updates on submit", () => {
     const onSearch = vi.fn();
 

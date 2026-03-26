@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
 import { getMediaUrl } from "@/lib/mediaUrl";
+import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -24,7 +25,9 @@ export function RightPanelInspector({
   const title = clip.i18n.title[lang] || clip.name;
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
-  const [previewFailed, setPreviewFailed] = useState(false);
+  const quickViewOpen = useUIStore((state) => state.quickViewOpen);
+  const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
+  const previewFailed = quickViewOpen || failedPreviewUrl === previewUrl;
   const mediaKindKey = getClipMediaKind(clip.ext);
   const mediaKind =
     mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
@@ -36,10 +39,6 @@ export function RightPanelInspector({
   const memoText = clip.annotation || "-";
   const hasLink = Boolean(clip.url);
   const hasMemo = Boolean(clip.annotation);
-
-  useEffect(() => {
-    setPreviewFailed(false);
-  }, [previewUrl]);
 
   return (
     <div className="space-y-5 p-4 text-sm text-foreground">
@@ -61,7 +60,7 @@ export function RightPanelInspector({
             onDragStart={(event) => event.preventDefault()}
             onContextMenu={(event) => event.preventDefault()}
             className="h-full w-full object-cover"
-            onError={() => setPreviewFailed(true)}
+            onError={() => setFailedPreviewUrl(previewUrl)}
           />
         ) : (
           <Image
@@ -174,9 +173,9 @@ function TokenSection({ label, items }: { label: string; items: string[] }) {
       </h4>
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <span
-              key={item}
+              key={`${item}-${index}`}
               className="rounded-full border border-border bg-background px-3 py-1 text-xs"
             >
               {item}

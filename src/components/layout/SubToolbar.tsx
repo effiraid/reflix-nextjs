@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
-import { useFilterSync } from "@/hooks/useFilterSync";
-import { useFilterStore } from "@/stores/filterStore";
+import { MIN_THUMBNAIL_SIZE, MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
 
 interface SubToolbarProps {
   lang: Locale;
-  dict: Pick<Dictionary, "browse" | "clip" | "nav">;
+  dict: Pick<Dictionary, "clip">;
 }
 
 export function SubToolbar({ lang, dict }: SubToolbarProps) {
@@ -23,17 +20,6 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
     setActiveFilterTab,
     reshuffleClips,
   } = useUIStore();
-  const searchQuery = useFilterStore((state) => state.searchQuery);
-  const { updateURL } = useFilterSync();
-  const [localSearch, setLocalSearch] = useState(searchQuery);
-  const isComposingRef = useRef(false);
-
-  useEffect(() => {
-    if (!isComposingRef.current) {
-      setLocalSearch(searchQuery);
-    }
-  }, [searchQuery]);
-
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
@@ -48,14 +34,38 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
     <div className="shrink-0 border-b border-border">
       {/* Top toolbar row */}
       <div className="h-10 flex items-center px-3 gap-2">
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Left: Filter + Shuffle */}
+        <div className="flex items-center gap-1 flex-1">
+          <button
+            type="button"
+            aria-label={filterLabel}
+            onClick={handleFilterToggle}
+            className={`p-1.5 rounded ${
+              filterBarOpen
+                ? "bg-accent text-white"
+                : "hover:bg-surface-hover text-muted"
+            }`}
+          >
+            <FilterIcon />
+          </button>
+          <button
+            type="button"
+            aria-label={shuffleLabel}
+            onClick={reshuffleClips}
+            className="p-1.5 rounded hover:bg-surface-hover text-muted"
+          >
+            <RefreshIcon />
+          </button>
+        </div>
 
-        {/* Thumbnail size slider */}
+        {/* Center: Thumbnail size slider */}
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
+            aria-label="-"
             onClick={() => setThumbnailSize(thumbnailSize - 1)}
-            className="p-1 rounded hover:bg-surface-hover text-muted"
+            disabled={thumbnailSize <= MIN_THUMBNAIL_SIZE}
+            className="p-1 rounded hover:bg-surface-hover text-muted disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <MinusIcon />
           </button>
@@ -66,62 +76,22 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
             step={1}
             value={thumbnailSize}
             onChange={(e) => setThumbnailSize(Number(e.target.value))}
+            aria-label="Thumbnail size"
             className="w-24 h-1 accent-muted"
           />
           <button
+            type="button"
+            aria-label="+"
             onClick={() => setThumbnailSize(thumbnailSize + 1)}
-            className="p-1 rounded hover:bg-surface-hover text-muted"
+            disabled={thumbnailSize >= MAX_THUMBNAIL_SIZE}
+            className="p-1 rounded hover:bg-surface-hover text-muted disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <PlusIcon />
           </button>
         </div>
 
-        {/* Refresh button */}
-        <button
-          type="button"
-          aria-label={shuffleLabel}
-          onClick={reshuffleClips}
-          className="p-1.5 rounded hover:bg-surface-hover text-muted"
-        >
-          <RefreshIcon />
-        </button>
-
-        {/* Filter toggle */}
-        <button
-          type="button"
-          aria-label={filterLabel}
-          onClick={handleFilterToggle}
-          className={`p-1.5 rounded ${
-            filterBarOpen
-              ? "bg-accent text-white"
-              : "hover:bg-surface-hover text-muted"
-          }`}
-        >
-          <FilterIcon />
-        </button>
-
-        {/* Search */}
-        <div className="relative">
-          <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            type="text"
-            value={localSearch}
-            onChange={(e) => {
-              setLocalSearch(e.target.value);
-              if (!isComposingRef.current) {
-                updateURL({ searchQuery: e.target.value });
-              }
-            }}
-            onCompositionStart={() => { isComposingRef.current = true; }}
-            onCompositionEnd={(e) => {
-              isComposingRef.current = false;
-              updateURL({ searchQuery: e.currentTarget.value });
-            }}
-            placeholder={dict.nav.searchPlaceholder}
-            aria-label={dict.nav.search}
-            className="w-40 h-7 pl-7 pr-2 text-sm rounded border border-border bg-background focus:outline-none focus:border-accent"
-          />
-        </div>
+        {/* Right spacer for centering */}
+        <div className="flex-1" />
       </div>
 
       {/* Filter tabs row (toggled) */}
@@ -184,15 +154,6 @@ function FilterIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1.5 3H12.5M3.5 7H10.5M5.5 11H8.5" />
-    </svg>
-  );
-}
-
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <circle cx="6" cy="6" r="4" />
-      <path d="M9 9L12.5 12.5" />
     </svg>
   );
 }

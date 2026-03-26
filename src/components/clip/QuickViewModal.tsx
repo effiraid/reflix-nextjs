@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { VideoPlayer, PLAYBACK_SPEEDS } from "@/components/clip/VideoPlayer";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
@@ -8,6 +8,7 @@ import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { formatClipDuration } from "@/lib/clipInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { ClipIndex, Locale } from "@/lib/types";
+
 
 interface QuickViewModalProps {
   clip: ClipIndex;
@@ -22,20 +23,31 @@ export function QuickViewModal({
   dict,
   onClose,
 }: QuickViewModalProps) {
-  const [playbackRate, setPlaybackRate] = useState(1);
-
-  // Reset speed when clip changes
-  useEffect(() => {
-    setPlaybackRate(1);
-  }, [clip.id]);
+  const [playbackState, setPlaybackState] = useState(() => ({
+    clipId: clip.id,
+    rate: 1,
+  }));
+  const dialogRef = useRef<HTMLElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const playbackRate = playbackState.clipId === clip.id ? playbackState.rate : 1;
+  const setPlaybackRate = useCallback(
+    (rate: number) => {
+      setPlaybackState({ clipId: clip.id, rate });
+    },
+    [clip.id]
+  );
 
   const stepSpeed = useCallback((direction: 1 | -1) => {
-    setPlaybackRate((prev) => {
-      const idx = PLAYBACK_SPEEDS.indexOf(prev);
+    setPlaybackState((prev) => {
+      const currentRate = prev.clipId === clip.id ? prev.rate : 1;
+      const idx = PLAYBACK_SPEEDS.indexOf(currentRate);
       const nextIdx = Math.min(PLAYBACK_SPEEDS.length - 1, Math.max(0, idx + direction));
-      return PLAYBACK_SPEEDS[nextIdx];
+      return {
+        clipId: clip.id,
+        rate: PLAYBACK_SPEEDS[nextIdx],
+      };
     });
-  }, []);
+  }, [clip.id]);
 
   const shortcuts = useMemo<Shortcut[]>(
     () => [
@@ -48,6 +60,15 @@ export function QuickViewModal({
   );
   useKeyboardShortcuts(shortcuts);
 
+  useLayoutEffect(() => {
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    return () => {
+      previousFocusRef.current?.focus();
+    };
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -55,40 +76,25 @@ export function QuickViewModal({
       onClick={onClose}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label={clip.name}
+        tabIndex={-1}
         className="w-full max-w-5xl rounded-3xl border border-border bg-background shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,2fr)_320px]">
-          <div className="space-y-4">
-            <VideoPlayer
-              videoUrl={`/videos/${clip.id}.mp4`}
-              thumbnailUrl={clip.thumbnailUrl}
-              duration={clip.duration}
-              autoPlayMuted
-              playbackRate={playbackRate}
-              onPlaybackRateChange={setPlaybackRate}
-            />
+          <VideoPlayer
+            videoUrl={`/videos/${clip.id}.mp4`}
+            thumbnailUrl={clip.thumbnailUrl}
+            duration={clip.duration}
+            autoPlayMuted
+            playbackRate={playbackRate}
+            onPlaybackRateChange={setPlaybackRate}
+          />
 
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-2xl font-semibold">{clip.name}</h2>
-                <p className="mt-1 text-sm text-muted">
-                  {dict.clip.duration}: {formatClipDuration(clip.duration)}
-                </p>
-              </div>
-              <Link
-                href={`/${lang}/clip/${clip.id}`}
-                className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium hover:bg-surface/80"
-              >
-                {dict.clip.detail}
-              </Link>
-            </div>
-          </div>
-
-          <aside className="space-y-4 rounded-2xl border border-border bg-surface/40 p-4">
+          <aside className="flex flex-col gap-4 rounded-2xl border border-border bg-surface/40 p-4">
             <section>
               <h3 className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted">
                 {dict.clip.tags}
@@ -122,6 +128,26 @@ export function QuickViewModal({
                 <dd className="font-medium">{formatClipDuration(clip.duration)}</dd>
               </div>
             </dl>
+
+            <div className="mt-auto flex gap-2">
+              <button
+                type="button"
+                className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-surface/80"
+                onClick={() => {
+                  void navigator.clipboard.writeText(
+                    `${window.location.origin}/${lang}/clip/${clip.id}`
+                  );
+                }}
+              >
+                {dict.clip.share}
+              </button>
+              <Link
+                href={`/${lang}/clip/${clip.id}`}
+                className="flex-1 rounded-full bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
+              >
+                {dict.clip.detail}
+              </Link>
+            </div>
           </aside>
         </div>
       </section>

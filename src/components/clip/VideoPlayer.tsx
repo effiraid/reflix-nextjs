@@ -10,6 +10,8 @@ import {
   VolumeOffIcon,
   VolumeOnIcon,
   RepeatIcon,
+  FullscreenIcon,
+  FullscreenExitIcon,
 } from "./PlayerIcons";
 
 interface VideoPlayerProps {
@@ -25,12 +27,19 @@ interface VideoPlayerProps {
 
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
+const SCRUB_PX_PER_SEC = 200;
+const DRAG_THRESHOLD = 5;
+
 function formatPlaybackTime(value: number) {
   const totalSeconds = Math.max(0, Math.floor(value));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
   return String(minutes) + ":" + String(seconds).padStart(2, "0");
+}
+
+function formatFrameCount(time: number, frameDuration: number) {
+  return String(frameDuration > 0 ? Math.round(time / frameDuration) : 0);
 }
 
 export function VideoPlayer({
@@ -55,15 +64,29 @@ export function VideoPlayer({
   const [isLooping, setIsLooping] = useState(true);
   const [inPoint, setInPoint] = useState(0);
   const [outPoint, setOutPoint] = useState(duration);
+  const [showFrames, setShowFrames] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const resolvedVideoUrl = getMediaUrl(videoUrl);
   const resolvedThumbnailUrl = getMediaUrl(thumbnailUrl);
   const totalDuration = Math.max(0, duration);
 
-  // Sync outPoint when duration becomes available
-  useEffect(() => {
-    setOutPoint((prev) => (prev === 0 ? duration : prev));
-  }, [duration]);
+  // Render-time state adjustments (avoids cascading-render effects)
+  const [prevVideoUrl, setPrevVideoUrl] = useState(resolvedVideoUrl);
+  const [prevDuration, setPrevDuration] = useState(duration);
+
+  if (prevVideoUrl !== resolvedVideoUrl) {
+    setPrevVideoUrl(resolvedVideoUrl);
+    setHasPlaybackError(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+  }
+
+  if (prevDuration !== duration) {
+    setPrevDuration(duration);
+    setOutPoint((prev) => (prev === prevDuration ? duration : prev));
+  }
 
   // Sync isMuted state to video element
   useEffect(() => {
@@ -76,6 +99,11 @@ export function VideoPlayer({
     if (!video || hasPlaybackError) return;
 
     if (video.paused) {
+      if (isLooping && (video.currentTime < inPoint || video.currentTime >= outPoint)) {
+        video.currentTime = inPoint;
+        setCurrentTime(inPoint);
+      }
+
       setIsPlaying(true);
       const playAttempt = video.play();
       if (playAttempt && typeof playAttempt.catch === "function") {
@@ -88,7 +116,7 @@ export function VideoPlayer({
 
     video.pause();
     setIsPlaying(false);
-  }, [hasPlaybackError]);
+  }, [hasPlaybackError, inPoint, isLooping, outPoint]);
 
   const handleSeek = useCallback((time: number) => {
     const video = videoRef.current;
@@ -112,15 +140,42 @@ export function VideoPlayer({
     if (!video) return;
     const time = video.currentTime;
     setCurrentTime(time);
+
+    if (video.paused) {
+      return;
+    }
+
     if (time >= outPoint) {
       if (isLooping) {
         video.currentTime = inPoint;
+        setCurrentTime(inPoint);
       } else {
         video.pause();
         setIsPlaying(false);
       }
     }
   }, [inPoint, outPoint, isLooping]);
+
+  const handleEnded = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (!isLooping) {
+      setIsPlaying(false);
+      return;
+    }
+
+    video.currentTime = inPoint;
+    setCurrentTime(inPoint);
+    setIsPlaying(true);
+
+    const playAttempt = video.play();
+    if (playAttempt && typeof playAttempt.catch === "function") {
+      playAttempt.catch(() => {
+        setIsPlaying(false);
+      });
+    }
+  }, [inPoint, isLooping]);
 
   const cyclePlaybackRate = useCallback(() => {
     if (hasPlaybackError) {
@@ -154,6 +209,39 @@ export function VideoPlayer({
     setIsMuted((prev) => !prev);
   }, []);
 
+  const stepSpeed = useCallback((direction: 1 | -1) => {
+    if (hasPlaybackError) return;
+    const video = videoRef.current;
+    const currentIndex = PLAYBACK_SPEEDS.indexOf(playbackRate);
+    const nextIdx = Math.min(PLAYBACK_SPEEDS.length - 1, Math.max(0, currentIndex + direction));
+    const nextRate = PLAYBACK_SPEEDS[nextIdx];
+    if (isControlled) {
+      onPlaybackRateChange?.(nextRate);
+    } else {
+      setInternalRate(nextRate);
+    }
+    if (video) {
+      video.playbackRate = nextRate;
+    }
+  }, [hasPlaybackError, playbackRate, isControlled, onPlaybackRateChange]);
+
+  const toggleFullscreen = useCallback(async () => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await el.requestFullscreen();
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handleChange);
+    return () => document.removeEventListener("fullscreenchange", handleChange);
+  }, []);
+
   const seekRelative = useCallback(
     (seconds: number) => {
       const video = videoRef.current;
@@ -170,11 +258,198 @@ export function VideoPlayer({
     setOutPoint(totalDuration);
   }, [totalDuration]);
 
+  // Video-area drag-to-scrub (relative: delta-X → time offset from grab point)
+  const scrubState = useRef<{
+    startX: number;
+    dragging: boolean;
+    baseTime: number;
+    rafId: number;
+  } | null>(null);
+
+  const handleVideoPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (hasPlaybackError) return;
+      const video = videoRef.current;
+      if (!video) return;
+
+      e.preventDefault();
+      (e.currentTarget as HTMLDivElement).setPointerCapture?.(e.pointerId);
+      scrubState.current = {
+        startX: e.clientX,
+        dragging: false,
+        baseTime: video.currentTime,
+        rafId: 0,
+      };
+    },
+    [hasPlaybackError]
+  );
+
+  const handleVideoPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = scrubState.current;
+      if (!state) return;
+      const video = videoRef.current;
+      if (!video) return;
+
+      const dx = e.clientX - state.startX;
+
+      if (!state.dragging && Math.abs(dx) >= DRAG_THRESHOLD) {
+        state.dragging = true;
+        video.pause();
+      }
+
+      if (state.dragging) {
+        const totalDx = e.clientX - state.startX;
+        let raw = state.baseTime + totalDx / SCRUB_PX_PER_SEC;
+        // Wrap around at boundaries
+        if (totalDuration > 0) {
+          raw = ((raw % totalDuration) + totalDuration) % totalDuration;
+        }
+        video.currentTime = raw;
+        // Throttle React re-renders to rAF
+        if (!state.rafId) {
+          state.rafId = requestAnimationFrame(() => {
+            setCurrentTime(video.currentTime);
+            if (scrubState.current) scrubState.current.rafId = 0;
+          });
+        }
+      }
+    },
+    [totalDuration]
+  );
+
+  const handleVideoPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      const state = scrubState.current;
+      scrubState.current = null;
+      if (!state) return;
+
+      try {
+        (e.currentTarget as HTMLDivElement).releasePointerCapture?.(e.pointerId);
+      } catch {
+        // already released
+      }
+
+      if (state.dragging) {
+        if (state.rafId) cancelAnimationFrame(state.rafId);
+        setCurrentTime(videoRef.current?.currentTime ?? 0);
+      } else {
+        void togglePlayback();
+      }
+    },
+    [togglePlayback]
+  );
+
+  // Frame-accurate wheel scrubbing
+  const frameDurationRef = useRef(1 / 30); // fallback: 30fps
+  const lastFrameTimeRef = useRef(-1);
+
+  // Detect actual frame duration from video metadata
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !video.requestVideoFrameCallback) return;
+
+    let callbackId: number;
+    const detect = (_now: DOMHighResTimeStamp, meta: VideoFrameCallbackMetadata) => {
+      if (lastFrameTimeRef.current >= 0) {
+        const dt = meta.mediaTime - lastFrameTimeRef.current;
+        if (dt > 0 && dt < 0.2) {
+          frameDurationRef.current = dt;
+          return; // detected, stop
+        }
+      }
+      lastFrameTimeRef.current = meta.mediaTime;
+      callbackId = video.requestVideoFrameCallback(detect);
+    };
+    callbackId = video.requestVideoFrameCallback(detect);
+
+    return () => {
+      video.cancelVideoFrameCallback?.(callbackId);
+      lastFrameTimeRef.current = -1;
+    };
+  }, [resolvedVideoUrl]);
+
+  const stepForward = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const fd = frameDurationRef.current;
+
+    // Wrap: at or past end → jump to start
+    if (video.currentTime >= totalDuration - fd / 2) {
+      video.currentTime = 0;
+      setCurrentTime(0);
+      return;
+    }
+
+    const t = Math.min(totalDuration, video.currentTime + fd);
+    video.currentTime = t;
+    setCurrentTime(t);
+  }, [totalDuration]);
+
+  const stepBackward = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const fd = frameDurationRef.current;
+
+    // Wrap: at or before start → jump to end
+    if (video.currentTime <= fd / 2) {
+      video.currentTime = totalDuration;
+      setCurrentTime(totalDuration);
+      return;
+    }
+
+    const t = video.currentTime - fd;
+    video.currentTime = t;
+    setCurrentTime(t);
+  }, [totalDuration]);
+
+  const handleVideoWheel = useCallback(
+    (e: React.WheelEvent<HTMLDivElement>) => {
+      if (hasPlaybackError) return;
+      const video = videoRef.current;
+      if (!video) return;
+
+      e.preventDefault();
+      const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+
+      video.pause();
+      setIsPlaying(false);
+
+      if (delta > 0) {
+        stepForward();
+      } else {
+        stepBackward();
+      }
+    },
+    [hasPlaybackError, stepForward, stepBackward]
+  );
+
+  const setInPointHere = useCallback(() => {
+    const video = videoRef.current;
+    if (video) setInPoint(video.currentTime);
+  }, []);
+
+  const setOutPointHere = useCallback(() => {
+    const video = videoRef.current;
+    if (video) setOutPoint(video.currentTime);
+  }, []);
+
+  const toggleLoop = useCallback(() => {
+    setIsLooping((prev) => !prev);
+  }, []);
+
   useVideoKeyboard({
     togglePlayback,
     seekRelative,
     toggleMute,
     resetMarkers,
+    toggleFullscreen,
+    setInPointHere,
+    setOutPointHere,
+    toggleLoop,
+    stepForward,
+    stepBackward,
+    stepSpeed,
     disabled: hasPlaybackError,
   });
 
@@ -197,12 +472,6 @@ export function VideoPlayer({
   }, [playbackRate]);
 
   useEffect(() => {
-    setHasPlaybackError(false);
-    setIsPlaying(false);
-    setCurrentTime(0);
-  }, [resolvedVideoUrl]);
-
-  useEffect(() => {
     if (!autoPlayMuted) {
       return;
     }
@@ -217,7 +486,6 @@ export function VideoPlayer({
     }
 
     video.muted = true;
-    setIsPlaying(true);
 
     const playAttempt = video.play();
     if (playAttempt && typeof playAttempt.catch === "function") {
@@ -228,14 +496,15 @@ export function VideoPlayer({
   }, [autoPlayMuted, hasPlaybackError, resolvedVideoUrl]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border">
+    <div ref={containerRef} className="overflow-hidden rounded-2xl border border-border">
       {/* Video area */}
       <div className="relative bg-black" onContextMenu={(e) => e.preventDefault()}>
         <div
-          className={`absolute inset-0 z-10 ${hasPlaybackError ? "cursor-default" : "cursor-pointer"}`}
-          onClick={() => {
-            void togglePlayback();
-          }}
+          className={`absolute inset-0 z-10 touch-none ${hasPlaybackError ? "cursor-default" : "cursor-pointer"}`}
+          onPointerDown={handleVideoPointerDown}
+          onPointerMove={handleVideoPointerMove}
+          onPointerUp={handleVideoPointerUp}
+          onWheel={handleVideoWheel}
           aria-hidden="true"
         />
         <video
@@ -248,11 +517,12 @@ export function VideoPlayer({
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
           onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEnded}
           onContextMenu={(e) => e.preventDefault()}
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
           onError={handlePlaybackError}
-          className="aspect-video w-full object-cover"
+          className="aspect-video w-full object-contain"
         />
       </div>
 
@@ -260,6 +530,7 @@ export function VideoPlayer({
       <div className="flex items-center gap-2 border-t border-border bg-surface px-3 py-2">
         <button
           type="button"
+          tabIndex={-1}
           className="flex items-center p-1 text-foreground hover:text-foreground/80 disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => {
             void togglePlayback();
@@ -272,6 +543,7 @@ export function VideoPlayer({
 
         <button
           type="button"
+          tabIndex={-1}
           className="flex items-center p-1 text-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           onClick={toggleMute}
           aria-label={isMuted ? "Unmute" : "Mute"}
@@ -280,13 +552,17 @@ export function VideoPlayer({
           {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
         </button>
 
-        <span className="text-xs tabular-nums text-muted">
-          {formatPlaybackTime(currentTime)} / {formatPlaybackTime(totalDuration)}
-        </span>
-
-        <span className="text-[10px] tabular-nums text-muted/60">
-          F:{Math.floor(currentTime * 15)}
-        </span>
+        <button
+          type="button"
+          tabIndex={-1}
+          className="text-xs tabular-nums text-muted hover:text-foreground"
+          onClick={() => setShowFrames((prev) => !prev)}
+          aria-label="Toggle time/frame display"
+        >
+          {showFrames
+            ? `${formatFrameCount(currentTime, frameDurationRef.current)}f / ${formatFrameCount(totalDuration, frameDurationRef.current)}f`
+            : `${formatPlaybackTime(currentTime)} / ${formatPlaybackTime(totalDuration)}`}
+        </button>
 
         <SeekBar
           currentTime={currentTime}
@@ -303,6 +579,7 @@ export function VideoPlayer({
 
         <button
           type="button"
+          tabIndex={-1}
           className="flex items-center p-1 text-xs font-medium text-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
           onClick={cyclePlaybackRate}
           aria-label="Playback speed"
@@ -313,12 +590,23 @@ export function VideoPlayer({
 
         <button
           type="button"
+          tabIndex={-1}
           className={`flex items-center p-1 ${isLooping ? "text-accent" : "text-muted"} hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60`}
           onClick={() => setIsLooping((prev) => !prev)}
           aria-label={isLooping ? "Disable loop" : "Enable loop"}
           disabled={hasPlaybackError}
         >
           <RepeatIcon />
+        </button>
+
+        <button
+          type="button"
+          tabIndex={-1}
+          className="flex items-center p-1 text-muted hover:text-foreground"
+          onClick={() => { void toggleFullscreen(); }}
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </button>
       </div>
     </div>

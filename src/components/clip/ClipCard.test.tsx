@@ -37,7 +37,7 @@ vi.mock("@/lib/mediaUrl", () => ({
 const clip: ClipIndex = {
   id: "clip-1",
   name: "연출 아케인 힘듦 일어나기 비몽사몽 비틀비틀 아픔",
-  tags: [],
+  tags: ["아케인", "힘듦"],
   folders: [],
   star: 3,
   category: "acting",
@@ -59,10 +59,11 @@ describe("ClipCard", () => {
     getMediaUrlMock.mockImplementation((path: string) => path);
   });
 
-  it("shows title and duration with lighter default text that brightens on hover and omits stars", () => {
+  it("shows tags and duration with lighter default text that brightens on hover and omits stars", () => {
     render(<ClipCard clip={clip} />);
 
-    expect(screen.getByText(clip.name)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: clip.name })).toBeInTheDocument();
+    expect(screen.getByText("아케인, 힘듦")).toBeInTheDocument();
     expect(screen.getByText("8.6s")).toBeInTheDocument();
     expect(screen.queryByText("★★★")).not.toBeInTheDocument();
 
@@ -90,7 +91,7 @@ describe("ClipCard", () => {
 
     render(<ClipCard clip={clip} onOpenQuickView={onOpenQuickView} />);
 
-    fireEvent.doubleClick(screen.getByText(clip.name));
+    fireEvent.doubleClick(screen.getByRole("button", { name: clip.name }));
 
     expect(setSelectedClipIdMock).toHaveBeenCalledWith(clip.id);
     expect(onOpenQuickView).toHaveBeenCalledWith(clip.id);
@@ -102,7 +103,7 @@ describe("ClipCard", () => {
 
     render(<ClipCard clip={clip} onOpenQuickView={onOpenQuickView} />);
 
-    fireEvent.click(screen.getByText(clip.name));
+    fireEvent.click(screen.getByRole("button", { name: clip.name }));
 
     expect(setSelectedClipIdMock).not.toHaveBeenCalled();
     expect(onOpenQuickView).toHaveBeenCalledWith(clip.id);
@@ -144,7 +145,13 @@ describe("ClipCard", () => {
   it("hides the clip info overlay when text display is disabled", () => {
     render(<ClipCard clip={clip} showInfo={false} />);
 
-    expect(screen.queryByText(clip.name)).not.toBeInTheDocument();
+    expect(screen.queryByText("아케인, 힘듦")).not.toBeInTheDocument();
     expect(screen.queryByText("8.6s")).not.toBeInTheDocument();
+  });
+
+  it("marks prioritized thumbnails for eager loading above the fold", () => {
+    render(<ClipCard clip={clip} prioritizeThumbnail />);
+
+    expect(screen.getByAltText(clip.name)).toHaveAttribute("loading", "eager");
   });
 });

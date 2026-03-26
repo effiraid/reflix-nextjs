@@ -239,9 +239,11 @@ describe("MasonryGrid", () => {
 
     expect(activeOptions).toHaveLength(3);
     expect(activeOptions[0]?.getItemKey?.(0)).toBe("clip-a");
-    expect(activeOptions[0]?.getItemKey?.(1)).toBe("clip-f");
+    expect(activeOptions[0]?.getItemKey?.(1)).toBe("clip-d");
     expect(activeOptions[1]?.getItemKey?.(0)).toBe("clip-b");
+    expect(activeOptions[1]?.getItemKey?.(1)).toBe("clip-e");
     expect(activeOptions[2]?.getItemKey?.(0)).toBe("clip-c");
+    expect(activeOptions[2]?.getItemKey?.(1)).toBe("clip-f");
   });
 
   it("switches zoomed-out grids to hover-triggered previews", () => {
@@ -267,6 +269,51 @@ describe("MasonryGrid", () => {
       enablePreview: true,
       previewOnHover: true,
       showInfo: false,
+    });
+  });
+
+  it("suspends grid previews while quick view is open", () => {
+    useUIStore.setState({
+      thumbnailSize: 2,
+      shuffleSeed: 0,
+      quickViewOpen: true,
+      filterBarOpen: false,
+      activeFilterTab: null,
+      leftPanelOpen: true,
+      rightPanelOpen: true,
+      viewMode: "masonry",
+    });
+
+    render(
+      <main data-masonry-scroll>
+        <MasonryGrid clips={clips} />
+      </main>
+    );
+
+    expect(clipCardProps.length).toBeGreaterThan(0);
+    expect(clipCardProps[0]).toMatchObject({
+      enablePreview: false,
+    });
+  });
+
+  it("prioritizes above-the-fold thumbnails in each column", () => {
+    render(
+      <main data-masonry-scroll>
+        <MasonryGrid clips={clips} />
+      </main>
+    );
+
+    expect(clipCardProps.find((props) => props.clip === clips[0])).toMatchObject({
+      prioritizeThumbnail: true,
+    });
+    expect(clipCardProps.find((props) => props.clip === clips[1])).toMatchObject({
+      prioritizeThumbnail: true,
+    });
+    expect(clipCardProps.find((props) => props.clip === clips[2])).toMatchObject({
+      prioritizeThumbnail: true,
+    });
+    expect(clipCardProps.find((props) => props.clip === clips[5])).toMatchObject({
+      prioritizeThumbnail: false,
     });
   });
 });

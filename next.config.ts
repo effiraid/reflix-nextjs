@@ -19,6 +19,16 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
+  headers: async () => [
+    {
+      source: "/:path(videos|previews)/:file*",
+      headers: [
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "Content-Disposition", value: "inline" },
+        { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;

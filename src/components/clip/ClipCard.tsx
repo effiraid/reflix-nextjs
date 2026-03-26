@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
+import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
 import type { ClipIndex } from "@/lib/types";
 
@@ -12,6 +13,7 @@ interface ClipCardProps {
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
   previewOnHover?: boolean;
   showInfo?: boolean;
+  prioritizeThumbnail?: boolean;
   onOpenQuickView?: (clipId: string) => void;
 }
 
@@ -20,20 +22,18 @@ export function ClipCard({
   enablePreview = true,
   previewOnHover = false,
   showInfo = true,
+  prioritizeThumbnail = false,
   onOpenQuickView,
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
   const { selectedClipId, setSelectedClipId } = useClipStore();
   const isSelected = selectedClipId === clip.id;
   const [isHovered, setIsHovered] = useState(false);
-  const [previewFailed, setPreviewFailed] = useState(false);
+  const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
 
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
-
-  useEffect(() => {
-    setPreviewFailed(false);
-  }, [previewUrl]);
+  const previewFailed = failedPreviewUrl === previewUrl;
 
   const handleClick = useCallback(() => {
     if (isSelected) {
@@ -49,6 +49,16 @@ export function ClipCard({
     onOpenQuickView?.(clip.id);
   }, [clip.id, onOpenQuickView, setSelectedClipId]);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleClick();
+      }
+    },
+    [handleClick]
+  );
+
   const showPreview =
     enablePreview &&
     stage === "webp" &&
@@ -59,17 +69,22 @@ export function ClipCard({
   return (
     <div
       ref={ref}
-      className={`group relative rounded-lg overflow-hidden cursor-pointer transition-shadow ${
+      role="button"
+      tabIndex={0}
+      aria-label={clip.name}
+      aria-pressed={isSelected}
+      className={`group relative rounded-lg overflow-hidden cursor-pointer transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent bg-black ${
         isSelected ? "ring-2 ring-accent" : "hover:shadow-lg"
       }`}
-      style={{ aspectRatio: `${clip.width}/${clip.height}` }}
+      style={{ aspectRatio: THUMBNAIL_ASPECT_RATIO }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Stage 1: LQIP blur placeholder */}
-      {clip.lqipBase64 && (
+      {stage === "lqip" && clip.lqipBase64 && (
         <Image
           src={clip.lqipBase64}
           alt=""
@@ -87,8 +102,9 @@ export function ClipCard({
           src={thumbnailUrl}
           alt={clip.name}
           fill
+          loading={prioritizeThumbnail ? "eager" : undefined}
           sizes="33vw"
-          className="object-cover"
+          className="object-contain"
         />
       )}
 
@@ -100,16 +116,20 @@ export function ClipCard({
           autoPlay
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          controlsList="nodownload nofullscreen noremoteplayback"
+          disablePictureInPicture
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          className="absolute inset-0 w-full h-full object-contain"
           onContextMenu={(e) => e.preventDefault()}
-          onError={() => setPreviewFailed(true)}
+          onError={() => setFailedPreviewUrl(previewUrl)}
         />
       )}
 
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
           <div className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white">
-            <span className="truncate">{clip.name}</span>
+            <span className="truncate">{clip.tags.join(", ")}</span>
             <span>{clip.duration.toFixed(1)}s</span>
           </div>
         </div>

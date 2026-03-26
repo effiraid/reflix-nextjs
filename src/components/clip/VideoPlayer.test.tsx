@@ -39,8 +39,39 @@ vi.mock("./SeekBar", () => ({
         onDragEnd();
       }}
     >
-      <button onClick={() => onInPointChange(1)}>set-in</button>
-      <button onClick={() => onOutPointChange(9)}>set-out</button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onInPointChange(1);
+        }}
+      >
+        set-in
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onOutPointChange(9);
+        }}
+      >
+        set-out
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDragStart();
+          onSeek(10);
+        }}
+      >
+        drag-seek-10
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDragEnd();
+        }}
+      >
+        end-drag
+      </button>
     </div>
   ),
 }));
@@ -316,7 +347,7 @@ describe("VideoPlayer", () => {
     expect(screen.getByRole("button", { name: "Unmute" })).toBeInTheDocument();
   });
 
-  it("renders the frame counter based on current time", async () => {
+  it("does not render a frame counter", async () => {
     render(
       <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
     );
@@ -324,7 +355,7 @@ describe("VideoPlayer", () => {
     Object.defineProperty(video, "currentTime", { configurable: true, get: () => 2 });
     fireEvent.timeUpdate(video);
     await waitFor(() => {
-      expect(screen.getByText("F:30")).toBeInTheDocument();
+      expect(screen.queryByText(/^F:/)).not.toBeInTheDocument();
     });
   });
 
@@ -335,6 +366,122 @@ describe("VideoPlayer", () => {
     const loopBtn = screen.getByRole("button", { name: "Disable loop" });
     fireEvent.click(loopBtn);
     expect(screen.getByRole("button", { name: "Enable loop" })).toBeInTheDocument();
+  });
+
+  it("restarts playback from the loop start when the video ends", async () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+
+    const video = document.querySelector("video") as HTMLVideoElement;
+    let paused = false;
+    let currentTime = 12;
+
+    Object.defineProperty(video, "paused", {
+      configurable: true,
+      get: () => paused,
+    });
+    Object.defineProperty(video, "currentTime", {
+      configurable: true,
+      get: () => currentTime,
+      set: (value: number) => {
+        currentTime = value;
+      },
+    });
+    Object.defineProperty(video, "play", {
+      configurable: true,
+      value: vi.fn(async () => {
+        paused = false;
+      }),
+    });
+
+    fireEvent.ended(video);
+
+    await waitFor(() => {
+      expect(video.play).toHaveBeenCalledTimes(1);
+    });
+    expect(currentTime).toBe(0);
+  });
+
+  it("allows dragging past the out point while loop is enabled", () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+
+    const video = document.querySelector("video") as HTMLVideoElement;
+    let paused = false;
+    let currentTime = 0;
+
+    Object.defineProperty(video, "paused", {
+      configurable: true,
+      get: () => paused,
+    });
+    Object.defineProperty(video, "currentTime", {
+      configurable: true,
+      get: () => currentTime,
+      set: (value: number) => {
+        currentTime = value;
+      },
+    });
+    Object.defineProperty(video, "pause", {
+      configurable: true,
+      value: vi.fn(() => {
+        paused = true;
+      }),
+    });
+
+    fireEvent.click(screen.getByText("set-in"));
+    fireEvent.click(screen.getByText("set-out"));
+    fireEvent.click(screen.getByText("drag-seek-10"));
+    fireEvent.timeUpdate(video);
+
+    expect(currentTime).toBe(10);
+    expect(screen.getByText("0:10 / 0:12")).toBeInTheDocument();
+  });
+
+  it("seeks back to the in point when playback resumes outside the loop range", async () => {
+    render(
+      <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} />
+    );
+
+    const video = document.querySelector("video") as HTMLVideoElement;
+    let paused = true;
+    let currentTime = 0;
+
+    Object.defineProperty(video, "paused", {
+      configurable: true,
+      get: () => paused,
+    });
+    Object.defineProperty(video, "currentTime", {
+      configurable: true,
+      get: () => currentTime,
+      set: (value: number) => {
+        currentTime = value;
+      },
+    });
+    Object.defineProperty(video, "play", {
+      configurable: true,
+      value: vi.fn(async () => {
+        paused = false;
+      }),
+    });
+    Object.defineProperty(video, "pause", {
+      configurable: true,
+      value: vi.fn(() => {
+        paused = true;
+      }),
+    });
+
+    fireEvent.click(screen.getByText("set-in"));
+    fireEvent.click(screen.getByText("set-out"));
+    fireEvent.click(screen.getByText("drag-seek-10"));
+    fireEvent.click(screen.getByText("end-drag"));
+    fireEvent.click(screen.getByRole("button", { name: "Play video" }));
+
+    await waitFor(() => {
+      expect(video.play).toHaveBeenCalledTimes(1);
+    });
+    expect(currentTime).toBe(1);
   });
 
   it("starts muted with mute button in compact mode", () => {

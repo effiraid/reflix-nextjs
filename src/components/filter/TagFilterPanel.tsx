@@ -59,10 +59,11 @@ export function TagFilterPanel({
   }, [tagGroups]);
 
   // Matcher for tag search (shared across memos)
-  const matchTag = useMemo(
-    () => searchQuery ? (t: string) => createMatcher(lang, searchQuery)(getDisplayTag(t)) : null,
-    [searchQuery, lang, getDisplayTag]
-  );
+  const matchTag = useMemo(() => {
+    if (!searchQuery) return null;
+    const match = createMatcher(lang, searchQuery);
+    return (t: string) => match(getDisplayTag(t));
+  }, [searchQuery, lang, getDisplayTag]);
 
   // 현재 선택된 그룹의 태그 목록
   const currentTags = useMemo(() => {
@@ -138,8 +139,7 @@ export function TagFilterPanel({
   return (
     <div
       ref={panelRef}
-      className="absolute top-full left-0 right-0 border border-border rounded-b-lg bg-background shadow-lg flex flex-col"
-      style={{ height: "320px" }}
+      className="absolute top-full left-0 right-0 h-80 border border-border rounded-b-lg bg-background shadow-lg flex flex-col"
     >
       {/* 상단: 검색바 */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
@@ -160,7 +160,7 @@ export function TagFilterPanel({
             setSearchQuery(e.currentTarget.value);
           }}
           autoFocus
-          className="flex-1 h-7 px-2 text-sm rounded border border-border bg-surface focus:outline-none focus:border-accent"
+          className="flex-1 h-7 px-2 text-sm rounded border border-border bg-surface outline-none focus-visible:ring-2 focus-visible:ring-accent"
         />
       </div>
 

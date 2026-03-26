@@ -1,27 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SubToolbar } from "./SubToolbar";
-import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 
-const updateURL = vi.fn((updates: Partial<ReturnType<typeof useFilterStore.getState>>) => {
-  useFilterStore.setState((state) => ({ ...state, ...updates }));
-});
-
-vi.mock("@/hooks/useFilterSync", () => ({
-  useFilterSync: () => ({
-    updateURL,
-  }),
-}));
-
 const dict = {
-  nav: {
-    search: "검색",
-    searchPlaceholder: "태그, 카테고리, 키워드 검색...",
-  },
-  browse: {
-    random: "무작위",
-  },
   clip: {
     tags: "태그",
   },
@@ -35,15 +17,6 @@ describe("SubToolbar", () => {
       activeFilterTab: null,
       shuffleSeed: 0,
     });
-    useFilterStore.setState({
-      category: null,
-      selectedFolders: [],
-      selectedTags: [],
-      searchQuery: "",
-      sortBy: "newest",
-      starFilter: null,
-    });
-    updateURL.mockClear();
   });
 
   it("does not render the random label in the top toolbar", () => {
@@ -68,8 +41,7 @@ describe("SubToolbar", () => {
     render(<SubToolbar lang="ko" dict={dict} />);
 
     const slider = screen.getByRole("slider");
-    const buttons = screen.getAllByRole("button");
-    const plusButton = buttons[1];
+    const plusButton = screen.getByRole("button", { name: "+" });
 
     expect(slider).toHaveAttribute("max", "4");
 
@@ -78,13 +50,10 @@ describe("SubToolbar", () => {
     expect(useUIStore.getState().thumbnailSize).toBe(4);
   });
 
-  it("writes the search query into the filter store via URL sync", () => {
+  it("does not render the inline search field in the top toolbar", () => {
     render(<SubToolbar lang="ko" dict={dict} />);
 
-    fireEvent.change(screen.getByRole("textbox", { name: "검색" }), {
-      target: { value: "sword" },
-    });
-
-    expect(useFilterStore.getState().searchQuery).toBe("sword");
+    expect(screen.queryByRole("textbox", { name: "검색" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("searchbox", { name: "검색" })).not.toBeInTheDocument();
   });
 });

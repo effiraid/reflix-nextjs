@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { MoonStarIcon, SunMediumIcon } from "lucide-react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
 import type { Locale } from "@/lib/types";
@@ -23,8 +23,11 @@ interface NavbarProps {
 
 export function Navbar({ lang, dict }: NavbarProps) {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const {
     leftPanelOpen,
     rightPanelOpen,
@@ -110,13 +113,12 @@ export function Navbar({ lang, dict }: NavbarProps) {
         data-testid="navbar-controls"
         className="col-start-2 flex items-center justify-self-end gap-1 md:col-start-3"
       >
-        <button
-          type="button"
-          onClick={() => router.push(switchedPath)}
+        <Link
+          href={switchedPath}
           className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
         >
           {lang === "ko" ? "EN" : "KO"}
-        </button>
+        </Link>
 
         <button
           type="button"

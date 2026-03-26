@@ -8,3 +8,5 @@ export function clampThumbnailSize(size: number): number {
 export function getColumnCountFromThumbnailSize(size: number): number {
   return 5 - clampThumbnailSize(size);
 }
+
+export const THUMBNAIL_ASPECT_RATIO = 16 / 9;

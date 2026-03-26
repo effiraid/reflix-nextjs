@@ -9,7 +9,7 @@ export interface Shortcut {
   requireModifier?: "ctrl" | "shift" | "alt";
 }
 
-function isTypingTarget(target: EventTarget | null): boolean {
+export function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   return (
     el?.tagName === "INPUT" ||
@@ -22,6 +22,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export function useKeyboardShortcuts(shortcuts: Shortcut[]): void {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      if (event.defaultPrevented) return;
       for (const shortcut of shortcuts) {
         if (shortcut.enabled === false) continue;
         if (event.key !== shortcut.key) continue;

@@ -30,7 +30,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams("q=search"),
 }));
 
-vi.mock("next-themes", () => ({
+vi.mock("@/components/ThemeProvider", () => ({
   useTheme: () => ({
     theme: "light",
     setTheme,

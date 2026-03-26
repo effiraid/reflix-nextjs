@@ -4,7 +4,7 @@ import { useMemo, useRef, useEffect, useLayoutEffect, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ClipCard } from "./ClipCard";
 import { useUIStore } from "@/stores/uiStore";
-import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
+import { getColumnCountFromThumbnailSize, THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import type { ClipIndex } from "@/lib/types";
 
 interface MasonryGridProps {
@@ -16,6 +16,7 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastWidthRef = useRef<number | null>(null);
   const thumbnailSize = useUIStore((s) => s.thumbnailSize);
+  const quickViewOpen = useUIStore((s) => s.quickViewOpen);
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
   const previewOnHover = columnCount >= 4; // 4-5열: hover 시 MP4 preview, 1-3열: 즉시 재생
   const showInfo = columnCount <= 3;
@@ -65,7 +66,7 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
     for (const clip of clips) {
       const shortestCol = heights.indexOf(Math.min(...heights));
       cols[shortestCol].push(clip);
-      heights[shortestCol] += clip.height / clip.width;
+      heights[shortestCol] += 1 / THUMBNAIL_ASPECT_RATIO;
     }
     return cols;
   }, [clips, columnCount]);
@@ -77,6 +78,7 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
           key={`${columnCount}-${layoutVersion}-${colIndex}`}
           clips={colClips}
           scrollElement={scrollElement}
+          enablePreview={!quickViewOpen}
           previewOnHover={previewOnHover}
           showInfo={showInfo}
           onOpenQuickView={onOpenQuickView}
@@ -89,12 +91,14 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
 function MasonryColumn({
   clips,
   scrollElement,
+  enablePreview,
   previewOnHover,
   showInfo,
   onOpenQuickView,
 }: {
   clips: ClipIndex[];
   scrollElement: HTMLElement | null;
+  enablePreview: boolean;
   previewOnHover: boolean;
   showInfo: boolean;
   onOpenQuickView?: (clipId: string) => void;
@@ -106,11 +110,7 @@ function MasonryColumn({
     count: clips.length,
     getItemKey: (index) => clips[index]?.id ?? index,
     getScrollElement: () => scrollElement,
-    estimateSize: (index) => {
-      const clip = clips[index];
-      // Rough estimate — measureElement will correct it after render
-      return Math.round(200 * (clip.height / clip.width)) + 12;
-    },
+    estimateSize: () => Math.round(200 / THUMBNAIL_ASPECT_RATIO) + 12,
     overscan: 5,
     measureElement: (el) => {
       // Measure actual rendered height including padding
@@ -130,6 +130,7 @@ function MasonryColumn({
               key={clip.id}
               ref={virtualizer.measureElement}
               data-index={virtualItem.index}
+              data-clip-id={clip.id}
               style={{
                 position: "absolute",
                 top: 0,
@@ -141,9 +142,10 @@ function MasonryColumn({
             >
               <ClipCard
                 clip={clip}
-                enablePreview
+                enablePreview={enablePreview}
                 previewOnHover={previewOnHover}
                 showInfo={showInfo}
+                prioritizeThumbnail={virtualItem.index === 0}
                 onOpenQuickView={onOpenQuickView}
               />
             </div>

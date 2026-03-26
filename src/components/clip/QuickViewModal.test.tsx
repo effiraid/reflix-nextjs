@@ -31,7 +31,10 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
       data-video-url={videoUrl}
       data-thumbnail-url={thumbnailUrl}
       data-auto-play-muted={String(autoPlayMuted ?? false)}
-    />
+    >
+      <button type="button">Play video</button>
+      <button type="button">Playback speed</button>
+    </div>
   ),
   PLAYBACK_SPEEDS: [0.25, 0.5, 1, 1.5, 2],
 }));
@@ -57,6 +60,7 @@ const dict = {
     tags: "Tags",
     rating: "Rating",
     duration: "Duration",
+    share: "Share",
   },
 };
 
@@ -107,5 +111,54 @@ describe("QuickViewModal", () => {
 
     fireEvent.keyDown(window, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("restores focus to previous element on close", () => {
+    const onClose = vi.fn();
+
+    const { rerender } = render(
+      <>
+        <button type="button">Before</button>
+      </>
+    );
+
+    const beforeButton = screen.getByRole("button", { name: "Before" });
+    beforeButton.focus();
+
+    rerender(
+      <>
+        <button type="button">Before</button>
+        <QuickViewModal
+          clip={clip}
+          lang="ko"
+          dict={dict}
+          onClose={onClose}
+        />
+      </>
+    );
+
+    rerender(
+      <>
+        <button type="button">Before</button>
+      </>
+    );
+
+    expect(screen.getByRole("button", { name: "Before" })).toHaveFocus();
+  });
+
+  it("renders share and detail buttons in the aside", () => {
+    const onClose = vi.fn();
+
+    render(
+      <QuickViewModal
+        clip={clip}
+        lang="ko"
+        dict={dict}
+        onClose={onClose}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Share" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View Detail" })).toBeInTheDocument();
   });
 });

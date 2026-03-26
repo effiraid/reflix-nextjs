@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RightPanelInspector } from "./RightPanelInspector";
+import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip } from "@/lib/types";
 
@@ -89,6 +90,9 @@ describe("RightPanelInspector", () => {
   beforeEach(() => {
     getMediaUrlMock.mockClear();
     getMediaUrlMock.mockImplementation((path: string) => path);
+    useUIStore.setState({
+      quickViewOpen: false,
+    });
   });
 
   it("renders the localized inspector fields without deprecated metadata", () => {
@@ -205,5 +209,23 @@ describe("RightPanelInspector", () => {
       "nodownload nofullscreen noremoteplayback"
     );
     expect(preview.hasAttribute("disablePictureInPicture")).toBe(true);
+  });
+
+  it("falls back to the thumbnail when quick view is open over browse", () => {
+    useUIStore.setState({
+      quickViewOpen: true,
+    });
+
+    const { container } = render(
+      <RightPanelInspector
+        clip={clip}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(container.querySelector("video")).toBeNull();
+    expect(screen.getByAltText("블레이드 스톰")).toBeInTheDocument();
   });
 });

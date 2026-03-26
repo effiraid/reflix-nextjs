@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_THUMBNAIL_SIZE,
   MIN_THUMBNAIL_SIZE,
+  THUMBNAIL_ASPECT_RATIO,
   clampThumbnailSize,
   getColumnCountFromThumbnailSize,
 } from "./thumbnailSize";
@@ -20,5 +21,9 @@ describe("thumbnailSize helpers", () => {
     expect(getColumnCountFromThumbnailSize(2)).toBe(3);
     expect(getColumnCountFromThumbnailSize(3)).toBe(2);
     expect(getColumnCountFromThumbnailSize(4)).toBe(1);
+  });
+
+  it("exports the standard 16:9 browse-grid thumbnail aspect ratio", () => {
+    expect(THUMBNAIL_ASPECT_RATIO).toBeCloseTo(16 / 9);
   });
 });

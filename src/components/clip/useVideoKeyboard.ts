@@ -1,11 +1,27 @@
 import { useEffect } from "react";
+import { isTypingTarget } from "@/hooks/useKeyboardShortcuts";
 
 interface UseVideoKeyboardOptions {
   togglePlayback: () => void;
   seekRelative: (seconds: number) => void;
   toggleMute: () => void;
   resetMarkers: () => void;
+  toggleFullscreen: () => void;
+  setInPointHere: () => void;
+  setOutPointHere: () => void;
+  toggleLoop: () => void;
+  stepForward: () => void;
+  stepBackward: () => void;
+  stepSpeed: (direction: 1 | -1) => void;
   disabled?: boolean;
+}
+
+function isNestedInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return !!target.closest("button, a[href], [role='slider']");
 }
 
 export function useVideoKeyboard({
@@ -13,14 +29,22 @@ export function useVideoKeyboard({
   seekRelative,
   toggleMute,
   resetMarkers,
+  toggleFullscreen,
+  setInPointHere,
+  setOutPointHere,
+  toggleLoop,
+  stepForward,
+  stepBackward,
+  stepSpeed,
   disabled = false,
 }: UseVideoKeyboardOptions) {
   useEffect(() => {
     if (disabled) return;
 
     function handleKeyDown(e: KeyboardEvent) {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.defaultPrevented) return;
+      if (isTypingTarget(e.target)) return;
+      if (isNestedInteractiveTarget(e.target)) return;
 
       switch (e.key) {
         case " ":
@@ -45,10 +69,51 @@ export function useVideoKeyboard({
           e.preventDefault();
           resetMarkers();
           break;
+        case "f":
+        case "F":
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case "i":
+        case "I":
+        case "[":
+          e.preventDefault();
+          setInPointHere();
+          break;
+        case "o":
+        case "O":
+        case "]":
+          e.preventDefault();
+          setOutPointHere();
+          break;
+        case "l":
+        case "L":
+          e.preventDefault();
+          toggleLoop();
+          break;
+        case ",":
+        case "<":
+          e.preventDefault();
+          stepBackward();
+          break;
+        case ".":
+        case ">":
+          e.preventDefault();
+          stepForward();
+          break;
+        case "-":
+          e.preventDefault();
+          stepSpeed(-1);
+          break;
+        case "+":
+        case "=":
+          e.preventDefault();
+          stepSpeed(1);
+          break;
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [disabled, togglePlayback, seekRelative, toggleMute, resetMarkers]);
+  }, [disabled, togglePlayback, seekRelative, toggleMute, resetMarkers, toggleFullscreen, setInPointHere, setOutPointHere, toggleLoop, stepForward, stepBackward, stepSpeed]);
 }
