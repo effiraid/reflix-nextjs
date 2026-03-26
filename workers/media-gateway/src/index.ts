@@ -94,10 +94,11 @@ async function serveR2Object(
   key: string,
   protectedPath: boolean
 ): Promise<Response> {
+  const hasRange = request.headers.has("Range");
   const object =
     request.method === "HEAD"
       ? await env.MEDIA_BUCKET.head(key)
-      : await env.MEDIA_BUCKET.get(key, { range: request.headers });
+      : await env.MEDIA_BUCKET.get(key, hasRange ? { range: request.headers } : undefined);
 
   if (!object) {
     return new Response("Not Found", { status: 404 });
@@ -114,8 +115,10 @@ async function serveR2Object(
     headers.set("Content-Security-Policy", "frame-ancestors 'self' https://reflix.dev");
   }
 
+  const isPartial = hasRange && object.range;
+
   return new Response(request.method === "HEAD" ? null : object.body ?? null, {
-    status: object.range ? 206 : 200,
+    status: isPartial ? 206 : 200,
     headers,
   });
 }
