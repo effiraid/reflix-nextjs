@@ -1,105 +1,170 @@
-import { VideoPlayer } from "@/components/clip/VideoPlayer";
+import { ClipDetailLayout } from "@/components/clip/ClipDetailLayout";
 import { ShareButton } from "@/components/clip/ShareButton";
-import { formatClipDuration } from "@/lib/clipInspector";
+import { getCategoryLabel } from "@/lib/categories";
+import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { Clip, Locale } from "@/lib/types";
+import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
 interface ClipDetailViewProps {
   clip: Clip;
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
+  categories: CategoryTree;
 }
 
-export function ClipDetailView({ clip, lang, dict }: ClipDetailViewProps) {
+export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewProps) {
   const title = clip.i18n.title[lang] || clip.name;
   const sizeLabel = `${Math.round(clip.size / 1024)} KB`;
+  const mediaKindKey = getClipMediaKind(clip.ext);
+  const mediaKind =
+    mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
+  const folderLabels = clip.folders.map((folderId) =>
+    getCategoryLabel(folderId, categories, lang)
+  );
+  const palette = clip.palettes?.slice(0, 6) ?? [];
+  const memoText = clip.annotation || "-";
+  const hasMemo = Boolean(clip.annotation);
 
   return (
-    <div className="space-y-6">
-      <VideoPlayer
-        videoUrl={clip.videoUrl}
-        thumbnailUrl={clip.thumbnailUrl}
-        duration={clip.duration}
-        useBlobUrl
-      />
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+    <ClipDetailLayout
+      videoUrl={clip.videoUrl}
+      thumbnailUrl={clip.thumbnailUrl}
+      duration={clip.duration}
+    >
+      <aside className="w-full space-y-4 lg:w-80 lg:shrink-0">
+        {/* Title + Share */}
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-xl font-semibold leading-tight tracking-tight">
+            {title}
+          </h1>
           <ShareButton
             clipId={clip.id}
             lang={lang}
             label={dict.clip.share}
             copiedLabel={dict.clip.copied}
-            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface/80"
+            variant="icon-only"
+            className="shrink-0 rounded-full border border-border bg-surface p-2 transition-colors hover:bg-surface/80"
           />
         </div>
-        {clip.annotation ? (
-          <p className="max-w-3xl text-sm leading-7 text-muted">
-            {clip.annotation}
-          </p>
-        ) : null}
-      </section>
 
-      <section className="rounded-2xl border border-border bg-surface/40 p-4">
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
-          {dict.clip.tags}
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {clip.tags.length > 0 ? (
-            clip.tags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-border bg-background px-3 py-1 text-xs"
-              >
-                {tag}
-              </span>
-            ))
-          ) : (
-            <span className="text-sm italic text-muted">-</span>
-          )}
-        </div>
-      </section>
+        {/* Memo */}
+        <FieldCard
+          label={dict.clip.memo}
+          value={memoText}
+          isPlaceholder={!hasMemo}
+        />
 
-      <section className="rounded-2xl border border-border bg-surface/40 p-4">
-        <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
-          {dict.clip.memo}
-        </h2>
-        <dl className="grid gap-3 text-sm md:grid-cols-2">
-          <DetailRow
-            label={dict.clip.rating}
-            value={`${"★".repeat(clip.star)}${"☆".repeat(Math.max(0, 5 - clip.star))}`}
-          />
-          <DetailRow
-            label={dict.clip.duration}
-            value={formatClipDuration(clip.duration)}
-          />
-          <DetailRow
-            label={dict.clip.resolution}
-            value={`${clip.width}×${clip.height}`}
-          />
-          <DetailRow label={dict.clip.size} value={sizeLabel} />
-          <DetailRow label={dict.clip.format} value={clip.ext.toUpperCase()} />
-        </dl>
-      </section>
+        {/* Color Palette */}
+        {palette.length > 0 && (
+          <section className="rounded-2xl border border-border bg-surface/40 p-4">
+            <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
+              {dict.clip.colorPalette}
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {palette.map((swatch, index) => (
+                <div
+                  key={`${swatch.color.join("-")}-${index}`}
+                  className="h-7 w-7 rounded-full border border-white/10 shadow-sm"
+                  style={{
+                    backgroundColor: `rgb(${swatch.color[0]}, ${swatch.color[1]}, ${swatch.color[2]})`,
+                  }}
+                  title={`${swatch.ratio}%`}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {clip.relatedClips.length > 0 ? (
+        {/* Folders */}
+        <TokenSection label={dict.clip.folders} items={folderLabels} />
+
+        {/* Tags */}
+        <TokenSection label={dict.clip.tags} items={clip.tags} />
+
+        {/* Properties */}
         <section className="rounded-2xl border border-border bg-surface/40 p-4">
-          <h2 className="mb-2 text-lg font-semibold">{dict.clip.related}</h2>
-          <p className="text-sm text-muted">
-            {clip.relatedClips.length} related clip ids
-          </p>
+          <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
+            {dict.clip.properties}
+          </h2>
+          <dl className="space-y-2">
+            <PropertyRow
+              label={dict.clip.rating}
+              value={`${"★".repeat(clip.star)}${"☆".repeat(Math.max(0, 5 - clip.star))}`}
+            />
+            <PropertyRow
+              label={dict.clip.duration}
+              value={formatClipDuration(clip.duration)}
+            />
+            <PropertyRow
+              label={dict.clip.resolution}
+              value={`${clip.width}×${clip.height}`}
+            />
+            <PropertyRow label={dict.clip.size} value={sizeLabel} />
+            <PropertyRow
+              label={dict.clip.format}
+              value={`${clip.ext.toUpperCase()} · ${mediaKind}`}
+            />
+          </dl>
         </section>
-      ) : null}
-    </div>
+      </aside>
+    </ClipDetailLayout>
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string }) {
+function FieldCard({
+  label,
+  value,
+  isPlaceholder = false,
+}: {
+  label: string;
+  value: string;
+  isPlaceholder?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-background/60 px-4 py-3">
-      <dt className="text-muted">{label}</dt>
-      <dd className="font-medium">{value}</dd>
+    <section className="rounded-2xl border border-border bg-surface/40 p-4">
+      <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted">
+        {label}
+      </div>
+      <p
+        className={`break-words text-sm leading-6 ${
+          isPlaceholder ? "italic text-muted" : ""
+        }`}
+      >
+        {value}
+      </p>
+    </section>
+  );
+}
+
+function TokenSection({ label, items }: { label: string; items: string[] }) {
+  return (
+    <section className="rounded-2xl border border-border bg-surface/40 p-4">
+      <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
+        {label}
+      </h2>
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {items.map((item, index) => (
+            <span
+              key={`${item}-${index}`}
+              className="rounded-full border border-border bg-background px-3 py-1 text-xs"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm italic text-muted">-</p>
+      )}
+    </section>
+  );
+}
+
+function PropertyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="text-sm font-medium">{value}</dd>
     </div>
   );
 }

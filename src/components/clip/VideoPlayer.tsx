@@ -13,6 +13,8 @@ import {
   RepeatIcon,
   FullscreenIcon,
   FullscreenExitIcon,
+  ExpandIcon,
+  CollapseIcon,
 } from "./PlayerIcons";
 
 interface VideoPlayerProps {
@@ -25,6 +27,8 @@ interface VideoPlayerProps {
   playbackRate?: number;
   onPlaybackRateChange?: (rate: number) => void;
   useBlobUrl?: boolean;
+  isExpanded?: boolean;
+  onExpandToggle?: () => void;
 }
 
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -54,6 +58,8 @@ export function VideoPlayer({
   playbackRate: controlledRate,
   onPlaybackRateChange,
   useBlobUrl = false,
+  isExpanded = false,
+  onExpandToggle,
 }: VideoPlayerProps) {
   const isControlled = controlledRate !== undefined;
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -480,6 +486,7 @@ export function VideoPlayer({
     stepForward,
     stepBackward,
     stepSpeed,
+    onExpandToggle,
     disabled: hasPlaybackError,
   });
 
@@ -628,6 +635,18 @@ export function VideoPlayer({
         >
           <RepeatIcon />
         </button>
+
+        {onExpandToggle && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className="flex items-center p-1 text-muted hover:text-foreground"
+            onClick={onExpandToggle}
+            aria-label={isExpanded ? "Collapse player" : "Expand player"}
+          >
+            {isExpanded ? <CollapseIcon /> : <ExpandIcon />}
+          </button>
+        )}
 
         <button
           type="button"

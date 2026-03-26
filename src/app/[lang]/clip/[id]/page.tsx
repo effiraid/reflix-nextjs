@@ -4,7 +4,7 @@ import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { ClipDetailView } from "@/components/clip/ClipDetailView";
 import { Navbar } from "@/components/layout/Navbar";
-import { getClip, getDeploymentOrigin } from "@/lib/data";
+import { getClip, getCategories, getDeploymentOrigin } from "@/lib/data";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "../../dictionaries";
 
@@ -75,9 +75,10 @@ export default async function ClipDetailPage({ params }: ClipDetailPageProps) {
 async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
   const { lang, id } = await params;
   const locale = lang as Locale;
-  const [clip, dict] = await Promise.all([
+  const [clip, dict, categories] = await Promise.all([
     getCachedClip(id),
     getDictionary(locale),
+    getCategories(),
   ]);
 
   if (!clip) {
@@ -90,7 +91,7 @@ async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
         <Navbar lang={locale} dict={dict} />
       </Suspense>
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
-        <ClipDetailView clip={clip} lang={locale} dict={dict} />
+        <ClipDetailView clip={clip} lang={locale} dict={dict} categories={categories} />
       </main>
     </div>
   );

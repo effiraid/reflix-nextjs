@@ -5,6 +5,7 @@ import { createMatcher } from "./search";
 export interface FilterState {
   selectedFolders: string[];
   selectedTags: string[];
+  excludedTags: string[];
   starFilter: number | null;
   searchQuery: string;
   sortBy: SortBy;
@@ -37,6 +38,13 @@ export function filterClips(
   if (filters.selectedTags.length > 0) {
     result = result.filter((c) =>
       filters.selectedTags.every((t) => c.tags.includes(t))
+    );
+  }
+
+  // Exclude filter: OR logic — clip with ANY excluded tag is hidden
+  if (filters.excludedTags.length > 0) {
+    result = result.filter((c) =>
+      !filters.excludedTags.some((t) => c.tags.includes(t))
     );
   }
 

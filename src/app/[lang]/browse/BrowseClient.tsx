@@ -48,6 +48,7 @@ export function BrowseClient({
     useShallow((s) => ({
       selectedFolders: s.selectedFolders,
       selectedTags: s.selectedTags,
+      excludedTags: s.excludedTags,
       starFilter: s.starFilter,
       searchQuery: s.searchQuery,
       sortBy: s.sortBy,

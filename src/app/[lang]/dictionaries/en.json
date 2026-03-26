@@ -6,8 +6,9 @@
     "searchPlaceholder": "Search tags, categories, keywords..."
   },
   "home": {
-    "hero": "Game Animation Reference",
-    "heroSub": "Explore 7,000+ game animation reference clips",
+    "hero": "Animation Reference Library",
+    "heroSub": "Motion reference for animators and developers.",
+    "heroSub2": "Find the animation you need with tag-based search.",
     "cta": "Start Browsing",
     "popularClips": "Popular Clips",
     "categories": "Categories"
@@ -59,6 +60,8 @@
   "common": {
     "close": "Close",
     "select": "Select",
+    "exclude": "Exclude",
+    "clearAll": "Clear all",
     "loading": "Loading...",
     "loadFailed": "Could not load this clip."
   }

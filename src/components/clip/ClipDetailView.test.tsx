@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ClipDetailView } from "./ClipDetailView";
-import type { Clip } from "@/lib/types";
+import type { CategoryTree, Clip } from "@/lib/types";
 
 vi.mock("@/components/clip/ShareButton", () => ({
   ShareButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
@@ -51,35 +51,56 @@ const baseClip: Clip = {
   relatedClips: ["clip-2", "clip-3"],
 };
 
+const categories: CategoryTree = {
+  "folder-a": {
+    slug: "action",
+    i18n: { ko: "액션", en: "Action" },
+  },
+};
+
 const dict = {
   clip: {
+    play: "Play",
+    pause: "Pause",
+    speed: "Speed",
+    detail: "Detail",
     related: "Related Clips",
     tags: "Tags",
+    folders: "Folders",
     rating: "Rating",
-    duration: "Duration",
-    resolution: "Resolution",
-    size: "Size",
-    format: "Format",
     memo: "Memo",
+    properties: "Properties",
+    size: "Size",
+    resolution: "Resolution",
+    format: "Format",
+    added: "Added",
+    duration: "Duration",
+    inspectorRating: "Rating",
+    inspectorDuration: "Duration",
+    fileType: "File Type",
     share: "Share",
+    video: "Video",
+    image: "Image",
+    noLink: "No link",
+    colorPalette: "Color Palette",
+    sourceUrl: "Source URL",
     copied: "Copied",
   },
 };
 
 describe("ClipDetailView", () => {
   it("renders title, annotation, tags, and clip stats", () => {
-    render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} />);
+    render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} categories={categories} />);
 
     expect(screen.getByRole("heading", { name: "클립 하나" })).toBeInTheDocument();
     expect(screen.getByText("An energetic scene.")).toBeInTheDocument();
     expect(screen.getByText("tag-a")).toBeInTheDocument();
     expect(screen.getByText("1280×720")).toBeInTheDocument();
     expect(screen.getByText("512 KB")).toBeInTheDocument();
-    expect(screen.getByText("MP4")).toBeInTheDocument();
   });
 
   it("passes the hosted media paths to VideoPlayer", () => {
-    render(<ClipDetailView clip={baseClip} lang="en" dict={dict} />);
+    render(<ClipDetailView clip={baseClip} lang="en" dict={dict} categories={categories} />);
 
     expect(screen.getByTestId("video-player")).toHaveAttribute(
       "data-video-url",
@@ -91,28 +112,9 @@ describe("ClipDetailView", () => {
     );
   });
 
-  it("renders the related section only when related clips exist", () => {
-    const { rerender } = render(
-      <ClipDetailView clip={baseClip} lang="en" dict={dict} />
-    );
+  it("renders folder labels from categories", () => {
+    render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} categories={categories} />);
 
-    expect(
-      screen.getByRole("heading", { name: "Related Clips" })
-    ).toBeInTheDocument();
-
-    rerender(
-      <ClipDetailView
-        clip={{
-          ...baseClip,
-          relatedClips: [],
-        }}
-        lang="en"
-        dict={dict}
-      />
-    );
-
-    expect(
-      screen.queryByRole("heading", { name: "Related Clips" })
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("액션")).toBeInTheDocument();
   });
 });

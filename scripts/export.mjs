@@ -377,7 +377,10 @@ export async function runExport(
 }
 
 async function main() {
-  await runExport(parseFlags(process.argv.slice(2)));
+  const result = await runExport(parseFlags(process.argv.slice(2)));
+  if (result.failed > 0 || result.uploadSummary?.failed > 0) {
+    process.exitCode = 1;
+  }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === DIRECT_RUN_PATH) {

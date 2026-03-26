@@ -86,9 +86,22 @@ export async function uploadFile(
   };
 }
 
+async function objectExists(client, bucketName, key) {
+  const { HeadObjectCommand } = require("@aws-sdk/client-s3");
+  try {
+    await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: key }));
+    return true;
+  } catch (err) {
+    if (err.name === "NotFound" || err.$metadata?.httpStatusCode === 404) {
+      return false;
+    }
+    throw err;
+  }
+}
+
 export async function uploadBatch(
   entries,
-  { dryRun = false, env = process.env, client = null } = {}
+  { dryRun = false, skipExisting = true, env = process.env, client = null } = {}
 ) {
   const bucketName = dryRun ? null : getRequiredR2Config(env).bucketName;
   const resolvedClient = dryRun ? client : client ?? createR2ClientFromEnv(env);
@@ -120,6 +133,24 @@ export async function uploadBatch(
       summary.skipped += 1;
       summary.entries.push(plannedEntry);
       continue;
+    }
+
+    if (skipExisting) {
+      try {
+        if (await objectExists(resolvedClient, bucketName, key)) {
+          summary.skipped += 1;
+          summary.entries.push({
+            key,
+            localPath: entry.localPath,
+            contentType,
+            dryRun: false,
+            status: "skipped",
+          });
+          continue;
+        }
+      } catch (err) {
+        console.warn(`  ⚠️ HeadObject check failed for ${key}, proceeding to upload: ${err.message}`);
+      }
     }
 
     let uploaded = false;

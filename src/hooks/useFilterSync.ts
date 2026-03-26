@@ -21,14 +21,20 @@ export function useFilterSync() {
   useEffect(() => {
     const category = searchParams.get("category");
     const tags = searchParams.getAll("tag");
+    const excludeTags = searchParams.getAll("exclude");
     const star = searchParams.get("star");
-    const sort = searchParams.get("sort") as SortBy | null;
+    const rawSort = searchParams.get("sort");
+    const sort: SortBy | null =
+      rawSort && ["newest", "rating", "name"].includes(rawSort)
+        ? (rawSort as SortBy)
+        : null;
     const folders = searchParams.getAll("folder");
     const searchQuery = searchParams.get("q");
 
     useFilterStore.setState({
       category: category || null,
       selectedTags: tags,
+      excludedTags: excludeTags,
       starFilter: star ? Number(star) : null,
       sortBy: sort || "newest",
       selectedFolders: folders,
@@ -41,6 +47,7 @@ export function useFilterSync() {
     updateURL: (updates: Partial<{
       category: string | null;
       selectedTags: string[];
+      excludedTags: string[];
       selectedFolders: string[];
       starFilter: number | null;
       sortBy: SortBy;
@@ -51,6 +58,7 @@ export function useFilterSync() {
 
       if (state.category) params.set("category", state.category);
       state.selectedTags.forEach((t) => params.append("tag", t));
+      state.excludedTags.forEach((t) => params.append("exclude", t));
       state.selectedFolders.forEach((f) => params.append("folder", f));
       if (state.starFilter !== null)
         params.set("star", String(state.starFilter));

@@ -13,6 +13,7 @@ interface UseVideoKeyboardOptions {
   stepForward: () => void;
   stepBackward: () => void;
   stepSpeed: (direction: 1 | -1) => void;
+  onExpandToggle?: () => void;
   disabled?: boolean;
 }
 
@@ -36,6 +37,7 @@ export function useVideoKeyboard({
   stepForward,
   stepBackward,
   stepSpeed,
+  onExpandToggle,
   disabled = false,
 }: UseVideoKeyboardOptions) {
   useEffect(() => {
@@ -110,10 +112,17 @@ export function useVideoKeyboard({
           e.preventDefault();
           stepSpeed(1);
           break;
+        case "e":
+        case "E":
+          if (onExpandToggle) {
+            e.preventDefault();
+            onExpandToggle();
+          }
+          break;
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [disabled, togglePlayback, seekRelative, toggleMute, resetMarkers, toggleFullscreen, setInPointHere, setOutPointHere, toggleLoop, stepForward, stepBackward, stepSpeed]);
+  }, [disabled, togglePlayback, seekRelative, toggleMute, resetMarkers, toggleFullscreen, setInPointHere, setOutPointHere, toggleLoop, stepForward, stepBackward, stepSpeed, onExpandToggle]);
 }

@@ -13,7 +13,7 @@ interface TagFilterPanelProps {
   lang: Locale;
   tagI18n: Record<string, string>;
   dict: Pick<Dictionary, "browse" | "clip" | "common">;
-  updateURL: (updates: { selectedTags: string[] }) => void;
+  updateURL: (updates: { selectedTags?: string[]; excludedTags?: string[] }) => void;
 }
 
 export function TagFilterPanel({
@@ -27,7 +27,7 @@ export function TagFilterPanel({
   const [searchQuery, setSearchQuery] = useState("");
   const [localTagSearch, setLocalTagSearch] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
-  const { selectedTags } = useFilterStore();
+  const { selectedTags, excludedTags } = useFilterStore();
   const { setActiveFilterTab } = useUIStore();
   const panelRef = useRef<HTMLDivElement>(null);
   const isComposingRef = useRef(false);
@@ -86,14 +86,53 @@ export function TagFilterPanel({
     return { groupTagCounts: counts, totalTagCount: total };
   }, [tagGroups, allTags, matchTag]);
 
-  // 태그 토글 핸들러
+  // 태그 좌클릭 핸들러 (3-상태: unselected→included, included→unselected, excluded→included)
   const handleTagToggle = useCallback(
     (tag: string) => {
-      const current = useFilterStore.getState().selectedTags;
-      const next = current.includes(tag)
-        ? current.filter((t) => t !== tag)
-        : [...current, tag];
-      updateURL({ selectedTags: next });
+      const state = useFilterStore.getState();
+      const isExcluded = state.excludedTags.includes(tag);
+      if (isExcluded) {
+        // excluded → included
+        updateURL({
+          selectedTags: [...state.selectedTags, tag],
+          excludedTags: state.excludedTags.filter((t) => t !== tag),
+        });
+        return;
+      }
+      const isIncluded = state.selectedTags.includes(tag);
+      if (isIncluded) {
+        // included → unselected
+        updateURL({ selectedTags: state.selectedTags.filter((t) => t !== tag) });
+      } else {
+        // unselected → included
+        updateURL({ selectedTags: [...state.selectedTags, tag] });
+      }
+    },
+    [updateURL]
+  );
+
+  // 태그 우클릭 핸들러 (3-상태: unselected→excluded, included→excluded, excluded→unselected)
+  const handleTagContextMenu = useCallback(
+    (e: React.MouseEvent, tag: string) => {
+      e.preventDefault();
+      const state = useFilterStore.getState();
+      const isExcluded = state.excludedTags.includes(tag);
+      if (isExcluded) {
+        // excluded → unselected
+        updateURL({ excludedTags: state.excludedTags.filter((t) => t !== tag) });
+        return;
+      }
+      const isIncluded = state.selectedTags.includes(tag);
+      if (isIncluded) {
+        // included → excluded
+        updateURL({
+          selectedTags: state.selectedTags.filter((t) => t !== tag),
+          excludedTags: [...state.excludedTags, tag],
+        });
+      } else {
+        // unselected → excluded
+        updateURL({ excludedTags: [...state.excludedTags, tag] });
+      }
     },
     [updateURL]
   );
@@ -220,27 +259,36 @@ export function TagFilterPanel({
         {/* 우측: 태그 목록 */}
         <div className="flex-1 overflow-y-auto">
           {currentTags.map((tag) => {
-            const isSelected = selectedTags.includes(tag);
+            const isIncluded = selectedTags.includes(tag);
+            const isExcluded = excludedTags.includes(tag);
             const color = tagColorMap[tag];
             return (
               <button
                 key={tag}
                 onClick={() => handleTagToggle(tag)}
+                onContextMenu={(e) => handleTagContextMenu(e, tag)}
                 className={`flex items-center gap-3 w-full px-3 py-1.5 text-sm hover:bg-surface-hover ${
-                  isSelected ? "bg-accent/10" : ""
+                  isIncluded ? "bg-accent/10" : isExcluded ? "bg-red-500/10" : ""
                 }`}
               >
                 {/* 체크박스 */}
                 <span
                   className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                    isSelected
+                    isIncluded
                       ? "bg-accent border-accent text-white"
-                      : "border-muted"
+                      : isExcluded
+                        ? "bg-red-500 border-red-500 text-white"
+                        : "border-muted"
                   }`}
                 >
-                  {isSelected && (
+                  {isIncluded && (
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M2 5L4 7L8 3" />
+                    </svg>
+                  )}
+                  {isExcluded && (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 2L8 8M8 2L2 8" />
                     </svg>
                   )}
                 </span>
@@ -257,7 +305,7 @@ export function TagFilterPanel({
                 </svg>
 
                 {/* 태그 이름 */}
-                <span className="flex-1 text-left">{getDisplayTag(tag)}</span>
+                <span className={`flex-1 text-left ${isExcluded ? "line-through text-red-600 dark:text-red-400" : ""}`}>{getDisplayTag(tag)}</span>
 
                 {/* 카운트 */}
                 <span className="text-xs text-muted">{(tagCounts[tag] || 0).toLocaleString()}</span>
@@ -274,9 +322,10 @@ export function TagFilterPanel({
       </div>
 
       {/* 하단: 도움말 */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-t border-border text-xs text-muted shrink-0">
+      <div className="flex items-center px-3 py-1.5 border-t border-border text-xs text-muted shrink-0">
         <span>{dict.common.select} <kbd className="px-1 py-0.5 rounded bg-surface border border-border text-[10px]">Click</kbd></span>
-        <span>{dict.common.close} <kbd className="px-1 py-0.5 rounded bg-surface border border-border text-[10px]">ESC</kbd></span>
+        <span className="ml-4">{dict.common.exclude} <kbd className="px-1 py-0.5 rounded bg-surface border border-border text-[10px]">Right Click</kbd></span>
+        <span className="ml-auto">{dict.common.close} <kbd className="px-1 py-0.5 rounded bg-surface border border-border text-[10px]">ESC</kbd></span>
       </div>
     </div>
   );

@@ -91,9 +91,12 @@ export function Navbar({ lang, dict }: NavbarProps) {
         <nav className="flex min-w-0 items-center gap-2 text-sm">
           <Link
             href={`/${lang}/browse`}
-            className="px-2 py-1 rounded hover:bg-surface-hover"
+            className="px-2 py-1 rounded hover:bg-surface-hover inline-flex items-center gap-1.5"
           >
             {dict.nav.browse}
+            <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground/60">
+              Beta
+            </span>
           </Link>
         </nav>
       </div>

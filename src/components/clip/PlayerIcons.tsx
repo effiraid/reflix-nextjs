@@ -97,3 +97,25 @@ export function CheckIcon() {
     </svg>
   );
 }
+
+export function ExpandIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <polyline points="2 12 6 8 10 12" />
+      <polyline points="2 12 6 16 10 12" />
+      <polyline points="22 12 18 8 14 12" />
+      <polyline points="22 12 18 16 14 12" />
+    </svg>
+  );
+}
+
+export function CollapseIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <polyline points="10 12 6 8 2 12" />
+      <polyline points="10 12 6 16 2 12" />
+      <polyline points="14 12 18 8 22 12" />
+      <polyline points="14 12 18 16 22 12" />
+    </svg>
+  );
+}
