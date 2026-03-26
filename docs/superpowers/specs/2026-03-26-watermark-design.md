@@ -20,7 +20,9 @@
 
 새 파일: `src/components/clip/Watermark.tsx`
 
-서버 컴포넌트로 구현. `size` prop으로 두 가지 크기를 지원한다.
+`'use client'` 없이 작성하되, 소비자(ClipCard, VideoPlayer)가 모두 클라이언트 컴포넌트이므로 실제로는 클라이언트 번들에 포함된다. 순수 표현 컴포넌트로 서버 데이터 의존성 없음.
+
+`size` prop으로 두 가지 크기를 지원한다.
 
 ```tsx
 interface WatermarkProps {
@@ -32,13 +34,16 @@ interface WatermarkProps {
 
 | Size | Context | Font Size | Padding | Position |
 |------|---------|-----------|---------|----------|
-| `sm` | ClipCard 프리뷰 | `text-[10px]` | `px-1.5 py-0.5` | `bottom-1.5 right-2` |
+| `sm` | ClipCard 프리뷰 | `text-[10px]` | `px-1.5 py-0.5` | `bottom-7 right-2` |
 | `md` | VideoPlayer | `text-[11px]` | `px-2 py-0.5` | `bottom-2 right-3` |
+
+`sm`의 `bottom-7`은 ClipCard 하단 info bar(`bg-gradient-to-t from-black/60`, 약 28px 높이)와의 겹침을 방지하기 위한 값이다.
 
 #### CSS Properties
 
 - `pointer-events-none` — 비디오 클릭/드래그 방해 안 함
 - `select-none` — 텍스트 선택 방지
+- `aria-hidden="true"` — 스크린 리더에서 숨김 (장식적 요소)
 - `z-20` — 기존 VideoPlayer 오버레이(`z-10`) 위에 렌더링
 - `bg-black/60` — 반투명 검은 배경
 - `text-white/90` — 흰 글씨
@@ -61,15 +66,17 @@ interface WatermarkProps {
 )}
 ```
 
+ClipCard의 루트 `<div>`가 `relative` + `overflow-hidden`이므로, Watermark의 `absolute` 포지셔닝이 카드 영역 내에서 정상 동작한다.
+
 ### 2. VideoPlayer (`src/components/clip/VideoPlayer.tsx`)
 
-비디오 컨테이너 내부, 기존 오버레이 요소들과 같은 레벨에 삽입한다. 항상 표시.
+Watermark를 `<div className="relative bg-black">` (비디오 영역 컨테이너) **내부**에, 기존 `z-10` 오버레이와 같은 형제 요소로 삽입한다. 항상 표시.
 
-**컨트롤 바 겹침 방지**: VideoPlayer 하단 컨트롤 바가 있으므로, 워터마크의 `bottom` 위치를 컨트롤 바 높이(약 40px) 위로 설정한다. 컨트롤 바가 표시될 때는 `bottom-12`, 숨겨져 있을 때는 `bottom-2`로 조정하거나, 고정 위치로 컨트롤 바 위에 배치한다.
+**컨트롤 바**: 컨트롤 바는 비디오 영역 컨테이너 **외부** (아래쪽 형제 `<div>`)에 위치하므로, 워터마크와 겹치지 않는다. `bottom-2 right-3`이 그대로 적용된다.
 
 ## Edge Cases
 
-- **풀스크린**: `absolute` 포지셔닝이 비디오 컨테이너 내부이므로 풀스크린에서도 자동 유지
+- **풀스크린**: 풀스크린은 최상위 `containerRef`에 적용되며, Watermark는 그 안의 비디오 영역 컨테이너에 위치한다. 비디오 콘텐츠 영역 우하단에 표시되며 (풀스크린 뷰포트 우하단이 아님), 이것이 의도된 동작이다.
 - **프리뷰 로딩 실패**: `showPreview`가 false가 되므로 워터마크도 자동으로 숨겨짐 (ClipCard)
 - **다크/라이트 모드**: 검은 배경 필이라 양쪽 모두 가독성 확보됨
 - **모바일**: 반응형 크기 조정 불필요 — `sm`/`md` 고정 크기가 모든 뷰포트에서 적절
