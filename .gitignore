@@ -20,6 +20,10 @@
 # production
 /build
 
+# protected media (served via media.reflix.dev worker, not Vercel)
+/public/videos/
+/public/previews/
+
 # misc
 .DS_Store
 *.pem
