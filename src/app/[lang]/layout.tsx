@@ -20,11 +20,11 @@ export async function generateMetadata({
   const isKo = lang === "ko";
   return {
     title: isKo
-      ? "Reflix — 게임 애니메이션 레퍼런스"
-      : "Reflix — Game Animation Reference",
+      ? "Reflix — 애니메이션 레퍼런스 라이브러리"
+      : "Reflix — Animation Reference Library",
     description: isKo
-      ? "7,000개 이상의 게임 애니메이션 클립을 탐색하세요."
-      : "Explore 7,000+ game animation reference clips.",
+      ? "애니메이터와 개발자를 위한 모션 레퍼런스. 태그 기반 검색으로 원하는 애니메이션을 빠르게 찾아보세요."
+      : "Motion reference for animators and developers. Find the animation you need with tag-based search.",
   };
 }
 
