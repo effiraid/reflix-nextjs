@@ -534,4 +534,21 @@ describe("VideoPlayer", () => {
       expect(fetchBlobUrlMock).not.toHaveBeenCalled();
     });
   });
+
+  it("always renders a watermark over the video area", () => {
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+      />
+    );
+
+    const watermark = screen.getByText("reflix.dev");
+    expect(watermark).toBeInTheDocument();
+
+    const wrapper = watermark.closest("[aria-hidden]") as HTMLElement;
+    expect(wrapper).toHaveAttribute("aria-hidden", "true");
+    expect(wrapper.className).toContain("pointer-events-none");
+  });
 });

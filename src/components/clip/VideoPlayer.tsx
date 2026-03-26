@@ -5,6 +5,7 @@ import { getMediaUrl } from "@/lib/mediaUrl";
 import { fetchBlobUrl } from "@/lib/blobVideo";
 import { SeekBar } from "./SeekBar";
 import { useVideoKeyboard } from "./useVideoKeyboard";
+import { Watermark } from "./Watermark";
 import {
   PlayIcon,
   PauseIcon,
@@ -561,6 +562,7 @@ export function VideoPlayer({
           onError={handlePlaybackError}
           className="aspect-video w-full object-contain"
         />
+        <Watermark size="md" />
       </div>
 
       {/* Control bar */}
