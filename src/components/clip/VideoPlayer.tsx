@@ -84,8 +84,9 @@ export function VideoPlayer({
         blobUrlRef.current = url;
         setBlobUrl(url);
       })
-      .catch(() => {
-        // fetch 실패 시 직접 URL로 폴백하지 않음 — poster 상태 유지
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setHasPlaybackError(true);
       });
 
     return () => {

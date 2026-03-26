@@ -142,9 +142,9 @@ const worker = {
       return new Response("Forbidden", { status: 403 });
     }
 
-    // Handle OPTIONS preflight
+    // Handle OPTIONS preflight (Origin required — browsers always send it)
     if (request.method === "OPTIONS") {
-      if (hostname === null || !isAllowedOrigin(hostname, extraOrigins)) {
+      if (hostname === null) {
         return new Response("Forbidden", { status: 403 });
       }
       return new Response(null, {
