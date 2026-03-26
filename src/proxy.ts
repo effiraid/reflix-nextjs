@@ -30,7 +30,7 @@ async function withMediaSession(
     value: token,
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: "none",
     domain: config.domain,
     path: "/",
     maxAge: config.ttlSeconds,
