@@ -6,6 +6,14 @@ const { getMediaUrlMock } = vi.hoisted(() => ({
   getMediaUrlMock: vi.fn((value: string) => `https://media.reflix.app${value}`),
 }));
 
+const { fetchBlobUrlMock } = vi.hoisted(() => ({
+  fetchBlobUrlMock: vi.fn(async (url: string) => `blob:${url}`),
+}));
+
+vi.mock("@/lib/blobVideo", () => ({
+  fetchBlobUrl: fetchBlobUrlMock,
+}));
+
 vi.mock("@/lib/mediaUrl", () => ({
   getMediaUrl: getMediaUrlMock,
 }));
@@ -83,6 +91,7 @@ vi.mock("./useVideoKeyboard", () => ({
 describe("VideoPlayer", () => {
   beforeEach(() => {
     getMediaUrlMock.mockClear();
+    fetchBlobUrlMock.mockClear();
   });
 
   afterEach(() => {
@@ -489,5 +498,40 @@ describe("VideoPlayer", () => {
       <VideoPlayer videoUrl="/videos/clip-1.mp4" thumbnailUrl="/thumbnails/clip-1.webp" duration={12} compact />
     );
     expect(screen.getByRole("button", { name: "Unmute" })).toBeInTheDocument();
+  });
+
+  describe("Blob URL playback", () => {
+    it("calls fetchBlobUrl when useBlobUrl is true", async () => {
+      render(
+        <VideoPlayer
+          videoUrl="/videos/clip-1.mp4"
+          thumbnailUrl="/thumbnails/clip-1.webp"
+          duration={10}
+          useBlobUrl
+        />
+      );
+
+      const video = document.querySelector("video") as HTMLVideoElement;
+      expect(video.poster).toContain("clip-1.webp");
+
+      await waitFor(() => {
+        expect(fetchBlobUrlMock).toHaveBeenCalledWith(
+          "https://media.reflix.app/videos/clip-1.mp4",
+          expect.any(AbortSignal)
+        );
+      });
+    });
+
+    it("does not use blob URL when useBlobUrl is false (default)", () => {
+      render(
+        <VideoPlayer
+          videoUrl="/videos/clip-1.mp4"
+          thumbnailUrl="/thumbnails/clip-1.webp"
+          duration={10}
+        />
+      );
+
+      expect(fetchBlobUrlMock).not.toHaveBeenCalled();
+    });
   });
 });

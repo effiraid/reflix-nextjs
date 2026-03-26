@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMediaUrl } from "@/lib/mediaUrl";
+import { fetchBlobUrl } from "@/lib/blobVideo";
 import { SeekBar } from "./SeekBar";
 import { useVideoKeyboard } from "./useVideoKeyboard";
 import {
@@ -23,6 +24,7 @@ interface VideoPlayerProps {
   autoPlayMuted?: boolean;
   playbackRate?: number;
   onPlaybackRateChange?: (rate: number) => void;
+  useBlobUrl?: boolean;
 }
 
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -51,6 +53,7 @@ export function VideoPlayer({
   autoPlayMuted = false,
   playbackRate: controlledRate,
   onPlaybackRateChange,
+  useBlobUrl = false,
 }: VideoPlayerProps) {
   const isControlled = controlledRate !== undefined;
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -68,16 +71,42 @@ export function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const resolvedVideoUrl = getMediaUrl(videoUrl);
+  const directVideoUrl = getMediaUrl(videoUrl);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const blobUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!useBlobUrl) return;
+
+    const controller = new AbortController();
+    fetchBlobUrl(directVideoUrl, controller.signal)
+      .then((url) => {
+        blobUrlRef.current = url;
+        setBlobUrl(url);
+      })
+      .catch(() => {
+        // fetch 실패 시 직접 URL로 폴백하지 않음 — poster 상태 유지
+      });
+
+    return () => {
+      controller.abort();
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, [directVideoUrl, useBlobUrl]);
+
+  const resolvedVideoUrl = useBlobUrl ? (blobUrl ?? "") : directVideoUrl;
   const resolvedThumbnailUrl = getMediaUrl(thumbnailUrl);
   const totalDuration = Math.max(0, duration);
 
   // Render-time state adjustments (avoids cascading-render effects)
-  const [prevVideoUrl, setPrevVideoUrl] = useState(resolvedVideoUrl);
+  const [prevVideoUrl, setPrevVideoUrl] = useState(directVideoUrl);
   const [prevDuration, setPrevDuration] = useState(duration);
 
-  if (prevVideoUrl !== resolvedVideoUrl) {
-    setPrevVideoUrl(resolvedVideoUrl);
+  if (prevVideoUrl !== directVideoUrl) {
+    setPrevVideoUrl(directVideoUrl);
     setHasPlaybackError(false);
     setIsPlaying(false);
     setCurrentTime(0);
@@ -367,7 +396,7 @@ export function VideoPlayer({
       video.cancelVideoFrameCallback?.(callbackId);
       lastFrameTimeRef.current = -1;
     };
-  }, [resolvedVideoUrl]);
+  }, [directVideoUrl]);
 
   const stepForward = useCallback(() => {
     const video = videoRef.current;
@@ -493,7 +522,7 @@ export function VideoPlayer({
         setIsPlaying(false);
       });
     }
-  }, [autoPlayMuted, hasPlaybackError, resolvedVideoUrl]);
+  }, [autoPlayMuted, hasPlaybackError, directVideoUrl]);
 
   return (
     <div ref={containerRef} className="overflow-hidden rounded-2xl border border-border">
@@ -509,7 +538,7 @@ export function VideoPlayer({
         />
         <video
           ref={videoRef}
-          src={resolvedVideoUrl}
+          src={resolvedVideoUrl || undefined}
           poster={resolvedThumbnailUrl}
           playsInline
           controlsList="nodownload nofullscreen noremoteplayback"
