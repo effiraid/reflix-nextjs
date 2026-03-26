@@ -52,7 +52,9 @@ describe("media gateway worker", () => {
   it("rejects protected media requests without a valid cookie", async () => {
     const env = createEnv();
 
-    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4");
+    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: { Origin: "https://reflix.dev" },
+    });
     const response = await worker.fetch(request, env);
 
     expect(response.status).toBe(403);
@@ -98,6 +100,7 @@ describe("media gateway worker", () => {
       headers: {
         Range: "bytes=0-1023",
         Cookie: validCookie,
+        Origin: "https://reflix.dev",
       },
     });
     const response = await worker.fetch(request, env);
@@ -123,6 +126,7 @@ describe("media gateway worker", () => {
       method: "HEAD",
       headers: {
         Cookie: validCookie,
+        Origin: "https://reflix.dev",
       },
     });
     const response = await worker.fetch(request, env);
@@ -197,7 +201,7 @@ describe("Referer/Origin validation", () => {
     expect(response.status).toBe(200);
   });
 
-  it("allows requests with neither Origin nor Referer (cookie-only)", async () => {
+  it("rejects protected media with neither Origin nor Referer", async () => {
     const validCookie = await createValidCookie();
     const env = createEnv({
       MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
@@ -206,7 +210,7 @@ describe("Referer/Origin validation", () => {
       headers: { Cookie: validCookie },
     });
     const response = await worker.fetch(request, env);
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(403);
   });
 
   it("rejects requests with disallowed Origin", async () => {
@@ -244,5 +248,145 @@ describe("Referer/Origin validation", () => {
     });
     const response = await worker.fetch(request, env);
     expect(response.status).toBe(200);
+  });
+});
+
+describe("S-001: wildcard subdomain blocking", () => {
+  it("rejects arbitrary *.reflix.dev subdomains", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "https://attacker.reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects nested subdomains like a.b.c.reflix.dev", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "https://a.b.c.reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("allows www.reflix.dev", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "https://www.reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("S-002: Origin/Referer required for protected media", () => {
+  it("rejects /videos/ with cookie but no Origin or Referer", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("rejects /previews/ with cookie but no Origin or Referer", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: { Cookie: validCookie },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("allows /thumbnails/ without Origin or Referer (public)", async () => {
+    const env = createEnv({
+      MEDIA_BUCKET: {
+        get: vi.fn(async () =>
+          createBucketObject({ body: "thumb", contentType: "image/webp" })
+        ),
+        head: vi.fn(),
+      },
+    });
+    const request = new Request("https://media.reflix.dev/thumbnails/clip-1.webp");
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("S-003: localhost access control via ALLOWED_ORIGINS", () => {
+  it("rejects localhost when ALLOWED_ORIGINS is empty", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      ALLOWED_ORIGINS: "",
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "http://localhost:3000" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("allows localhost when ALLOWED_ORIGINS includes it", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000",
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "http://localhost:3000" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("Anti-embedding headers", () => {
+  it("includes X-Frame-Options and CSP on protected media responses", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
+    expect(response.headers.get("Content-Security-Policy")).toBe(
+      "frame-ancestors 'self' https://reflix.dev"
+    );
+  });
+
+  it("does not include anti-embedding headers on thumbnail responses", async () => {
+    const env = createEnv({
+      MEDIA_BUCKET: {
+        get: vi.fn(async () =>
+          createBucketObject({ body: "thumb", contentType: "image/webp" })
+        ),
+        head: vi.fn(),
+      },
+    });
+    const request = new Request("https://media.reflix.dev/thumbnails/clip-1.webp");
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Frame-Options")).toBeNull();
+    expect(response.headers.get("Content-Security-Policy")).toBeNull();
   });
 });

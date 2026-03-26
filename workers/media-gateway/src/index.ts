@@ -44,11 +44,10 @@ function readCookie(cookieHeader: string | null, name: string): string | null {
   return null;
 }
 
+const ALLOWED_HOSTNAMES = new Set(["reflix.dev", "www.reflix.dev"]);
+
 function isAllowedOrigin(hostname: string, extraOrigins: string[]): boolean {
-  if (hostname === "reflix.dev" || hostname.endsWith(".reflix.dev")) {
-    return true;
-  }
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
+  if (ALLOWED_HOSTNAMES.has(hostname)) {
     return true;
   }
   return extraOrigins.includes(hostname);
@@ -111,6 +110,8 @@ async function serveR2Object(
 
   if (protectedPath) {
     headers.set("cache-control", "private, no-store");
+    headers.set("X-Frame-Options", "SAMEORIGIN");
+    headers.set("Content-Security-Policy", "frame-ancestors 'self' https://reflix.dev");
   }
 
   return new Response(request.method === "HEAD" ? null : object.body ?? null, {
@@ -167,6 +168,13 @@ const worker = {
 
     if (!isProtectedMediaPath(url.pathname)) {
       return new Response("Not Found", { status: 404 });
+    }
+
+    // Protected media requires Origin or Referer header.
+    // Browsers always send one for sub-resource loads (<video src>, fetch()).
+    // Missing both = direct URL access, curl, or suppressed Referer → block.
+    if (hostname === null) {
+      return new Response("Forbidden", { status: 403 });
     }
 
     const token = readCookie(request.headers.get("Cookie"), MEDIA_SESSION_COOKIE_NAME);
