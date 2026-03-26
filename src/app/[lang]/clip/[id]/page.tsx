@@ -33,7 +33,7 @@ export async function generateMetadata({
 
   const locale = lang as Locale;
   const title = clip.i18n.title[locale] || clip.name;
-  const description = clip.annotation || clip.tags.join(", ");
+  const description = clip.annotation || `${clip.category} · ${clip.tags.join(", ")}`;
 
   const origin = getDeploymentOrigin();
   const thumbnailUrl = clip.thumbnailUrl.startsWith("http")
@@ -48,6 +48,9 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
+      url: origin ? `${origin}/${locale}/clip/${id}` : undefined,
+      siteName: "Reflix",
+      type: "video.other",
       images: thumbnailUrl
         ? [{ url: thumbnailUrl, width: clip.width, height: clip.height }]
         : undefined,
