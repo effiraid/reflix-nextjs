@@ -11,3 +11,6 @@ custom_domain = true
 binding = "MEDIA_BUCKET"
 bucket_name = "reflix-media"
 preview_bucket_name = "reflix-media"
+
+[vars]
+ALLOWED_ORIGINS = ""

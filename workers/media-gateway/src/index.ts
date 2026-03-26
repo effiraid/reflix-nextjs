@@ -23,6 +23,7 @@ type R2LikeBucket = {
 
 type Env = {
   MEDIA_SESSION_SECRET: string;
+  ALLOWED_ORIGINS: string;
   MEDIA_BUCKET: R2LikeBucket;
 };
 
@@ -41,6 +42,51 @@ function readCookie(cookieHeader: string | null, name: string): string | null {
   }
 
   return null;
+}
+
+function isAllowedOrigin(hostname: string, extraOrigins: string[]): boolean {
+  if (hostname === "reflix.dev" || hostname.endsWith(".reflix.dev")) {
+    return true;
+  }
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return true;
+  }
+  return extraOrigins.includes(hostname);
+}
+
+function getOriginHostname(request: Request): string | null {
+  const origin = request.headers.get("Origin");
+  if (origin) {
+    try {
+      return new URL(origin).hostname;
+    } catch {
+      return null;
+    }
+  }
+
+  const referer = request.headers.get("Referer");
+  if (referer) {
+    try {
+      return new URL(referer).hostname;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function corsHeaders(request: Request, env: Env): Headers {
+  const headers = new Headers();
+  const origin = request.headers.get("Origin");
+  if (origin) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Access-Control-Allow-Credentials", "true");
+    headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    headers.set("Access-Control-Allow-Headers", "Range");
+    headers.set("Access-Control-Max-Age", "86400");
+  }
+  return headers;
 }
 
 async function serveR2Object(
@@ -77,13 +123,44 @@ const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    if (request.method !== "GET" && request.method !== "HEAD") {
-      return new Response("Method Not Allowed", {
-        status: 405,
-        headers: { Allow: "GET, HEAD" },
+    // Parse extra allowed origins from env
+    const extraOrigins = env.ALLOWED_ORIGINS
+      ? env.ALLOWED_ORIGINS.split(",")
+          .map((o) => {
+            try {
+              return new URL(o.trim()).hostname;
+            } catch {
+              return o.trim();
+            }
+          })
+          .filter(Boolean)
+      : [];
+
+    // Origin/Referer validation
+    const hostname = getOriginHostname(request);
+    if (hostname !== null && !isAllowedOrigin(hostname, extraOrigins)) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // Handle OPTIONS preflight
+    if (request.method === "OPTIONS") {
+      if (hostname === null || !isAllowedOrigin(hostname, extraOrigins)) {
+        return new Response("Forbidden", { status: 403 });
+      }
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders(request, env),
       });
     }
 
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { Allow: "GET, HEAD, OPTIONS" },
+      });
+    }
+
+    // Thumbnails are public — no CORS headers needed
     if (url.pathname.startsWith("/thumbnails/")) {
       return serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), false);
     }
@@ -101,7 +178,15 @@ const worker = {
       return new Response("Forbidden", { status: 403 });
     }
 
-    return serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), true);
+    const response = await serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), true);
+
+    // Add CORS headers to protected media responses
+    const cors = corsHeaders(request, env);
+    for (const [key, value] of cors.entries()) {
+      response.headers.set(key, value);
+    }
+
+    return response;
   },
 };
 
