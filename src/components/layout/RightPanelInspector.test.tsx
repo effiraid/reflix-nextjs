@@ -78,6 +78,7 @@ const dict: Pick<Dictionary, "clip"> = {
     inspectorDuration: "지속 시간",
     fileType: "파일 형식",
     share: "공유",
+    copied: "복사됨",
     video: "동영상",
     image: "이미지",
     noLink: "링크 없음",

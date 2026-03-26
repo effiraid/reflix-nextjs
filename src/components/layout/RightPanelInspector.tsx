@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ShareButton } from "@/components/clip/ShareButton";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
 import { getMediaUrl } from "@/lib/mediaUrl";
@@ -127,12 +128,13 @@ export function RightPanelInspector({
         </dl>
       </section>
 
-      <button
-        type="button"
+      <ShareButton
+        clipId={clip.id}
+        lang={lang}
+        label={dict.clip.share}
+        copiedLabel={dict.clip.copied}
         className="flex w-full items-center justify-center rounded-xl border border-border bg-surface px-4 py-3 font-medium transition-colors hover:bg-surface/80"
-      >
-        {dict.clip.share}
-      </button>
+      />
     </div>
   );
 }
