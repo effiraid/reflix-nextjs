@@ -76,7 +76,7 @@ function getOriginHostname(request: Request): string | null {
   return null;
 }
 
-function corsHeaders(request: Request, env: Env): Headers {
+function corsHeaders(request: Request): Headers {
   const headers = new Headers();
   const origin = request.headers.get("Origin");
   if (origin) {
@@ -149,7 +149,7 @@ const worker = {
       }
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(request, env),
+        headers: corsHeaders(request),
       });
     }
 
@@ -181,7 +181,7 @@ const worker = {
     const response = await serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), true);
 
     // Add CORS headers to protected media responses
-    const cors = corsHeaders(request, env);
+    const cors = corsHeaders(request);
     for (const [key, value] of cors.entries()) {
       response.headers.set(key, value);
     }
