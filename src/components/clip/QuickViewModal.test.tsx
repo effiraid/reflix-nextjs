@@ -61,6 +61,7 @@ const dict = {
     rating: "Rating",
     duration: "Duration",
     share: "Share",
+    copied: "Copied",
   },
 };
 

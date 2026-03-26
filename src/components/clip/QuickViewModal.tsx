@@ -3,6 +3,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { VideoPlayer, PLAYBACK_SPEEDS } from "@/components/clip/VideoPlayer";
+import { ShareButton } from "@/components/clip/ShareButton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { formatClipDuration } from "@/lib/clipInspector";
@@ -130,17 +131,13 @@ export function QuickViewModal({
             </dl>
 
             <div className="mt-auto flex gap-2">
-              <button
-                type="button"
-                className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-surface/80"
-                onClick={() => {
-                  void navigator.clipboard.writeText(
-                    `${window.location.origin}/${lang}/clip/${clip.id}`
-                  );
-                }}
-              >
-                {dict.clip.share}
-              </button>
+              <ShareButton
+                clipId={clip.id}
+                lang={lang}
+                label={dict.clip.share}
+                copiedLabel={dict.clip.copied}
+                className="flex flex-1 items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-surface/80"
+              />
               <Link
                 href={`/${lang}/clip/${clip.id}`}
                 className="flex-1 rounded-full bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
