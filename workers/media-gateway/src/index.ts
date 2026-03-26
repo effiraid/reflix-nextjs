@@ -6,10 +6,24 @@ import {
 
 type R2LikeObject = {
   body?: BodyInit | null;
-  range?: unknown;
+  range?: R2LikeRange;
   httpEtag: string;
+  size: number;
   writeHttpMetadata(headers: Headers): void;
 };
+
+type R2LikeRange =
+  | {
+      offset: number;
+      length?: number;
+    }
+  | {
+      offset?: number;
+      length: number;
+    }
+  | {
+      suffix: number;
+    };
 
 type R2LikeBucket = {
   get(
@@ -88,6 +102,38 @@ function corsHeaders(request: Request): Headers {
   return headers;
 }
 
+function getRangedResponseMetadata(
+  range: R2LikeRange | undefined,
+  size: number
+): { start: number; end: number; length: number } | null {
+  if (!range || size <= 0) {
+    return null;
+  }
+
+  if ("suffix" in range && typeof range.suffix === "number") {
+    const length = Math.min(range.suffix, size);
+    const start = Math.max(size - length, 0);
+    return {
+      start,
+      end: size - 1,
+      length,
+    };
+  }
+
+  const rawStart = "offset" in range && typeof range.offset === "number" ? range.offset : 0;
+  const start = Math.max(rawStart, 0);
+  const available = Math.max(size - start, 0);
+  const requestedLength =
+    "length" in range && typeof range.length === "number" ? range.length : available;
+  const length = Math.min(requestedLength, available);
+
+  return {
+    start,
+    end: start + Math.max(length - 1, 0),
+    length,
+  };
+}
+
 async function serveR2Object(
   request: Request,
   env: Env,
@@ -115,10 +161,14 @@ async function serveR2Object(
     headers.set("Content-Security-Policy", "frame-ancestors 'self' https://reflix.dev");
   }
 
-  const isPartial = hasRange && object.range;
+  const partial = hasRange ? getRangedResponseMetadata(object.range, object.size) : null;
+  if (partial) {
+    headers.set("content-range", `bytes ${partial.start}-${partial.end}/${object.size}`);
+    headers.set("content-length", String(partial.length));
+  }
 
   return new Response(request.method === "HEAD" ? null : object.body ?? null, {
-    status: isPartial ? 206 : 200,
+    status: partial ? 206 : 200,
     headers,
   });
 }

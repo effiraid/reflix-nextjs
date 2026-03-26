@@ -6,16 +6,19 @@ function createBucketObject({
   body = "media-body",
   contentType = "video/mp4",
   etag = '"etag-123"',
+  size = 4096,
   range = undefined,
 }: {
   body?: string;
   contentType?: string;
   etag?: string;
+  size?: number;
   range?: { offset: number; length: number } | undefined;
 }) {
   return {
     body,
     range,
+    size,
     httpEtag: etag,
     writeHttpMetadata(headers: Headers) {
       headers.set("content-type", contentType);
@@ -78,9 +81,7 @@ describe("media gateway worker", () => {
 
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("thumb-body");
-    expect(env.MEDIA_BUCKET.get).toHaveBeenCalledWith("thumbnails/clip-1.webp", {
-      range: request.headers,
-    });
+    expect(env.MEDIA_BUCKET.get).toHaveBeenCalledWith("thumbnails/clip-1.webp", undefined);
   });
 
   it("forwards ranged preview requests to R2", async () => {
@@ -108,9 +109,40 @@ describe("media gateway worker", () => {
     expect(response.status).toBe(206);
     expect(response.headers.get("accept-ranges")).toBe("bytes");
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("content-range")).toBe("bytes 0-1023/4096");
     expect(env.MEDIA_BUCKET.get).toHaveBeenCalledWith("previews/clip-1.mp4", {
       range: request.headers,
     });
+  });
+
+  it("normalizes ranged preview metadata when R2 includes an undefined suffix field", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: {
+        get: vi.fn(async () =>
+          createBucketObject({
+            size: 4096,
+            range: { suffix: undefined, length: 1024 } as unknown as {
+              offset: number;
+              length: number;
+            },
+          })
+        ),
+        head: vi.fn(),
+      },
+    });
+
+    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: {
+        Range: "bytes=0-1023",
+        Cookie: validCookie,
+        Origin: "https://reflix.dev",
+      },
+    });
+    const response = await worker.fetch(request, env);
+
+    expect(response.status).toBe(206);
+    expect(response.headers.get("content-range")).toBe("bytes 0-1023/4096");
   });
 
   it("supports HEAD for protected video objects", async () => {
