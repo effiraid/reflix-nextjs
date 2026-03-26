@@ -185,7 +185,7 @@ test("resolveEagleLibraryPath falls back to the Desktop Eagle library path", () 
   assert.equal(libraryPath, "/Users/tester/Desktop/라이브러리/레퍼런스 - 게임,연출.library");
 });
 
-test("package scripts expose batch-first export commands with prune enabled", () => {
+test("package scripts expose incremental batch export and explicit prune commands", () => {
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf-8")
   );
