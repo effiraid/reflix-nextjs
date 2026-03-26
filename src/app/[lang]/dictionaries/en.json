@@ -53,7 +53,8 @@
     "image": "Image",
     "noLink": "No link",
     "colorPalette": "Color Palette",
-    "sourceUrl": "Source URL"
+    "sourceUrl": "Source URL",
+    "copied": "Copied"
   },
   "common": {
     "close": "Close",

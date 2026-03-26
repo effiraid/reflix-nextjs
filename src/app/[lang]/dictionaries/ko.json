@@ -53,7 +53,8 @@
     "image": "이미지",
     "noLink": "링크 없음",
     "colorPalette": "색상 팔레트",
-    "sourceUrl": "소스 URL"
+    "sourceUrl": "소스 URL",
+    "copied": "복사됨"
   },
   "common": {
     "close": "닫기",
