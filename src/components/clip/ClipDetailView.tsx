@@ -1,4 +1,5 @@
 import { VideoPlayer } from "@/components/clip/VideoPlayer";
+import { ShareButton } from "@/components/clip/ShareButton";
 import { formatClipDuration } from "@/lib/clipInspector";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Clip, Locale } from "@/lib/types";
@@ -19,10 +20,20 @@ export function ClipDetailView({ clip, lang, dict }: ClipDetailViewProps) {
         videoUrl={clip.videoUrl}
         thumbnailUrl={clip.thumbnailUrl}
         duration={clip.duration}
+        useBlobUrl
       />
 
       <section className="space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+          <ShareButton
+            clipId={clip.id}
+            lang={lang}
+            label={dict.clip.share}
+            copiedLabel={dict.clip.copied}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface/80"
+          />
+        </div>
         {clip.annotation ? (
           <p className="max-w-3xl text-sm leading-7 text-muted">
             {clip.annotation}

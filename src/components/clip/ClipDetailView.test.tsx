@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { ClipDetailView } from "./ClipDetailView";
 import type { Clip } from "@/lib/types";
 
+vi.mock("@/components/clip/ShareButton", () => ({
+  ShareButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
+}));
+
 vi.mock("@/components/clip/VideoPlayer", () => ({
   VideoPlayer: ({
     videoUrl,
@@ -57,6 +61,8 @@ const dict = {
     size: "Size",
     format: "Format",
     memo: "Memo",
+    share: "Share",
+    copied: "Copied",
   },
 };
 
