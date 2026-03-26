@@ -46,6 +46,66 @@ test("buildFullClip excludes internal reflix operation tags from public clip pay
   assert.deepEqual(clip.tags, ["연출", "표정"]);
 });
 
+test("buildClipIndex preserves AI-generated tags when present", () => {
+  const aiTags = {
+    actionType: ["베기"],
+    emotion: ["결의"],
+    composition: ["클로즈업"],
+    pacing: "빠름",
+    characterType: ["전사"],
+    effects: ["잔상"],
+    description: {
+      ko: "대검을 크게 휘두르는 공격 모션",
+      en: "A fast greatsword attack",
+    },
+    model: "gemini-2.5-flash",
+    generatedAt: "2026-03-26T00:00:00.000Z",
+  };
+
+  const clip = buildClipIndex(
+    {
+      id: "CLIP_AI",
+      name: "AI 클립",
+      tags: ["검"],
+      folders: [],
+      aiTags,
+    },
+    "data:image/jpeg;base64,abc"
+  );
+
+  assert.deepEqual(clip.aiTags, aiTags);
+});
+
+test("buildFullClip preserves AI-generated tags when present", () => {
+  const aiTags = {
+    actionType: ["베기"],
+    emotion: ["결의"],
+    composition: ["클로즈업"],
+    pacing: "빠름",
+    characterType: ["전사"],
+    effects: ["잔상"],
+    description: {
+      ko: "대검을 크게 휘두르는 공격 모션",
+      en: "A fast greatsword attack",
+    },
+    model: "gemini-2.5-flash",
+    generatedAt: "2026-03-26T00:00:00.000Z",
+  };
+
+  const clip = buildFullClip(
+    {
+      id: "CLIP_AI",
+      name: "AI 클립",
+      tags: ["검"],
+      folders: [],
+      aiTags,
+    },
+    "data:image/jpeg;base64,abc"
+  );
+
+  assert.deepEqual(clip.aiTags, aiTags);
+});
+
 test("writeOutputFiles merges new entries into an existing index", () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-index-builder-"));
   fs.mkdirSync(path.join(tmpDir, "src", "data"), { recursive: true });

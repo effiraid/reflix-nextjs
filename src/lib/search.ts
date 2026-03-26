@@ -2,12 +2,12 @@ import { getChoseong, convertQwertyToHangul } from "es-hangul";
 import { fuzzyMatch } from "@nozbe/microfuzz";
 
 /** 쿼리가 순수 초성(ㄱ-ㅎ)으로만 구성되어 있는지 확인 */
-function isChoseongOnly(str: string): boolean {
+export function isChoseongOnly(str: string): boolean {
   return /^[ㄱ-ㅎ]+$/.test(str);
 }
 
 /** 쿼리가 영문 알파벳으로만 구성되어 있는지 확인 (영타 변환 대상) */
-function isLatinOnly(str: string): boolean {
+export function isLatinOnly(str: string): boolean {
   return /^[a-zA-Z]+$/.test(str);
 }
 

@@ -72,6 +72,22 @@ Generated media contract:
 
 The exported JSON continues to reference these assets as relative paths.
 
+## Tag Translation Workflow
+
+English tag labels are generated into `src/data/tag-i18n.json` from the current clip index plus deterministic rules in `scripts/config/tag-translation-rules.json`.
+
+```bash
+# Preview unresolved tags without writing output
+node scripts/tag-translate.mjs --dry-run
+
+# Generate and write src/data/tag-i18n.json
+npm run tags:translate
+```
+
+- `GEMINI_API_KEY` is only required when unresolved Korean tags remain after rule-based translation.
+- `npm run tags:translate -- --only-new` limits work to tags that are still missing from `src/data/tag-i18n.json`.
+- `node scripts/tag-translate.mjs --dry-run --clip-id CLIP_ID` previews translation work for a single clip.
+
 ## Release Approval Workflow
 
 The release commands and Eagle tags form the operator flow for Phase 2:

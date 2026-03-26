@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 지침 괴로움 고뇌",
   "ext": "mp4",
   "size": 1387733,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 13.209,
   "tags": [
     "아케인",
@@ -109,6 +109,49 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "힘듦",
+      "고뇌",
+      "지쳐있음",
+      "탐색",
+      "움직임"
+    ],
+    "emotion": [
+      "괴로움",
+      "지침",
+      "힘겨움",
+      "걱정",
+      "불안",
+      "고통",
+      "절박함",
+      "결심"
+    ],
+    "composition": [
+      "클로즈업",
+      "미디엄샷",
+      "하이앵글",
+      "전신샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "주인공",
+      "여성"
+    ],
+    "effects": [
+      "붉은조명",
+      "어두운배경",
+      "땀방울",
+      "어두운눈가",
+      "패널숫자변화"
+    ],
+    "description": {
+      "ko": "주인공 진크스가 지쳐 있고 고통스러운 모습으로 어둡고 붉은 조명의 공간에서 거대한 기계를 다루거나 주변을 탐색합니다. 클로즈업 샷에서는 그녀의 땀과 다크서클이 두드러지며 극심한 피로와 내면의 불안감을 생생하게 전달합니다. 느린 움직임과 무거운 숨소리가 그녀의 힘겨운 상황을 강조합니다.",
+      "en": "Jinx appears exhausted and in agony, navigating a dimly lit, red-hued space while interacting with a large mechanism. Close-up shots highlight her sweat and dark under-eyes, vividly conveying her extreme fatigue and inner turmoil. Her slow movements and heavy breathing underscore the strenuous and desperate situation she is in."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:15:17.208Z"
   },
   "videoUrl": "/videos/L3TR52T2S1A9X.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2S1A9X.webp",

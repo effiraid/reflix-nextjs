@@ -7,6 +7,7 @@ import { ShareButton } from "@/components/clip/ShareButton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { formatClipDuration } from "@/lib/clipInspector";
+import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { ClipIndex, Locale } from "@/lib/types";
 
@@ -14,6 +15,7 @@ import type { ClipIndex, Locale } from "@/lib/types";
 interface QuickViewModalProps {
   clip: ClipIndex;
   lang: Locale;
+  tagI18n?: Record<string, string>;
   dict: Pick<Dictionary, "clip">;
   onClose: () => void;
 }
@@ -21,6 +23,7 @@ interface QuickViewModalProps {
 export function QuickViewModal({
   clip,
   lang,
+  tagI18n = {},
   dict,
   onClose,
 }: QuickViewModalProps) {
@@ -31,6 +34,7 @@ export function QuickViewModal({
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const playbackRate = playbackState.clipId === clip.id ? playbackState.rate : 1;
+  const displayTags = getTagDisplayLabels(clip.tags, lang, tagI18n);
   const setPlaybackRate = useCallback(
     (rate: number) => {
       setPlaybackState({ clipId: clip.id, rate });
@@ -101,8 +105,8 @@ export function QuickViewModal({
                 {dict.clip.tags}
               </h3>
               <div className="flex flex-wrap gap-2">
-                {clip.tags.length > 0 ? (
-                  clip.tags.map((tag) => (
+                {displayTags.length > 0 ? (
+                  displayTags.map((tag) => (
                     <span
                       key={tag}
                       className="rounded-full border border-border bg-background px-3 py-1 text-xs"

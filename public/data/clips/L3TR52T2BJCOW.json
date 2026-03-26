@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 심호흡",
   "ext": "mp4",
   "size": 261111,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 3.733334,
   "tags": [
     "아케인",
@@ -98,6 +98,45 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "심호흡",
+      "마스크 착용",
+      "정돈",
+      "숨쉬기"
+    ],
+    "emotion": [
+      "힘듦",
+      "지침",
+      "고통",
+      "피로",
+      "결의"
+    ],
+    "composition": [
+      "클로즈업",
+      "미디엄샷",
+      "아이레벨"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "빌런",
+      "남성",
+      "인간형",
+      "개조인간"
+    ],
+    "effects": [
+      "어두운 조명",
+      "녹색조명",
+      "앰비언트 라이트",
+      "캐릭터 강조"
+    ],
+    "description": {
+      "ko": "한 남성 캐릭터가 깊은 숨을 내쉬며 얼굴에 두른 천 마스크를 끌어올립니다. 어둡고 녹색을 띠는 배경 속에서, 그는 힘겹고 지친 표정으로 눈을 감았다가 한쪽 눈을 뜨며 자신의 감정을 억누르는 듯한 모습을 보입니다. 느린 움직임과 클로즈업 구도는 캐릭터의 내면적 고통과 결의를 강조합니다.",
+      "en": "A male character slowly pulls up a fabric mask to cover his mouth and nose, taking a deep breath. In a dark, green-tinted environment, he closes his eyes in what appears to be an expression of weariness or pain, then opens one eye, suggesting a moment of inner struggle and resolve. The slow pacing and close-up composition emphasize the character's internal turmoil."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:13:31.925Z"
   },
   "videoUrl": "/videos/L3TR52T2BJCOW.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2BJCOW.webp",

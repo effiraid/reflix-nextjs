@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { AI_PARENT_GROUP_ID, buildAiTagGroups, getAllClipTags } from "@/lib/aiTags";
 import { createMatcher } from "@/lib/search";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { TagGroupData, Locale } from "@/lib/types";
@@ -24,6 +25,18 @@ export function TagFilterPanel({
   updateURL,
 }: TagFilterPanelProps) {
   const clips = useClipData();
+  const aiTagData = useMemo(() => buildAiTagGroups(clips), [clips]);
+  const mergedTagGroups = useMemo(
+    () => [...tagGroups.groups, ...aiTagData.groups],
+    [aiTagData.groups, tagGroups.groups]
+  );
+  const mergedParentGroups = useMemo(
+    () =>
+      aiTagData.hasAiField
+        ? [...tagGroups.parentGroups, aiTagData.parentGroup]
+        : tagGroups.parentGroups,
+    [aiTagData.hasAiField, aiTagData.parentGroup, tagGroups.parentGroups]
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [localTagSearch, setLocalTagSearch] = useState("");
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
@@ -40,10 +53,8 @@ export function TagFilterPanel({
   const tagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const clip of clips) {
-      if (clip.tags) {
-        for (const tag of clip.tags) {
-          counts[tag] = (counts[tag] || 0) + 1;
-        }
+      for (const tag of getAllClipTags(clip)) {
+        counts[tag] = (counts[tag] || 0) + 1;
       }
     }
     return counts;
@@ -52,11 +63,11 @@ export function TagFilterPanel({
   // 전체 태그 (모든 그룹의 태그 합집합)
   const allTags = useMemo(() => {
     const set = new Set<string>();
-    for (const group of tagGroups.groups) {
+    for (const group of mergedTagGroups) {
       for (const tag of group.tags) set.add(tag);
     }
     return Array.from(set).sort();
-  }, [tagGroups]);
+  }, [mergedTagGroups]);
 
   // Matcher for tag search (shared across memos)
   const matchTag = useMemo(() => {
@@ -68,23 +79,23 @@ export function TagFilterPanel({
   // 현재 선택된 그룹의 태그 목록
   const currentTags = useMemo(() => {
     const baseTags = selectedGroupId
-      ? tagGroups.groups.find((g) => g.id === selectedGroupId)?.tags ?? []
+      ? mergedTagGroups.find((g) => g.id === selectedGroupId)?.tags ?? []
       : allTags;
 
     return matchTag ? baseTags.filter(matchTag) : baseTags;
-  }, [selectedGroupId, tagGroups, allTags, matchTag]);
+  }, [selectedGroupId, mergedTagGroups, allTags, matchTag]);
 
   // 그룹별 태그 수 + 전체 태그 수 (검색 반영, 한 번에 계산)
   const { groupTagCounts, totalTagCount } = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const group of tagGroups.groups) {
+    for (const group of mergedTagGroups) {
       counts[group.id] = matchTag
         ? group.tags.filter(matchTag).length
         : group.tags.length;
     }
     const total = matchTag ? allTags.filter(matchTag).length : allTags.length;
     return { groupTagCounts: counts, totalTagCount: total };
-  }, [tagGroups, allTags, matchTag]);
+  }, [mergedTagGroups, allTags, matchTag]);
 
   // 태그 좌클릭 핸들러 (3-상태: unselected→included, included→unselected, excluded→included)
   const handleTagToggle = useCallback(
@@ -167,13 +178,13 @@ export function TagFilterPanel({
   // 태그가 속한 그룹의 색상 (북마크 아이콘용)
   const tagColorMap = useMemo(() => {
     const map: Record<string, string | undefined> = {};
-    for (const group of tagGroups.groups) {
+    for (const group of mergedTagGroups) {
       for (const tag of group.tags) {
         map[tag] = group.color;
       }
     }
     return map;
-  }, [tagGroups]);
+  }, [mergedTagGroups]);
 
   return (
     <div
@@ -221,11 +232,22 @@ export function TagFilterPanel({
           </button>
 
           {/* parentGroup별 섹션 헤더 + child groups */}
-          {tagGroups.parentGroups.map((parent) => {
-            const childGroups = tagGroups.groups.filter(
+          {mergedParentGroups.map((parent) => {
+            const childGroups = mergedTagGroups.filter(
               (g) => g.parent === parent.id && groupTagCounts[g.id] > 0
             );
-            if (childGroups.length === 0) return null;
+            if (childGroups.length === 0) {
+              if (parent.id === AI_PARENT_GROUP_ID && aiTagData.hasAiField) {
+                return (
+                  <div key={parent.id}>
+                    <div className="mt-2 px-3 py-1 text-[10px] uppercase tracking-wider text-muted">
+                      {parent.name[lang]}
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            }
             return (
               <div key={parent.id}>
                 {/* 섹션 헤더 */}
@@ -241,7 +263,15 @@ export function TagFilterPanel({
                       selectedGroupId === group.id ? "bg-accent text-white" : ""
                     }`}
                   >
-                    <span>{group.name[lang]}</span>
+                    <span className="flex items-center gap-1">
+                      {group.parent === AI_PARENT_GROUP_ID ? (
+                        <span
+                          aria-hidden="true"
+                          className="h-1 w-1 rounded-full bg-accent"
+                        />
+                      ) : null}
+                      <span>{group.name[lang]}</span>
+                    </span>
                     <span
                       className={`text-xs ${
                         selectedGroupId === group.id ? "text-white/70" : "text-muted"

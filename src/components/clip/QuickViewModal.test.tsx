@@ -162,4 +162,23 @@ describe("QuickViewModal", () => {
     expect(screen.getByRole("button", { name: "Share" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "View Detail" })).toBeInTheDocument();
   });
+
+  it("renders translated tag labels in english mode", () => {
+    render(
+      <QuickViewModal
+        clip={clip}
+        lang="en"
+        tagI18n={{
+          "tag-a": "Tag A",
+          "tag-b": "Tag B",
+        }}
+        dict={dict}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Tag A")).toBeInTheDocument();
+    expect(screen.getByText("Tag B")).toBeInTheDocument();
+    expect(screen.queryByText("tag-a")).not.toBeInTheDocument();
+  });
 });

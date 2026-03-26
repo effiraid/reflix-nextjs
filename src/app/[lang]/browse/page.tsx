@@ -44,7 +44,7 @@ export default async function BrowsePage({
     <ClipDataProvider clips={clipIndex.clips}>
       <div className="h-screen flex flex-col">
         <Suspense>
-          <Navbar lang={lang as Locale} dict={dict} />
+          <Navbar lang={lang as Locale} dict={dict} tagI18n={tagI18n} />
         </Suspense>
         <div className="flex-1 flex overflow-hidden">
           <LeftPanel>
@@ -86,11 +86,16 @@ export default async function BrowsePage({
           </div>
 
           <RightPanel>
-            <RightPanelContent
-              categories={categories}
-              lang={lang as Locale}
-              dict={dict}
-            />
+            <Suspense
+              fallback={<div className="p-4 text-sm text-muted">{dict.common.loading}</div>}
+            >
+              <RightPanelContent
+                categories={categories}
+                lang={lang as Locale}
+                dict={dict}
+                tagI18n={tagI18n}
+              />
+            </Suspense>
           </RightPanel>
         </div>
       </div>

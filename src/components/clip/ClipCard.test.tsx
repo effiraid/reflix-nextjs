@@ -80,6 +80,22 @@ describe("ClipCard", () => {
     expect(overlay?.className).not.toContain("hover:opacity-100");
   });
 
+  it("renders translated tag labels in english mode", () => {
+    render(
+      <ClipCard
+        clip={clip}
+        lang="en"
+        tagI18n={{
+          아케인: "Arcane",
+          힘듦: "Fatigue",
+        }}
+      />
+    );
+
+    expect(screen.getByText("Arcane, Fatigue")).toBeInTheDocument();
+    expect(screen.queryByText("아케인, 힘듦")).not.toBeInTheDocument();
+  });
+
   it("resolves the thumbnail path through the shared media URL helper", () => {
     render(<ClipCard clip={clip} />);
 

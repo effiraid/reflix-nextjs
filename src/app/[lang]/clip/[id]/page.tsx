@@ -4,7 +4,12 @@ import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { ClipDetailView } from "@/components/clip/ClipDetailView";
 import { Navbar } from "@/components/layout/Navbar";
-import { getClip, getCategories, getDeploymentOrigin } from "@/lib/data";
+import {
+  getClip,
+  getCategories,
+  getDeploymentOrigin,
+  getTagI18n,
+} from "@/lib/data";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "../../dictionaries";
 
@@ -33,7 +38,11 @@ export async function generateMetadata({
 
   const locale = lang as Locale;
   const title = clip.i18n.title[locale] || clip.name;
-  const description = clip.annotation || `${clip.category} · ${clip.tags.join(", ")}`;
+  const description =
+    clip.annotation ||
+    clip.aiTags?.description[locale] ||
+    clip.aiTags?.description.ko ||
+    `${clip.category} · ${clip.tags.join(", ")}`;
 
   const origin = getDeploymentOrigin();
   const thumbnailUrl = clip.thumbnailUrl.startsWith("http")
@@ -75,10 +84,11 @@ export default async function ClipDetailPage({ params }: ClipDetailPageProps) {
 async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
   const { lang, id } = await params;
   const locale = lang as Locale;
-  const [clip, dict, categories] = await Promise.all([
+  const [clip, dict, categories, tagI18n] = await Promise.all([
     getCachedClip(id),
     getDictionary(locale),
     getCategories(),
+    getTagI18n(),
   ]);
 
   if (!clip) {
@@ -91,7 +101,13 @@ async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
         <Navbar lang={locale} dict={dict} />
       </Suspense>
       <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6">
-        <ClipDetailView clip={clip} lang={locale} dict={dict} categories={categories} />
+        <ClipDetailView
+          clip={clip}
+          lang={locale}
+          dict={dict}
+          categories={categories}
+          tagI18n={tagI18n}
+        />
       </main>
     </div>
   );

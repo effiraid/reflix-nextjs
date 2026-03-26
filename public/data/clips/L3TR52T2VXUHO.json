@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 올라감 고통",
   "ext": "mp4",
   "size": 757943,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 5.292,
   "tags": [
     "아케인",
@@ -110,6 +110,50 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "몸부림",
+      "기상",
+      "힘겨움",
+      "넘어짐",
+      "움직임"
+    ],
+    "emotion": [
+      "고통",
+      "힘듦",
+      "지침",
+      "아픔",
+      "괴로움",
+      "절망",
+      "결의"
+    ],
+    "composition": [
+      "클로즈업",
+      "로우앵글",
+      "핸드헬드",
+      "시선끌기",
+      "어두운구도"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "주인공",
+      "인간형"
+    ],
+    "effects": [
+      "카메라흔들림",
+      "보라색이펙트",
+      "어두운조명",
+      "배경흐림",
+      "잔상",
+      "플레어"
+    ],
+    "description": {
+      "ko": "어둡고 차가운 바닥에 쓰러진 비가 극심한 고통과 지친 몸으로 필사적인 몸부림을 치며 겨우 몸을 일으키려 애쓴다. 흔들리는 카메라와 강렬한 보라색 빛 이펙트가 그녀의 처절한 투지와 절망적인 상황을 생생하게 전달한다.",
+      "en": "Vi lies collapsed on a dark, cold surface, struggling desperately to rise with intense pain and exhaustion. The shaky camera and powerful purple light effects vividly convey her fierce determination and the desperate situation she's in."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:16:03.366Z"
   },
   "videoUrl": "/videos/L3TR52T2VXUHO.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2VXUHO.webp",

@@ -316,4 +316,21 @@ describe("MasonryGrid", () => {
       prioritizeThumbnail: false,
     });
   });
+
+  it("passes lang and tag i18n through to clip cards", () => {
+    render(
+      <main data-masonry-scroll>
+        <MasonryGrid
+          clips={clips}
+          lang="en"
+          tagI18n={{ clip: "Clip" }}
+        />
+      </main>
+    );
+
+    expect(clipCardProps[0]).toMatchObject({
+      lang: "en",
+      tagI18n: { clip: "Clip" },
+    });
+  });
 });

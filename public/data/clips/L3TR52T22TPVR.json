@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 일어나기 비몽사몽 비틀비틀 아픔",
   "ext": "mp4",
   "size": 817348,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 8.555,
   "tags": [
     "아케인",
@@ -105,6 +105,46 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "일어나기",
+      "비틀거리기",
+      "몸을 일으키다",
+      "고통스러워하다"
+    ],
+    "emotion": [
+      "아픔",
+      "고통",
+      "괴로움",
+      "지침",
+      "힘겨움",
+      "비몽사몽"
+    ],
+    "composition": [
+      "클로즈업",
+      "미디엄 샷",
+      "미디엄 풀 샷",
+      "로우 앵글"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "남성",
+      "애니메이션 캐릭터"
+    ],
+    "effects": [
+      "어두운 조명",
+      "녹색 톤 색감",
+      "피 묻은 배경",
+      "디테일한 표정",
+      "카메라 흔들림 (초반)"
+    ],
+    "description": {
+      "ko": "클립은 어둡고 음울한 녹색 조명 아래, 고통스러워하며 힘겹게 일어나는 남성 캐릭터의 모습을 담고 있습니다. 비틀거리며 겨우 몸을 일으키는 캐릭터의 지친 표정과 테이블 위의 피 흔적은 그의 심각한 부상과 힘겨운 상황을 암시합니다. 카메라워크는 캐릭터의 움직임을 따라가며 그의 고통을 강조합니다.",
+      "en": "The clip features a male character struggling to stand up in pain, set against a dark and gloomy green-toned lighting. His exhausted expression as he stumbles to his feet, along with bloodstains on the table, suggests severe injury and a difficult situation. The camera work follows the character's movements, emphasizing his suffering."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:12:12.910Z"
   },
   "videoUrl": "/videos/L3TR52T22TPVR.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T22TPVR.webp",

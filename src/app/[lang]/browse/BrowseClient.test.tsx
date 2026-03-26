@@ -227,4 +227,48 @@ describe("BrowseClient", () => {
     expect(await screen.findByRole("dialog", { name: "Beta" })).toBeInTheDocument();
     expect(useClipStore.getState().selectedClipId).toBe("clip-b");
   });
+
+  it("shows a live result count while a search query is active", () => {
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "Alpha",
+      sortBy: "newest",
+      starFilter: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByText("1개 클립")).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("renders a query-specific empty state when no clips match", () => {
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "없는 검색어",
+      sortBy: "newest",
+      starFilter: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByText("'없는 검색어'에 대한 결과가 없습니다")).toBeInTheDocument();
+  });
 });

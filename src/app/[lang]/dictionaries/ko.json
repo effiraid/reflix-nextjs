@@ -55,7 +55,10 @@
     "noLink": "링크 없음",
     "colorPalette": "색상 팔레트",
     "sourceUrl": "소스 URL",
-    "copied": "복사됨"
+    "copied": "복사됨",
+    "aiAnalysis": "AI 분석",
+    "aiLatest": "NEW",
+    "aiPending": "AI 분석 대기 중"
   },
   "common": {
     "close": "닫기",

@@ -1,18 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { RightPanelContent } from "./RightPanelContent";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree } from "@/lib/types";
 
 const useClipStoreMock = vi.fn();
+const updateURLMock = vi.fn();
 
 vi.mock("@/stores/clipStore", () => ({
   useClipStore: () => useClipStoreMock(),
 }));
 
+vi.mock("@/hooks/useFilterSync", () => ({
+  useFilterSync: () => ({
+    updateURL: updateURLMock,
+  }),
+}));
+
 vi.mock("./RightPanelInspector", () => ({
-  RightPanelInspector: ({ clip }: { clip: { name: string } }) => (
-    <div>Inspector: {clip.name}</div>
+  RightPanelInspector: ({
+    clip,
+    onSelectFolder,
+    onSelectTag,
+  }: {
+    clip: { name: string };
+    onSelectFolder?: (folderId: string) => void;
+    onSelectTag?: (tag: string) => void;
+  }) => (
+    <div>
+      <div>Inspector: {clip.name}</div>
+      <button type="button" onClick={() => onSelectFolder?.("ultimate")}>
+        필살기
+      </button>
+      <button type="button" onClick={() => onSelectTag?.("검")}>
+        검
+      </button>
+    </div>
   ),
 }));
 
@@ -55,6 +78,7 @@ const dict = {
 describe("RightPanelContent", () => {
   beforeEach(() => {
     useClipStoreMock.mockReset();
+    updateURLMock.mockReset();
     vi.restoreAllMocks();
   });
 
@@ -100,5 +124,73 @@ describe("RightPanelContent", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("로딩 중...")).not.toBeInTheDocument();
     expect(screen.queryByText(/Inspector:/)).not.toBeInTheDocument();
+  });
+
+  it("replaces folder filters when a folder badge is clicked in the inspector", async () => {
+    const setSelectedClipId = vi.fn();
+
+    useClipStoreMock.mockReturnValue({
+      selectedClipId: "clip-1",
+      setSelectedClipId,
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              id: "clip-1",
+              name: "Blade Storm",
+            }),
+        } as Response)
+      )
+    );
+
+    render(<RightPanelContent categories={categories} lang="ko" dict={dict} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "필살기" }));
+
+    expect(updateURLMock).toHaveBeenCalledWith({
+      selectedFolders: ["ultimate"],
+      selectedTags: [],
+      excludedTags: [],
+    });
+    expect(setSelectedClipId).not.toHaveBeenCalled();
+  });
+
+  it("replaces tag filters when a tag badge is clicked in the inspector", async () => {
+    const setSelectedClipId = vi.fn();
+
+    useClipStoreMock.mockReturnValue({
+      selectedClipId: "clip-1",
+      setSelectedClipId,
+    });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              id: "clip-1",
+              name: "Blade Storm",
+            }),
+        } as Response)
+      )
+    );
+
+    render(<RightPanelContent categories={categories} lang="ko" dict={dict} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "검" }));
+
+    expect(updateURLMock).toHaveBeenCalledWith({
+      selectedTags: ["검"],
+      selectedFolders: [],
+      excludedTags: [],
+    });
+    expect(setSelectedClipId).not.toHaveBeenCalled();
   });
 });

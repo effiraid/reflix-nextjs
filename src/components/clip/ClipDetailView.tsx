@@ -1,7 +1,9 @@
 import { ClipDetailLayout } from "@/components/clip/ClipDetailLayout";
 import { ShareButton } from "@/components/clip/ShareButton";
+import { getStructuredAiTags } from "@/lib/aiTags";
 import { getCategoryLabel } from "@/lib/categories";
 import { formatClipDuration, getClipMediaKind } from "@/lib/clipInspector";
+import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -10,9 +12,16 @@ interface ClipDetailViewProps {
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
   categories: CategoryTree;
+  tagI18n?: Record<string, string>;
 }
 
-export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewProps) {
+export function ClipDetailView({
+  clip,
+  lang,
+  dict,
+  categories,
+  tagI18n = {},
+}: ClipDetailViewProps) {
   const title = clip.i18n.title[lang] || clip.name;
   const sizeLabel = `${Math.round(clip.size / 1024)} KB`;
   const mediaKindKey = getClipMediaKind(clip.ext);
@@ -20,6 +29,12 @@ export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewP
     mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
   const folderLabels = clip.folders.map((folderId) =>
     getCategoryLabel(folderId, categories, lang)
+  );
+  const tagLabels = getTagDisplayLabels(clip.tags, lang, tagI18n);
+  const aiTagTokens = getTagDisplayLabels(
+    getStructuredAiTags(clip.aiTags),
+    lang,
+    tagI18n
   );
   const palette = clip.palettes?.slice(0, 6) ?? [];
   const memoText = clip.annotation || "-";
@@ -31,7 +46,14 @@ export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewP
       thumbnailUrl={clip.thumbnailUrl}
       duration={clip.duration}
     >
-      <aside className="w-full space-y-4 lg:w-80 lg:shrink-0">
+      <aside
+        data-pagefind-body
+        className="w-full space-y-4 lg:w-80 lg:shrink-0"
+      >
+        <div className="sr-only">
+          {title} {tagLabels.join(" ")} {aiTagTokens.join(" ")}{" "}
+          {clip.aiTags?.description.ko ?? ""} {clip.aiTags?.description.en ?? ""}
+        </div>
         {/* Title + Share */}
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-xl font-semibold leading-tight tracking-tight">
@@ -60,7 +82,7 @@ export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewP
             <h2 className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
               {dict.clip.colorPalette}
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-center gap-2">
               {palette.map((swatch, index) => (
                 <div
                   key={`${swatch.color.join("-")}-${index}`}
@@ -79,7 +101,7 @@ export function ClipDetailView({ clip, lang, dict, categories }: ClipDetailViewP
         <TokenSection label={dict.clip.folders} items={folderLabels} />
 
         {/* Tags */}
-        <TokenSection label={dict.clip.tags} items={clip.tags} />
+        <TokenSection label={dict.clip.tags} items={tagLabels} />
 
         {/* Properties */}
         <section className="rounded-2xl border border-border bg-surface/40 p-4">

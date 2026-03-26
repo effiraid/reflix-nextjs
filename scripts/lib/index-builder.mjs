@@ -29,6 +29,12 @@ function toPublicTags(tags) {
   );
 }
 
+function getOptionalAiTags(meta) {
+  return Object.prototype.hasOwnProperty.call(meta, "aiTags")
+    ? meta.aiTags
+    : undefined;
+}
+
 export function loadCategoryMap(categoriesPath) {
   const data = JSON.parse(fs.readFileSync(categoriesPath, "utf-8"));
   function walk(tree) {
@@ -57,6 +63,7 @@ export function buildClipIndex(meta, lqipBase64) {
     id: meta.id,
     name: meta.name,
     tags: toPublicTags(meta.tags),
+    aiTags: getOptionalAiTags(meta),
     folders: meta.folders || [],
     star: meta.star || 0,
     category: getCategoryForFolders(meta.folders || []),
@@ -98,6 +105,7 @@ export function buildFullClip(meta, lqipBase64) {
       title: { ko: meta.name, en: "" },
       description: { ko: "", en: "" },
     },
+    aiTags: getOptionalAiTags(meta),
     videoUrl: `/videos/${meta.id}.mp4`,
     thumbnailUrl: `/thumbnails/${meta.id}.webp`,
     previewUrl: `/previews/${meta.id}.mp4`,

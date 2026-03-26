@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 숨을 거칠게 내쉰 거친 호흡",
   "ext": "mp4",
   "size": 502149,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 4.843,
   "tags": [
     "아케인",
@@ -108,6 +108,47 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "싸움",
+      "고군분투",
+      "대치"
+    ],
+    "emotion": [
+      "힘듦",
+      "지침",
+      "분노",
+      "결의",
+      "고통"
+    ],
+    "composition": [
+      "클로즈업",
+      "풀샷",
+      "로우앵글",
+      "어두운 배경",
+      "역광"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "전사",
+      "인간",
+      "괴물"
+    ],
+    "effects": [
+      "파티클",
+      "카메라 흔들림",
+      "어두운 조명",
+      "붉은색 강조",
+      "피",
+      "연기"
+    ],
+    "description": {
+      "ko": "어두운 배경에서 전투 중인 주인공 바이와 거대한 적이 대치하고 있다. 바이는 피투성이가 된 얼굴로 거친 숨을 몰아쉬며 고통과 분노, 그리고 강한 결의를 드러낸다. 주황색 불꽃이 날리는 가운데, 그녀의 힘겨운 싸움이 강조된다.",
+      "en": "In a dark setting, the protagonist Vi confronts a massive enemy during a battle. With blood on her face, Vi breathes heavily, revealing pain, anger, and fierce determination. Amidst flying orange sparks, her arduous struggle is highlighted."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:13:09.204Z"
   },
   "videoUrl": "/videos/L3TR52T2A751G.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2A751G.webp",

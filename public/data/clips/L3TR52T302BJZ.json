@@ -3,8 +3,8 @@
   "name": "연출 소울 표정 감동 와우",
   "ext": "mp4",
   "size": 620714,
-  "width": 640,
-  "height": 268,
+  "width": 1920,
+  "height": 804,
   "duration": 2.601,
   "tags": [
     "소울",
@@ -97,6 +97,40 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "관찰",
+      "감탄",
+      "경탄"
+    ],
+    "emotion": [
+      "경이로움",
+      "놀람",
+      "감동",
+      "순수함"
+    ],
+    "composition": [
+      "클로즈업",
+      "미디엄 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "영혼 캐릭터",
+      "아기 영혼"
+    ],
+    "effects": [
+      "빛 효과",
+      "발광 효과",
+      "미세한 파티클",
+      "몽환적인 배경"
+    ],
+    "description": {
+      "ko": "어두운 우주를 배경으로 두 영혼 캐릭터가 등장합니다. 작은 영혼 캐릭터는 무언가를 보고 경이로운 표정으로 감탄하며, 몸에서 부드러운 빛이 발산되는 연출이 돋보입니다. 클로즈업 구도를 통해 캐릭터의 순수하고 감동적인 표정이 강조되며 차분한 페이싱으로 감정을 섬세하게 전달합니다.",
+      "en": "Against a dark cosmic background, two soul characters appear. The smaller soul character gazes at something with an expression of wonder and awe, highlighted by a soft glow emanating from its body. A close-up shot emphasizes the character's pure and moving facial expression, and the slow pacing subtly conveys emotion."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:16:25.956Z"
   },
   "videoUrl": "/videos/L3TR52T302BJZ.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T302BJZ.webp",

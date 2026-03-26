@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useReducer } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 import { useClipStore } from "@/stores/clipStore";
 import { RightPanelInspector } from "./RightPanelInspector";
+import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { useFilterSync } from "@/hooks/useFilterSync";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -43,19 +45,34 @@ interface RightPanelContentProps {
   categories: CategoryTree;
   lang: Locale;
   dict: Dictionary;
+  tagI18n?: Record<string, string>;
 }
 
 export function RightPanelContent({
   categories,
   lang,
   dict,
+  tagI18n = {},
 }: RightPanelContentProps) {
-  const { selectedClipId } = useClipStore();
+  const clipIndex = useClipData();
+  const { selectedClipId, setSelectedClipId } = useClipStore();
+  const { updateURL } = useFilterSync();
   const [{ clip, loadState }, dispatch] = useReducer(clipPanelReducer, {
     clip: null,
     loadState: "idle",
   });
   const activeClip = clip?.id === selectedClipId ? clip : null;
+  const clipIndexMap = useMemo(
+    () => new Map(clipIndex.map((entry) => [entry.id, entry])),
+    [clipIndex]
+  );
+  const relatedClips = useMemo(
+    () =>
+      activeClip?.relatedClips
+        .map((clipId) => clipIndexMap.get(clipId))
+        .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry)) ?? [],
+    [activeClip?.relatedClips, clipIndexMap]
+  );
 
   useEffect(() => {
     if (!selectedClipId) {
@@ -103,6 +120,23 @@ export function RightPanelContent({
       categories={categories}
       lang={lang}
       dict={dict}
+      tagI18n={tagI18n}
+      relatedClips={relatedClips}
+      onSelectFolder={(folderId) =>
+        updateURL({
+          selectedFolders: [folderId],
+          selectedTags: [],
+          excludedTags: [],
+        })
+      }
+      onSelectRelatedClip={setSelectedClipId}
+      onSelectTag={(tag) =>
+        updateURL({
+          selectedTags: [tag],
+          selectedFolders: [],
+          excludedTags: [],
+        })
+      }
     />
   );
 }

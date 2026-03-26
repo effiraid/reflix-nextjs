@@ -4,12 +4,15 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
+import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
-import type { ClipIndex } from "@/lib/types";
+import type { ClipIndex, Locale } from "@/lib/types";
 
 interface ClipCardProps {
   clip: ClipIndex;
+  lang?: Locale;
+  tagI18n?: Record<string, string>;
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
   previewOnHover?: boolean;
   showInfo?: boolean;
@@ -19,6 +22,8 @@ interface ClipCardProps {
 
 export function ClipCard({
   clip,
+  lang = "ko",
+  tagI18n = {},
   enablePreview = true,
   previewOnHover = false,
   showInfo = true,
@@ -34,6 +39,7 @@ export function ClipCard({
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
   const previewFailed = failedPreviewUrl === previewUrl;
+  const displayTags = getTagDisplayLabels(clip.tags, lang, tagI18n);
 
   const handleClick = useCallback(() => {
     if (isSelected) {
@@ -129,7 +135,7 @@ export function ClipCard({
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
           <div className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white">
-            <span className="truncate">{clip.tags.join(", ")}</span>
+            <span className="truncate">{displayTags.join(", ")}</span>
             <span>{clip.duration.toFixed(1)}s</span>
           </div>
         </div>

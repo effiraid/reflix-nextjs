@@ -199,6 +199,15 @@ test("package scripts expose incremental batch export and explicit prune command
     packageJson.scripts["export:full"],
     "node scripts/export.mjs --full --confirm-full-export"
   );
+  assert.equal(packageJson.scripts["ai:tag:missing"], "node scripts/ai-tag-backfill.mjs");
+  assert.equal(
+    packageJson.scripts["ai:tag:retry-null"],
+    "node scripts/ai-tag-backfill.mjs --retry-null"
+  );
+  assert.equal(
+    packageJson.scripts["export:batch:ai"],
+    "node scripts/ai-tag-backfill.mjs && node scripts/export.mjs"
+  );
 });
 
 test("buildMergedKeepIds unions existing index ids with the incoming batch", () => {

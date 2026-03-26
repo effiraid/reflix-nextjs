@@ -105,6 +105,13 @@ export function BrowseClient({
   );
   const selectedIndex = selectedClipId ? (indexMap.get(selectedClipId) ?? -1) : -1;
   const selectedClip = selectedIndex >= 0 ? filtered[selectedIndex] : null;
+  const resultCountLabel =
+    lang === "ko" ? `${filtered.length}개 클립` : `${filtered.length} clips`;
+  const emptyStateLabel = filters.searchQuery
+    ? lang === "ko"
+      ? `'${filters.searchQuery}'에 대한 결과가 없습니다`
+      : `No results for "${filters.searchQuery}"`
+    : dict.browse.noResults;
 
   const navigateGrid = useCallback(
     (direction: "up" | "down" | "left" | "right" | "home" | "end" | "top" | "bottom") => {
@@ -263,19 +270,32 @@ export function BrowseClient({
 
   if (filtered.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 text-muted">
-        {dict.browse.noResults}
+      <div className="flex flex-1 items-center justify-center p-8 text-muted">
+        {emptyStateLabel}
       </div>
     );
   }
 
   return (
     <>
-      <MasonryGrid clips={filtered} onOpenQuickView={openQuickViewForClip} />
+      {filters.searchQuery ? (
+        <div className="border-b border-border px-4 py-2">
+          <p className="text-xs text-muted" aria-live="polite">
+            {resultCountLabel}
+          </p>
+        </div>
+      ) : null}
+      <MasonryGrid
+        clips={filtered}
+        lang={lang}
+        tagI18n={tagI18n}
+        onOpenQuickView={openQuickViewForClip}
+      />
       {quickViewOpen && selectedClip ? (
         <QuickViewModal
           clip={selectedClip}
           lang={lang}
+          tagI18n={tagI18n}
           dict={dict}
           onClose={handleCloseQuickView}
         />

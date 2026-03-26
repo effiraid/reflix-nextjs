@@ -5,14 +5,21 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ClipCard } from "./ClipCard";
 import { useUIStore } from "@/stores/uiStore";
 import { getColumnCountFromThumbnailSize, THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
-import type { ClipIndex } from "@/lib/types";
+import type { ClipIndex, Locale } from "@/lib/types";
 
 interface MasonryGridProps {
   clips: ClipIndex[];
+  lang?: Locale;
+  tagI18n?: Record<string, string>;
   onOpenQuickView?: (clipId: string) => void;
 }
 
-export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
+export function MasonryGrid({
+  clips,
+  lang = "ko",
+  tagI18n = {},
+  onOpenQuickView,
+}: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastWidthRef = useRef<number | null>(null);
   const thumbnailSize = useUIStore((s) => s.thumbnailSize);
@@ -81,6 +88,8 @@ export function MasonryGrid({ clips, onOpenQuickView }: MasonryGridProps) {
           enablePreview={!quickViewOpen}
           previewOnHover={previewOnHover}
           showInfo={showInfo}
+          lang={lang}
+          tagI18n={tagI18n}
           onOpenQuickView={onOpenQuickView}
         />
       ))}
@@ -94,6 +103,8 @@ function MasonryColumn({
   enablePreview,
   previewOnHover,
   showInfo,
+  lang,
+  tagI18n,
   onOpenQuickView,
 }: {
   clips: ClipIndex[];
@@ -101,6 +112,8 @@ function MasonryColumn({
   enablePreview: boolean;
   previewOnHover: boolean;
   showInfo: boolean;
+  lang: Locale;
+  tagI18n: Record<string, string>;
   onOpenQuickView?: (clipId: string) => void;
 }) {
   // TanStack Virtual intentionally returns imperative helpers.
@@ -142,6 +155,8 @@ function MasonryColumn({
             >
               <ClipCard
                 clip={clip}
+                lang={lang}
+                tagI18n={tagI18n}
                 enablePreview={enablePreview}
                 previewOnHover={previewOnHover}
                 showInfo={showInfo}

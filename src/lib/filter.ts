@@ -1,6 +1,7 @@
 import type { CategoryTree, ClipIndex, Locale, SortBy } from "./types";
 import { collectDescendantIds } from "./categories";
-import { createMatcher } from "./search";
+import { getAllClipTags } from "./aiTags";
+import { searchClips } from "./clipSearch";
 
 export interface FilterState {
   selectedFolders: string[];
@@ -37,14 +38,14 @@ export function filterClips(
   // Tag filter: AND logic — clip must have ALL selected tags
   if (filters.selectedTags.length > 0) {
     result = result.filter((c) =>
-      filters.selectedTags.every((t) => c.tags.includes(t))
+      filters.selectedTags.every((t) => getAllClipTags(c).includes(t))
     );
   }
 
   // Exclude filter: OR logic — clip with ANY excluded tag is hidden
   if (filters.excludedTags.length > 0) {
     result = result.filter((c) =>
-      !filters.excludedTags.some((t) => c.tags.includes(t))
+      !filters.excludedTags.some((t) => getAllClipTags(c).includes(t))
     );
   }
 
@@ -53,16 +54,11 @@ export function filterClips(
   }
 
   if (filters.searchQuery) {
-    const match = createMatcher(lang, filters.searchQuery);
-
-    result = result.filter(
-      (c) =>
-        match(c.name) ||
-        c.tags.some((t) => {
-          const translated = tagI18n[t] ?? "";
-          return match(t) || (translated && match(translated));
-        })
-    );
+    return searchClips(result, {
+      lang,
+      query: filters.searchQuery,
+      tagI18n,
+    });
   }
 
   return sortClips(result, filters.sortBy);

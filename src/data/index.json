@@ -18,14 +18,54 @@
         "고통",
         "괴로움"
       ],
+      "aiTags": {
+        "actionType": [
+          "일어나기",
+          "비틀거리기",
+          "몸을 일으키다",
+          "고통스러워하다"
+        ],
+        "emotion": [
+          "아픔",
+          "고통",
+          "괴로움",
+          "지침",
+          "힘겨움",
+          "비몽사몽"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "미디엄 풀 샷",
+          "로우 앵글"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "남성",
+          "애니메이션 캐릭터"
+        ],
+        "effects": [
+          "어두운 조명",
+          "녹색 톤 색감",
+          "피 묻은 배경",
+          "디테일한 표정",
+          "카메라 흔들림 (초반)"
+        ],
+        "description": {
+          "ko": "클립은 어둡고 음울한 녹색 조명 아래, 고통스러워하며 힘겹게 일어나는 남성 캐릭터의 모습을 담고 있습니다. 비틀거리며 겨우 몸을 일으키는 캐릭터의 지친 표정과 테이블 위의 피 흔적은 그의 심각한 부상과 힘겨운 상황을 암시합니다. 카메라워크는 캐릭터의 움직임을 따라가며 그의 고통을 강조합니다.",
+          "en": "The clip features a male character struggling to stand up in pain, set against a dark and gloomy green-toned lighting. His exhausted expression as he stumbles to his feet, along with bloodstains on the table, suggests severe injury and a difficult situation. The camera work follows the character's movements, emphasizing his suffering."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:12:12.910Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34RZ0I1OSKP"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 8.555,
       "previewUrl": "/previews/L3TR52T22TPVR.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T22TPVR.webp",
@@ -44,14 +84,57 @@
         "힘겨움",
         "연출"
       ],
+      "aiTags": {
+        "actionType": [
+          "숨쉬기",
+          "지쳐 숨을 몰아쉬다",
+          "움츠리다",
+          "힘겨워하다",
+          "응시"
+        ],
+        "emotion": [
+          "지침",
+          "고통",
+          "괴로움",
+          "슬픔",
+          "피로",
+          "힘듦"
+        ],
+        "composition": [
+          "익스트림 클로즈업",
+          "클로즈업",
+          "인물 클로즈업"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "애니메이션 캐릭터",
+          "여성 캐릭터",
+          "파란 머리 캐릭터",
+          "게임 캐릭터"
+        ],
+        "effects": [
+          "색수차",
+          "렌즈 플레어",
+          "배경 블러",
+          "극적인 조명",
+          "어두운 색감",
+          "비네팅"
+        ],
+        "description": {
+          "ko": "클립은 보라색 빛과 색수차 효과가 두드러진 캐릭터의 눈에 대한 익스트림 클로즈업으로 시작합니다. 이어 파란 머리의 캐릭터가 지쳐 몸을 움츠린 채 거칠게 숨을 몰아쉬는 클로즈업 장면으로 전환됩니다. 그녀의 얼굴에는 깊은 고통과 피로, 그리고 슬픔이 서려 있습니다.",
+          "en": "The clip opens with an extreme close-up of a character's eye, prominently featuring purple light and chromatic aberration effects. It then transitions to a close-up of a blue-haired character, hunched over and gasping for breath with a pained expression. Her face conveys profound distress, exhaustion, and sadness."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:12:38.865Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 6.917,
       "previewUrl": "/previews/L3TR52T27B2VL.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T27B2VL.webp",
@@ -70,14 +153,55 @@
         "힘겨움",
         "연출"
       ],
+      "aiTags": {
+        "actionType": [
+          "싸움",
+          "고군분투",
+          "대치"
+        ],
+        "emotion": [
+          "힘듦",
+          "지침",
+          "분노",
+          "결의",
+          "고통"
+        ],
+        "composition": [
+          "클로즈업",
+          "풀샷",
+          "로우앵글",
+          "어두운 배경",
+          "역광"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "전사",
+          "인간",
+          "괴물"
+        ],
+        "effects": [
+          "파티클",
+          "카메라 흔들림",
+          "어두운 조명",
+          "붉은색 강조",
+          "피",
+          "연기"
+        ],
+        "description": {
+          "ko": "어두운 배경에서 전투 중인 주인공 바이와 거대한 적이 대치하고 있다. 바이는 피투성이가 된 얼굴로 거친 숨을 몰아쉬며 고통과 분노, 그리고 강한 결의를 드러낸다. 주황색 불꽃이 날리는 가운데, 그녀의 힘겨운 싸움이 강조된다.",
+          "en": "In a dark setting, the protagonist Vi confronts a massive enemy during a battle. With blood on her face, Vi breathes heavily, revealing pain, anger, and fierce determination. Amidst flying orange sparks, her arduous struggle is highlighted."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:13:09.204Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 4.843,
       "previewUrl": "/previews/L3TR52T2A751G.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2A751G.webp",
@@ -94,14 +218,53 @@
         "힘겨움",
         "연출"
       ],
+      "aiTags": {
+        "actionType": [
+          "심호흡",
+          "마스크 착용",
+          "정돈",
+          "숨쉬기"
+        ],
+        "emotion": [
+          "힘듦",
+          "지침",
+          "고통",
+          "피로",
+          "결의"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄샷",
+          "아이레벨"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "빌런",
+          "남성",
+          "인간형",
+          "개조인간"
+        ],
+        "effects": [
+          "어두운 조명",
+          "녹색조명",
+          "앰비언트 라이트",
+          "캐릭터 강조"
+        ],
+        "description": {
+          "ko": "한 남성 캐릭터가 깊은 숨을 내쉬며 얼굴에 두른 천 마스크를 끌어올립니다. 어둡고 녹색을 띠는 배경 속에서, 그는 힘겹고 지친 표정으로 눈을 감았다가 한쪽 눈을 뜨며 자신의 감정을 억누르는 듯한 모습을 보입니다. 느린 움직임과 클로즈업 구도는 캐릭터의 내면적 고통과 결의를 강조합니다.",
+          "en": "A male character slowly pulls up a fabric mask to cover his mouth and nose, taking a deep breath. In a dark, green-tinted environment, he closes his eyes in what appears to be an expression of weariness or pain, then opens one eye, suggesting a moment of inner struggle and resolve. The slow pacing and close-up composition emphasize the character's internal turmoil."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:13:31.925Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 3.733334,
       "previewUrl": "/previews/L3TR52T2BJCOW.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2BJCOW.webp",
@@ -122,14 +285,53 @@
         "연출",
         "뛰기"
       ],
+      "aiTags": {
+        "actionType": [
+          "끌어올리기",
+          "오르기",
+          "달리기",
+          "부축",
+          "탈출"
+        ],
+        "emotion": [
+          "힘겨움",
+          "지침",
+          "절박함",
+          "결의"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "롱 샷",
+          "로우 앵글",
+          "미스트 효과 배경"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "여성 캐릭터",
+          "주인공",
+          "동료"
+        ],
+        "effects": [
+          "안개",
+          "녹색 조명",
+          "카메라 블러",
+          "음침한 색감"
+        ],
+        "description": {
+          "ko": "어둡고 음침한 환경에서 한 캐릭터가 지쳐 보이는 다른 캐릭터를 절벽 아래에서 끌어올립니다. 이어서 두 캐릭터는 안개가 자욱한 어두운 복도를 필사적으로 달아나며 위기감을 고조시킵니다. 전반적으로 침울하고 절박한 분위기가 강조됩니다.",
+          "en": "In a dark and gloomy environment, one character pulls another, seemingly exhausted, up from a ledge. Subsequently, the two characters desperately run down a misty, dark corridor, intensifying the sense of urgency. Overall, a somber and desperate atmosphere is emphasized."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:13:56.592Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "L951Y2DCQ8GH0"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 3.157334,
       "previewUrl": "/previews/L3TR52T2F47S1.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2F47S1.webp",
@@ -147,14 +349,50 @@
         "연출",
         "충격"
       ],
+      "aiTags": {
+        "actionType": [
+          "마법 시전",
+          "힘겨워함",
+          "숨가쁨"
+        ],
+        "emotion": [
+          "고통",
+          "절규",
+          "힘겨움",
+          "결의"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우 앵글",
+          "바스트 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "마법사",
+          "인간 남성"
+        ],
+        "effects": [
+          "빛나는 눈",
+          "빛나는 무기",
+          "푸른 빛",
+          "어두운 조명",
+          "음영"
+        ],
+        "description": {
+          "ko": "어두운 배경 속에서 한 남성 캐릭터가 푸른 빛을 내는 지팡이를 들고 마법을 시전하며 힘겨워하고 있습니다. 그의 눈에서도 푸른 빛이 강렬하게 발산되며, 고통스럽고 힘겨운 표정으로 가쁜 숨을 몰아쉬는 모습이 클로즈업으로 강조됩니다. 전반적으로 푸른색 계열의 빛과 어두운 색감이 긴장감 넘치는 분위기를 연출합니다.",
+          "en": "In a dark setting, a male character is seen struggling while casting magic, holding a staff that emits a blue glow. His eyes also radiate a strong blue light as he gasps for air with an expression of pain and exertion, emphasized by a close-up shot. The predominant blue light and dark color scheme create a tense and dramatic atmosphere."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:14:16.031Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34S0ZRPT5WD"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 3.477334,
       "previewUrl": "/previews/L3TR52T2K3FY9.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2K3FY9.webp",
@@ -181,6 +419,54 @@
         "교전",
         "일대일"
       ],
+      "aiTags": {
+        "actionType": [
+          "달리기",
+          "뛰기",
+          "공격",
+          "발차기",
+          "날라차기",
+          "점프",
+          "전투",
+          "교전",
+          "피격",
+          "이동"
+        ],
+        "emotion": [
+          "결연함",
+          "분노",
+          "고통",
+          "힘겨움",
+          "공격성",
+          "긴장감"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "풀 샷",
+          "로우 앵글",
+          "롱 샷"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "여성 전사",
+          "적 캐릭터",
+          "거대 로봇"
+        ],
+        "effects": [
+          "카메라 흔들림",
+          "충격 이펙트",
+          "연기",
+          "네온 조명",
+          "빠른 편집"
+        ],
+        "description": {
+          "ko": "붉은 머리 여성 캐릭터가 상처 입은 채 결연한 표정으로 어두운 지하 공간에서 거대한 적을 향해 달려들어 강력한 발차기 공격을 가합니다. 격렬한 전투는 적의 반격으로 이어지며, 클립은 연기가 자욱하고 네온 조명이 빛나는 어둡고 음침한 산업 환경을 보여주며 긴장감 넘치는 분위기를 연출합니다.",
+          "en": "A red-haired female character, with a resolute expression and injuries, charges towards a massive enemy in a dark underground area, delivering a powerful flying kick. The intense combat is met with a counterattack from the opponent, and the clip quickly transitions to a dark, smoky, industrial setting with neon lights, setting a tense atmosphere for the fight."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:14:45.559Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "L951Y2DCQ8GH0",
@@ -191,8 +477,8 @@
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 6.336,
       "previewUrl": "/previews/L3TR52T2RH4G6.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2RH4G6.webp",
@@ -220,14 +506,57 @@
         "고통",
         "아픔"
       ],
+      "aiTags": {
+        "actionType": [
+          "힘듦",
+          "고뇌",
+          "지쳐있음",
+          "탐색",
+          "움직임"
+        ],
+        "emotion": [
+          "괴로움",
+          "지침",
+          "힘겨움",
+          "걱정",
+          "불안",
+          "고통",
+          "절박함",
+          "결심"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄샷",
+          "하이앵글",
+          "전신샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "주인공",
+          "여성"
+        ],
+        "effects": [
+          "붉은조명",
+          "어두운배경",
+          "땀방울",
+          "어두운눈가",
+          "패널숫자변화"
+        ],
+        "description": {
+          "ko": "주인공 진크스가 지쳐 있고 고통스러운 모습으로 어둡고 붉은 조명의 공간에서 거대한 기계를 다루거나 주변을 탐색합니다. 클로즈업 샷에서는 그녀의 땀과 다크서클이 두드러지며 극심한 피로와 내면의 불안감을 생생하게 전달합니다. 느린 움직임과 무거운 숨소리가 그녀의 힘겨운 상황을 강조합니다.",
+          "en": "Jinx appears exhausted and in agony, navigating a dimly lit, red-hued space while interacting with a large mechanism. Close-up shots highlight her sweat and dark under-eyes, vividly conveying her extreme fatigue and inner turmoil. Her slow movements and heavy breathing underscore the strenuous and desperate situation she is in."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:15:17.208Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34RZ0I1OSKP"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 13.209,
       "previewUrl": "/previews/L3TR52T2S1A9X.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2S1A9X.webp",
@@ -248,14 +577,58 @@
         "아픔",
         "괴로움"
       ],
+      "aiTags": {
+        "actionType": [
+          "몸부림",
+          "기상",
+          "힘겨움",
+          "넘어짐",
+          "움직임"
+        ],
+        "emotion": [
+          "고통",
+          "힘듦",
+          "지침",
+          "아픔",
+          "괴로움",
+          "절망",
+          "결의"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우앵글",
+          "핸드헬드",
+          "시선끌기",
+          "어두운구도"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "주인공",
+          "인간형"
+        ],
+        "effects": [
+          "카메라흔들림",
+          "보라색이펙트",
+          "어두운조명",
+          "배경흐림",
+          "잔상",
+          "플레어"
+        ],
+        "description": {
+          "ko": "어둡고 차가운 바닥에 쓰러진 비가 극심한 고통과 지친 몸으로 필사적인 몸부림을 치며 겨우 몸을 일으키려 애쓴다. 흔들리는 카메라와 강렬한 보라색 빛 이펙트가 그녀의 처절한 투지와 절망적인 상황을 생생하게 전달한다.",
+          "en": "Vi lies collapsed on a dark, cold surface, struggling desperately to rise with intense pain and exhaustion. The shaky camera and powerful purple light effects vividly convey her fierce determination and the desperate situation she's in."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:16:03.366Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34RZ0I1OSKP"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 360,
+      "width": 1280,
+      "height": 720,
       "duration": 5.292,
       "previewUrl": "/previews/L3TR52T2VXUHO.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T2VXUHO.webp",
@@ -271,14 +644,48 @@
         "와우",
         "표정"
       ],
+      "aiTags": {
+        "actionType": [
+          "관찰",
+          "감탄",
+          "경탄"
+        ],
+        "emotion": [
+          "경이로움",
+          "놀람",
+          "감동",
+          "순수함"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "영혼 캐릭터",
+          "아기 영혼"
+        ],
+        "effects": [
+          "빛 효과",
+          "발광 효과",
+          "미세한 파티클",
+          "몽환적인 배경"
+        ],
+        "description": {
+          "ko": "어두운 우주를 배경으로 두 영혼 캐릭터가 등장합니다. 작은 영혼 캐릭터는 무언가를 보고 경이로운 표정으로 감탄하며, 몸에서 부드러운 빛이 발산되는 연출이 돋보입니다. 클로즈업 구도를 통해 캐릭터의 순수하고 감동적인 표정이 강조되며 차분한 페이싱으로 감정을 섬세하게 전달합니다.",
+          "en": "Against a dark cosmic background, two soul characters appear. The smaller soul character gazes at something with an expression of wonder and awe, highlighted by a soft glow emanating from its body. A close-up shot emphasizes the character's pure and moving facial expression, and the slow pacing subtly conveys emotion."
+        },
+        "model": "gemini-2.5-flash",
+        "generatedAt": "2026-03-26T14:16:25.956Z"
+      },
       "folders": [
         "L475K68YP1NH3",
         "MN34RZ0O4BJF5"
       ],
       "star": 3,
       "category": "direction-video",
-      "width": 640,
-      "height": 268,
+      "width": 1920,
+      "height": 804,
       "duration": 2.601,
       "previewUrl": "/previews/L3TR52T302BJZ.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T302BJZ.webp",
@@ -286,5 +693,5 @@
     }
   ],
   "totalCount": 10,
-  "generatedAt": "2026-03-24T15:31:58.493Z"
+  "generatedAt": "2026-03-26T14:16:38.754Z"
 }

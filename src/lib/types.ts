@@ -1,3 +1,18 @@
+export interface AIGeneratedTags {
+  actionType: string[];
+  emotion: string[];
+  composition: string[];
+  pacing: string;
+  characterType: string[];
+  effects: string[];
+  description: {
+    ko: string;
+    en: string;
+  };
+  model: string;
+  generatedAt: string;
+}
+
 export interface Clip {
   id: string;
   name: string;
@@ -18,6 +33,7 @@ export interface Clip {
     title: { ko: string; en: string };
     description: { ko: string; en: string };
   };
+  aiTags?: AIGeneratedTags | null;
   videoUrl: string;
   thumbnailUrl: string;
   previewUrl: string;
@@ -30,6 +46,7 @@ export interface ClipIndex {
   id: string;
   name: string;
   tags: string[];
+  aiTags?: AIGeneratedTags | null;
   folders: string[];
   star: number;
   category: string;

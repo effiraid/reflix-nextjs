@@ -1,0 +1,25 @@
+{
+  "glossary": {
+    "고통": "Suffering",
+    "연출": "Direction",
+    "마법사": "Mage",
+    "미디엄샷": "Medium Shot",
+    "미디엄 샷": "Medium Shot",
+    "느림": "Slow",
+    "잔상": "Afterimage",
+    "피로감": "Fatigue",
+    "비틀거리기": "Staggering",
+    "혼미": "Dazed",
+    "아케인": "Arcane"
+  },
+  "preserve": ["Arcane", "POV", "PV", "2D"],
+  "normalize": {
+    "비틀비틀": "비틀거리기",
+    "일어서기": "일어나기",
+    "미디엄 샷": "미디엄샷"
+  },
+  "style": {
+    "maxWords": 3,
+    "titleCase": true
+  }
+}

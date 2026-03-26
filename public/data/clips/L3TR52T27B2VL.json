@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 거친 호흡 숨을 몰아 쉴",
   "ext": "mp4",
   "size": 782724,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 6.917,
   "tags": [
     "아케인",
@@ -92,6 +92,49 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "숨쉬기",
+      "지쳐 숨을 몰아쉬다",
+      "움츠리다",
+      "힘겨워하다",
+      "응시"
+    ],
+    "emotion": [
+      "지침",
+      "고통",
+      "괴로움",
+      "슬픔",
+      "피로",
+      "힘듦"
+    ],
+    "composition": [
+      "익스트림 클로즈업",
+      "클로즈업",
+      "인물 클로즈업"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "애니메이션 캐릭터",
+      "여성 캐릭터",
+      "파란 머리 캐릭터",
+      "게임 캐릭터"
+    ],
+    "effects": [
+      "색수차",
+      "렌즈 플레어",
+      "배경 블러",
+      "극적인 조명",
+      "어두운 색감",
+      "비네팅"
+    ],
+    "description": {
+      "ko": "클립은 보라색 빛과 색수차 효과가 두드러진 캐릭터의 눈에 대한 익스트림 클로즈업으로 시작합니다. 이어 파란 머리의 캐릭터가 지쳐 몸을 움츠린 채 거칠게 숨을 몰아쉬는 클로즈업 장면으로 전환됩니다. 그녀의 얼굴에는 깊은 고통과 피로, 그리고 슬픔이 서려 있습니다.",
+      "en": "The clip opens with an extreme close-up of a character's eye, prominently featuring purple light and chromatic aberration effects. It then transitions to a close-up of a blue-haired character, hunched over and gasping for breath with a pained expression. Her face conveys profound distress, exhaustion, and sadness."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:12:38.865Z"
   },
   "videoUrl": "/videos/L3TR52T27B2VL.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T27B2VL.webp",

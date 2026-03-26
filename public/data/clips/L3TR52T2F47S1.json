@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 올라감 끌어 올리기 일어나서 달리기",
   "ext": "mp4",
   "size": 278841,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 3.157334,
   "tags": [
     "아케인",
@@ -118,6 +118,45 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "끌어올리기",
+      "오르기",
+      "달리기",
+      "부축",
+      "탈출"
+    ],
+    "emotion": [
+      "힘겨움",
+      "지침",
+      "절박함",
+      "결의"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "롱 샷",
+      "로우 앵글",
+      "미스트 효과 배경"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "여성 캐릭터",
+      "주인공",
+      "동료"
+    ],
+    "effects": [
+      "안개",
+      "녹색 조명",
+      "카메라 블러",
+      "음침한 색감"
+    ],
+    "description": {
+      "ko": "어둡고 음침한 환경에서 한 캐릭터가 지쳐 보이는 다른 캐릭터를 절벽 아래에서 끌어올립니다. 이어서 두 캐릭터는 안개가 자욱한 어두운 복도를 필사적으로 달아나며 위기감을 고조시킵니다. 전반적으로 침울하고 절박한 분위기가 강조됩니다.",
+      "en": "In a dark and gloomy environment, one character pulls another, seemingly exhausted, up from a ledge. Subsequently, the two characters desperately run down a misty, dark corridor, intensifying the sense of urgency. Overall, a somber and desperate atmosphere is emphasized."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:13:56.592Z"
   },
   "videoUrl": "/videos/L3TR52T2F47S1.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2F47S1.webp",

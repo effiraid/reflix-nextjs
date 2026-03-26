@@ -85,6 +85,9 @@ const dict = {
     colorPalette: "Color Palette",
     sourceUrl: "Source URL",
     copied: "Copied",
+    aiAnalysis: "AI Analysis",
+    aiLatest: "NEW",
+    aiPending: "AI analysis pending",
   },
 };
 
@@ -116,5 +119,50 @@ describe("ClipDetailView", () => {
     render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} categories={categories} />);
 
     expect(screen.getByText("액션")).toBeInTheDocument();
+  });
+
+  it("centers palette swatches inside the palette card", () => {
+    render(
+      <ClipDetailView
+        clip={{
+          ...baseClip,
+          palettes: [
+            { color: [14, 13, 12], ratio: 66 },
+            { color: [74, 81, 66], ratio: 9 },
+          ],
+        }}
+        lang="ko"
+        dict={dict}
+        categories={categories}
+      />
+    );
+
+    const paletteSection = screen.getByRole("heading", { name: "Color Palette" }).parentElement;
+    const swatchRow = paletteSection?.querySelector(".flex.flex-wrap");
+
+    expect(swatchRow).not.toBeNull();
+    expect(swatchRow).toHaveClass("justify-center");
+  });
+
+  it("renders translated english tag labels", () => {
+    render(
+      <ClipDetailView
+        clip={{
+          ...baseClip,
+          tags: ["고통", "마법사"],
+        }}
+        lang="en"
+        tagI18n={{
+          고통: "Suffering",
+          마법사: "Mage",
+        }}
+        dict={dict}
+        categories={categories}
+      />
+    );
+
+    expect(screen.getByText("Suffering")).toBeInTheDocument();
+    expect(screen.getByText("Mage")).toBeInTheDocument();
+    expect(screen.queryByText("고통")).not.toBeInTheDocument();
   });
 });

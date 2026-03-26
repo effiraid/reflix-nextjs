@@ -7,6 +7,7 @@ const push = vi.fn();
 const setTheme = vi.fn();
 const setLeftPanelOpen = vi.fn();
 const setRightPanelOpen = vi.fn();
+const setSelectedClipId = vi.fn();
 let uiState = {
   leftPanelOpen: true,
   rightPanelOpen: true,
@@ -59,6 +60,21 @@ vi.mock("@/components/common/SearchBar", () => ({
   ),
 }));
 
+vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
+  useClipData: () => [],
+}));
+
+vi.mock("@/stores/clipStore", () => ({
+  useClipStore: () => ({
+    setSelectedClipId,
+  }),
+}));
+
+vi.mock("./MobileSearchOverlay", () => ({
+  MobileSearchOverlay: ({ open }: { open: boolean }) =>
+    open ? <div>Mobile search overlay</div> : null,
+}));
+
 const dict = {
   nav: {
     home: "홈",
@@ -74,6 +90,7 @@ describe("Navbar", () => {
     setTheme.mockReset();
     setLeftPanelOpen.mockReset();
     setRightPanelOpen.mockReset();
+    setSelectedClipId.mockReset();
     uiState = {
       leftPanelOpen: true,
       rightPanelOpen: true,
@@ -144,5 +161,13 @@ describe("Navbar", () => {
     );
     expect(searchSlot.className).toContain("md:justify-self-center");
     expect(controls.className).toContain("justify-self-end");
+  });
+
+  it("opens the mobile search overlay from the search icon button", () => {
+    render(<Navbar lang="ko" dict={dict} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "모바일 검색 열기" }));
+
+    expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
   });
 });

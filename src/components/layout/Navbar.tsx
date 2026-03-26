@@ -1,28 +1,28 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { MoonStarIcon, SunMediumIcon } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
+import { MoonStarIcon, SearchIcon, SunMediumIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
+import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
+import { useClipStore } from "@/stores/clipStore";
+import { MobileSearchOverlay } from "./MobileSearchOverlay";
+import type { Dictionary } from "@/app/[lang]/dictionaries";
 
 interface NavbarProps {
   lang: Locale;
-  dict: {
-    nav: {
-      home: string;
-      browse: string;
-      search: string;
-      searchPlaceholder: string;
-    };
-  };
+  dict: Pick<Dictionary, "nav"> & Partial<Pick<Dictionary, "browse" | "common">>;
+  tagI18n?: Record<string, string>;
 }
 
-export function Navbar({ lang, dict }: NavbarProps) {
+export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const { theme, setTheme } = useTheme();
+  const clips = useClipData();
+  const { setSelectedClipId } = useClipStore();
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -37,6 +37,7 @@ export function Navbar({ lang, dict }: NavbarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const isDarkTheme = mounted && theme === "dark";
   const allPanelsOpen = leftPanelOpen && rightPanelOpen;
   const otherLang = lang === "ko" ? "en" : "ko";
@@ -58,7 +59,10 @@ export function Navbar({ lang, dict }: NavbarProps) {
     : lang === "ko"
       ? "좌우 사이드바 펼치기"
       : "Expand both sidebars";
+  const mobileSearchLabel =
+    lang === "ko" ? "모바일 검색 열기" : "Open mobile search";
   const ThemeIcon = isDarkTheme ? SunMediumIcon : MoonStarIcon;
+  const isBrowsePage = pathname === `/${lang}/browse`;
 
   function handlePanelsToggle() {
     const nextPanelsOpen = !allPanelsOpen;
@@ -67,9 +71,11 @@ export function Navbar({ lang, dict }: NavbarProps) {
   }
 
   function handleSearch(nextQuery: string) {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams.toString());
     if (nextQuery) {
       params.set("q", nextQuery);
+    } else {
+      params.delete("q");
     }
 
     const nextPath = params.toString()
@@ -78,72 +84,110 @@ export function Navbar({ lang, dict }: NavbarProps) {
     router.push(nextPath);
   }
 
+  function handleMobileSearchOpen() {
+    if (!isBrowsePage) {
+      handleSearch(currentSearchQuery);
+      return;
+    }
+
+    setMobileSearchOpen(true);
+  }
+
   return (
-    <header className="grid h-12 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 md:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]">
-      <div className="flex min-w-0 items-center gap-3">
-        <Link
-          href={`/${lang}`}
-          className="shrink-0 font-bold text-lg tracking-tight"
-        >
-          REFLIX
-        </Link>
-
-        <nav className="flex min-w-0 items-center gap-2 text-sm">
+    <>
+      <header className="grid h-12 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 md:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
-            href={`/${lang}/browse`}
-            className="px-2 py-1 rounded hover:bg-surface-hover inline-flex items-center gap-1.5"
+            href={`/${lang}`}
+            className="shrink-0 font-bold text-lg tracking-tight"
           >
-            {dict.nav.browse}
-            <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground/60">
-              Beta
-            </span>
+            REFLIX
           </Link>
-        </nav>
-      </div>
 
-      <div
-        data-testid="navbar-search"
-        className="hidden w-full md:block md:justify-self-center"
-      >
-        <SearchBar
-          initialQuery={currentSearchQuery}
-          placeholder={dict.nav.searchPlaceholder}
-          onSearch={handleSearch}
-        />
-      </div>
+          <nav className="flex min-w-0 items-center gap-2 text-sm">
+            <Link
+              href={`/${lang}/browse`}
+              className="px-2 py-1 rounded hover:bg-surface-hover inline-flex items-center gap-1.5"
+            >
+              {dict.nav.browse}
+              <span className="rounded-full bg-foreground/10 px-1.5 py-0.5 text-[10px] font-medium leading-none text-foreground/60">
+                Beta
+              </span>
+            </Link>
+          </nav>
+        </div>
 
-      <div
-        data-testid="navbar-controls"
-        className="col-start-2 flex items-center justify-self-end gap-1 md:col-start-3"
-      >
-        <Link
-          href={switchedPath}
-          className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
+        <div
+          data-testid="navbar-search"
+          className="hidden w-full md:block md:justify-self-center"
         >
-          {lang === "ko" ? "EN" : "KO"}
-        </Link>
+          <SearchBar
+            initialQuery={currentSearchQuery}
+            placeholder={dict.nav.searchPlaceholder}
+            onSearch={handleSearch}
+          />
+        </div>
 
-        <button
-          type="button"
-          aria-label={themeLabel}
-          title={themeLabel}
-          onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
-          className="p-1.5 rounded hover:bg-surface-hover text-sm"
+        <div
+          data-testid="navbar-controls"
+          className="col-start-2 flex items-center justify-self-end gap-1 md:col-start-3"
         >
-          <ThemeIcon className="size-4" strokeWidth={1.75} />
-        </button>
+          <button
+            type="button"
+            aria-label={mobileSearchLabel}
+            title={mobileSearchLabel}
+            onClick={handleMobileSearchOpen}
+            className="p-1.5 rounded hover:bg-surface-hover text-sm md:hidden"
+          >
+            <SearchIcon className="size-4" strokeWidth={1.75} />
+          </button>
 
-        <button
-          type="button"
-          aria-label={panelLabel}
-          title={panelLabel}
-          onClick={handlePanelsToggle}
-          className="p-1.5 rounded hover:bg-surface-hover text-sm"
-        >
-          {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
-        </button>
-      </div>
-    </header>
+          <Link
+            href={switchedPath}
+            className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
+          >
+            {lang === "ko" ? "EN" : "KO"}
+          </Link>
+
+          <button
+            type="button"
+            aria-label={themeLabel}
+            title={themeLabel}
+            onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+            className="p-1.5 rounded hover:bg-surface-hover text-sm"
+          >
+            <ThemeIcon className="size-4" strokeWidth={1.75} />
+          </button>
+
+          <button
+            type="button"
+            aria-label={panelLabel}
+            title={panelLabel}
+            onClick={handlePanelsToggle}
+            className="p-1.5 rounded hover:bg-surface-hover text-sm"
+          >
+            {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
+          </button>
+        </div>
+      </header>
+
+      <MobileSearchOverlay
+        key={mobileSearchOpen ? "mobile-search-open" : "mobile-search-closed"}
+        open={mobileSearchOpen}
+        clips={clips}
+        lang={lang}
+        tagI18n={tagI18n}
+        placeholder={dict.nav.searchPlaceholder}
+        closeLabel={dict.common?.close ?? (lang === "ko" ? "닫기" : "Close")}
+        noResultsLabel={dict.browse?.noResults ?? (lang === "ko" ? "검색 결과가 없습니다" : "No results found")}
+        onClose={() => setMobileSearchOpen(false)}
+        onSelectClip={(clipId, query) => {
+          setSelectedClipId(clipId);
+          setMobileSearchOpen(false);
+          handleSearch(query);
+        }}
+      />
+    </>
   );
 }
 

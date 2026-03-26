@@ -55,7 +55,10 @@
     "noLink": "No link",
     "colorPalette": "Color Palette",
     "sourceUrl": "Source URL",
-    "copied": "Copied"
+    "copied": "Copied",
+    "aiAnalysis": "AI Analysis",
+    "aiLatest": "NEW",
+    "aiPending": "AI analysis pending"
   },
   "common": {
     "close": "Close",

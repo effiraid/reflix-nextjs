@@ -3,8 +3,8 @@
   "name": "연출 아케인 힘듦 충격 가쁜 호흡",
   "ext": "mp4",
   "size": 257338,
-  "width": 640,
-  "height": 360,
+  "width": 1280,
+  "height": 720,
   "duration": 3.477334,
   "tags": [
     "아케인",
@@ -107,6 +107,42 @@
       "ko": "",
       "en": ""
     }
+  },
+  "aiTags": {
+    "actionType": [
+      "마법 시전",
+      "힘겨워함",
+      "숨가쁨"
+    ],
+    "emotion": [
+      "고통",
+      "절규",
+      "힘겨움",
+      "결의"
+    ],
+    "composition": [
+      "클로즈업",
+      "로우 앵글",
+      "바스트 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "마법사",
+      "인간 남성"
+    ],
+    "effects": [
+      "빛나는 눈",
+      "빛나는 무기",
+      "푸른 빛",
+      "어두운 조명",
+      "음영"
+    ],
+    "description": {
+      "ko": "어두운 배경 속에서 한 남성 캐릭터가 푸른 빛을 내는 지팡이를 들고 마법을 시전하며 힘겨워하고 있습니다. 그의 눈에서도 푸른 빛이 강렬하게 발산되며, 고통스럽고 힘겨운 표정으로 가쁜 숨을 몰아쉬는 모습이 클로즈업으로 강조됩니다. 전반적으로 푸른색 계열의 빛과 어두운 색감이 긴장감 넘치는 분위기를 연출합니다.",
+      "en": "In a dark setting, a male character is seen struggling while casting magic, holding a staff that emits a blue glow. His eyes also radiate a strong blue light as he gasps for air with an expression of pain and exertion, emphasized by a close-up shot. The predominant blue light and dark color scheme create a tense and dramatic atmosphere."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-26T14:14:16.031Z"
   },
   "videoUrl": "/videos/L3TR52T2K3FY9.mp4",
   "thumbnailUrl": "/thumbnails/L3TR52T2K3FY9.webp",
