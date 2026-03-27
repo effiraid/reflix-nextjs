@@ -1,6 +1,7 @@
 "use client";
 
 import { LandingClipCard } from "./LandingClipCard";
+import { useFadeIn } from "./useFadeIn";
 import type { BrowseClipRecord } from "@/lib/types";
 
 interface LandingFeaturesProps {
@@ -95,6 +96,7 @@ function FeatureRow({
   reversed = false,
   priority = false,
 }: FeatureRowProps) {
+  const { ref, style: fadeStyle } = useFadeIn();
   const textBlock = (
     <div className="flex flex-1 flex-col justify-center">
       <h3
@@ -123,7 +125,11 @@ function FeatureRow({
   );
 
   return (
-    <div className="flex flex-col gap-8 md:flex-row md:items-center md:gap-16">
+    <div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      style={fadeStyle}
+      className="flex flex-col gap-8 md:flex-row md:items-center md:gap-16"
+    >
       {reversed ? (
         <>
           {textBlock}
