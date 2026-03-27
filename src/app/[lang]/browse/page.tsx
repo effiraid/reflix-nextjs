@@ -50,7 +50,7 @@ export async function generateMetadata({
   const dict = await getDictionary(lang as Locale);
   return {
     title: `${dict.nav.browse} | Reflix`,
-    description: dict.home.heroSub,
+    description: dict.landing.heroSub,
   };
 }
 
