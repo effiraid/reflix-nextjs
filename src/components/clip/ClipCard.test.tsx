@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { ClipCard } from "./ClipCard";
 import type { ClipIndex } from "@/lib/types";
+import { useAuthStore } from "@/stores/authStore";
 
 const setSelectedClipIdMock = vi.fn();
 const { getMediaUrlMock, clipStoreState, intersectionState } = vi.hoisted(() => ({
@@ -54,6 +55,11 @@ describe("ClipCard", () => {
     clipStoreState.selectedClipId = null;
     intersectionState.stage = "thumbnail";
     intersectionState.isInView = false;
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
+    });
     setSelectedClipIdMock.mockReset();
     getMediaUrlMock.mockClear();
     getMediaUrlMock.mockImplementation((path: string) => path);
@@ -94,6 +100,16 @@ describe("ClipCard", () => {
 
     expect(screen.getByText("Arcane, Fatigue")).toBeInTheDocument();
     expect(screen.queryByText("아케인, 힘듦")).not.toBeInTheDocument();
+  });
+
+  it("does not render a Pro-only badge for legacy tiered clips", () => {
+    render(
+      <ClipCard
+        clip={{ ...clip, accessTier: "pro" } as unknown as ClipIndex}
+      />
+    );
+
+    expect(screen.queryByLabelText("Pro 전용 클립")).not.toBeInTheDocument();
   });
 
   it("resolves the thumbnail path through the shared media URL helper", () => {

@@ -1,9 +1,43 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { MEDIA_SESSION_COOKIE_NAME } from "@/lib/mediaSession";
+import {
+  MEDIA_SESSION_COOKIE_NAME,
+  verifyMediaSessionToken,
+} from "@/lib/mediaSession";
 import { proxy } from "./proxy";
 
+const { authState } = vi.hoisted(() => ({
+  authState: {
+    user: null as { id: string } | null,
+    profileTier: "free" as "free" | "pro",
+  },
+}));
+
+vi.mock("@supabase/ssr", () => ({
+  createServerClient: vi.fn(() => ({
+    auth: {
+      getUser: vi.fn(async () => ({
+        data: { user: authState.user },
+      })),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(async () => ({
+            data: authState.user ? { tier: authState.profileTier } : null,
+          })),
+        })),
+      })),
+    })),
+  })),
+}));
+
 describe("proxy media session cookie", () => {
+  beforeEach(() => {
+    authState.user = null;
+    authState.profileTier = "free";
+  });
+
   afterEach(() => {
     vi.unstubAllEnvs();
   });
@@ -37,5 +71,32 @@ describe("proxy media session cookie", () => {
 
     expect(response.status).toBeGreaterThanOrEqual(300);
     expect(response.cookies.get(MEDIA_SESSION_COOKIE_NAME)).toBeDefined();
+  });
+
+  it("redirects unauthenticated /account requests to login on the server", async () => {
+    const response = await proxy(new NextRequest("https://reflix.dev/ko/account"));
+
+    expect(response.status).toBeGreaterThanOrEqual(300);
+    expect(response.headers.get("location")).toBe("https://reflix.dev/ko/login");
+  });
+
+  it("treats any authenticated user as pro in the media session token", async () => {
+    vi.stubEnv("NEXT_PUBLIC_MEDIA_URL", "https://media.reflix.dev");
+    vi.stubEnv("MEDIA_SESSION_SECRET", "test-secret");
+    vi.stubEnv("MEDIA_SESSION_COOKIE_DOMAIN", ".reflix.dev");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://supabase.example");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    authState.user = { id: "user-123" };
+    authState.profileTier = "free";
+
+    const response = await proxy(new NextRequest("https://reflix.dev/ko/browse"));
+    const token = response.cookies.get(MEDIA_SESSION_COOKIE_NAME)?.value;
+    const payload = await verifyMediaSessionToken(token!, "test-secret", Date.now());
+
+    expect(payload).toMatchObject({
+      v: 2,
+      userId: "user-123",
+      tier: "pro",
+    });
   });
 });

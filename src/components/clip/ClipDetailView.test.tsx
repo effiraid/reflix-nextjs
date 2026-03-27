@@ -3,10 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import { ClipDetailView } from "./ClipDetailView";
 import type { CategoryTree, Clip } from "@/lib/types";
 
-vi.mock("@/components/auth/AccessGate", () => ({
-  AccessGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock("@/components/clip/ShareButton", () => ({
   ShareButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
 }));

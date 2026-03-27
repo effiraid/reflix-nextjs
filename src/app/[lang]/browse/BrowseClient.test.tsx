@@ -2,11 +2,12 @@ import * as React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BrowseClient } from "./BrowseClient";
+import { useAuthStore } from "@/stores/authStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
-import type { BrowseClipRecord, BrowseProjectionRecord, BrowseSummaryRecord, ClipIndex } from "@/lib/types";
+import type { BrowseProjectionRecord, BrowseSummaryRecord, ClipIndex } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 
 vi.mock("@/hooks/useFilterSync", () => ({
@@ -62,22 +63,43 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("next/dynamic", () => {
+  type DynamicComponent = React.ComponentType<Record<string, unknown>>;
+
+  function resolveDynamicComponent(moduleValue: unknown): DynamicComponent {
+    if (typeof moduleValue === "function") {
+      return moduleValue as DynamicComponent;
+    }
+
+    if (
+      moduleValue &&
+      typeof moduleValue === "object" &&
+      "default" in moduleValue &&
+      typeof moduleValue.default === "function"
+    ) {
+      return moduleValue.default as DynamicComponent;
+    }
+
+    return () => null;
+  }
+
   return {
     __esModule: true,
     default: (fn: () => Promise<unknown>) => {
-      let resolvedComp: React.ComponentType<any> | null = null;
-      fn().then((mod: any) => {
-        resolvedComp = typeof mod === "function" ? mod : mod?.default ?? mod;
+      let resolvedComp: DynamicComponent | null = null;
+      fn().then((mod) => {
+        resolvedComp = resolveDynamicComponent(mod);
       });
       return function DynamicMock(props: Record<string, unknown>) {
         // Use arrow function to avoid React calling the component as a state initializer
-        const [Comp, setComp] = React.useState<React.ComponentType<any> | null>(() => resolvedComp);
+        const [Comp, setComp] = React.useState<DynamicComponent | null>(
+          () => resolvedComp
+        );
         React.useEffect(() => {
           if (!Comp && resolvedComp) {
             setComp(() => resolvedComp);
           } else if (!resolvedComp) {
-            fn().then((mod: any) => {
-              resolvedComp = typeof mod === "function" ? mod : mod?.default ?? mod;
+            fn().then((mod) => {
+              resolvedComp = resolveDynamicComponent(mod);
               setComp(() => resolvedComp);
             });
           }
@@ -186,9 +208,11 @@ describe("BrowseClient", () => {
       category: null,
       selectedFolders: [],
       selectedTags: [],
+      excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
       starFilter: null,
+      contentMode: null,
     });
     useClipStore.setState({
       selectedClipId: null,
@@ -196,6 +220,11 @@ describe("BrowseClient", () => {
     useUIStore.setState({
       shuffleSeed: 0,
       quickViewOpen: false,
+    });
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
     });
   });
 
@@ -296,6 +325,143 @@ describe("BrowseClient", () => {
     expect(screen.getByText("1개 클립")).toHaveAttribute("aria-live", "polite");
   });
 
+  it("limits free search results to five and shows an upgrade banner", () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      star: index,
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = {
+      initialClips: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: ["match"],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: manyClips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "match",
+      sortBy: "newest",
+      starFilter: null,
+      contentMode: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent(
+      "clip-1,clip-2,clip-3,clip-4,clip-5"
+    );
+    expect(screen.getByText("7개 클립")).toHaveAttribute("aria-live", "polite");
+    expect(screen.getByText("2개 결과가 더 있습니다")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pro로 전체 보기" })).toHaveAttribute(
+      "href",
+      "/ko/pricing"
+    );
+  });
+
+  it("blocks free users from combining multiple filter axes", () => {
+    const comboClips = [
+      {
+        id: "clip-a",
+        name: "Mage Low",
+        tags: ["마법"],
+        folders: [],
+        star: 3,
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/a.mp4",
+        thumbnailUrl: "/a.jpg",
+        lqipBase64: "",
+      },
+      {
+        id: "clip-b",
+        name: "Mage High",
+        tags: ["마법"],
+        folders: [],
+        star: 5,
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/b.mp4",
+        thumbnailUrl: "/b.jpg",
+        lqipBase64: "",
+      },
+      {
+        id: "clip-c",
+        name: "Other High",
+        tags: ["걷기"],
+        folders: [],
+        star: 5,
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/c.mp4",
+        thumbnailUrl: "/c.jpg",
+        lqipBase64: "",
+      },
+    ];
+
+    browseDataState = {
+      initialClips: comboClips,
+      projectionClips: comboClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: comboClips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: ["마법"],
+      excludedTags: [],
+      searchQuery: "",
+      sortBy: "newest",
+      starFilter: 4,
+      contentMode: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-a,clip-b");
+    expect(screen.getByText("필터 조합은 Pro 전용입니다")).toBeInTheDocument();
+  });
+
   it("keeps the initial summary page when projection is ready but no filters are active", () => {
     browseDataState = {
       initialClips: initialSummaryClips,
@@ -365,5 +531,48 @@ describe("BrowseClient", () => {
     );
 
     expect(screen.getByText("'없는 검색어'에 대한 결과가 없습니다")).toBeInTheDocument();
+  });
+
+  it("lets Pro users keep multiple filter axes active", () => {
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "pro",
+      isLoading: false,
+    });
+
+    browseDataState = {
+      initialClips: clips,
+      projectionClips: clips.map((clip, index) => ({
+        ...clip,
+        tags: index < 2 ? ["마법"] : ["걷기"],
+        star: index === 0 ? 3 : 5,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: clips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: ["마법"],
+      excludedTags: [],
+      searchQuery: "",
+      sortBy: "newest",
+      starFilter: 4,
+      contentMode: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-b");
+    expect(screen.queryByText("필터 조합은 Pro 전용입니다")).not.toBeInTheDocument();
   });
 });

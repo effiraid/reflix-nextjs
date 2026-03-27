@@ -16,6 +16,7 @@ export function PricingCards({ lang }: PricingCardsProps) {
   const { user, tier } = useAuthStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const isKo = lang === "ko";
 
   async function handleSubscribe() {
@@ -25,6 +26,7 @@ export function PricingCards({ lang }: PricingCardsProps) {
     }
 
     setLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -34,8 +36,16 @@ export function PricingCards({ lang }: PricingCardsProps) {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else {
+        setError(
+          isKo ? "결제 페이지를 열 수 없습니다" : "Could not open checkout"
+        );
+        setLoading(false);
       }
     } catch {
+      setError(
+        isKo ? "결제 페이지를 열 수 없습니다" : "Could not open checkout"
+      );
       setLoading(false);
     }
   }
@@ -96,6 +106,9 @@ export function PricingCards({ lang }: PricingCardsProps) {
             </li>
           ))}
         </ul>
+        {error ? (
+          <p className="mt-4 text-xs text-red-500">{error}</p>
+        ) : null}
         {tier === "pro" ? (
           <button
             type="button"

@@ -149,54 +149,6 @@ describe("filterClips", () => {
     expect(filtered[0].id).toBe("clip-1");
   });
 
-  it("tier=free shows only free clips", () => {
-    const tieredClips = clips.map((c, i) => ({
-      ...c,
-      accessTier: i === 0 ? ("free" as const) : ("pro" as const),
-    }));
-
-    const filtered = filterClips(
-      tieredClips,
-      baseFilters,
-      undefined,
-      {},
-      "ko",
-      "free"
-    );
-    expect(filtered).toHaveLength(1);
-    expect(filtered[0].id).toBe("clip-1");
-  });
-
-  it("tier=pro shows all clips", () => {
-    const tieredClips = clips.map((c, i) => ({
-      ...c,
-      accessTier: i === 0 ? ("free" as const) : ("pro" as const),
-    }));
-
-    const filtered = filterClips(
-      tieredClips,
-      baseFilters,
-      undefined,
-      {},
-      "ko",
-      "pro"
-    );
-    expect(filtered).toHaveLength(4);
-  });
-
-  it("clips without accessTier default to pro (gated for free users)", () => {
-    const filtered = filterClips(
-      clips,
-      baseFilters,
-      undefined,
-      {},
-      "ko",
-      "free"
-    );
-    // All clips lack accessTier → default to "pro" → hidden from free users
-    expect(filtered).toHaveLength(0);
-  });
-
   it("treats browse projection aiStructuredTags as filterable tags", () => {
     const projection: BrowseProjectionRecord[] = [
       {
