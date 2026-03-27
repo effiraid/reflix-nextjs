@@ -8,7 +8,10 @@ export function useFadeIn(threshold = 0.15) {
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
+    const prefersReduced =
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!el || typeof IntersectionObserver === "undefined" || prefersReduced) {
       setVisible(true);
       return;
     }
