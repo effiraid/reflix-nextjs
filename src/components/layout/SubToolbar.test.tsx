@@ -7,16 +7,6 @@ import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterStore } from "@/stores/filterStore";
 
-const { routerPushMock } = vi.hoisted(() => ({
-  routerPushMock: vi.fn(),
-}));
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: routerPushMock,
-  }),
-}));
-
 const dict = {
   clip: koDict.clip,
 } satisfies Pick<Dictionary, "clip">;
@@ -35,7 +25,6 @@ describe("SubToolbar", () => {
   );
 
   beforeEach(() => {
-    routerPushMock.mockReset();
     useUIStore.setState({
       filterBarOpen: false,
       thumbnailSize: 2,
@@ -72,13 +61,13 @@ describe("SubToolbar", () => {
     expect(screen.queryByText("무작위")).not.toBeInTheDocument();
   });
 
-  it("routes free users to pricing instead of reshuffling", () => {
+  it("hides the shuffle control for free users", () => {
     render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Pro 전용 기능" }));
-
-    expect(useUIStore.getState().shuffleSeed).toBe(0);
-    expect(routerPushMock).toHaveBeenCalledWith("/ko/pricing");
+    expect(
+      screen.queryByRole("button", { name: "Pro 전용 기능" })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("PRO")).not.toBeInTheDocument();
   });
 
   it("increments the shuffle seed when the Pro-only icon is clicked by a Pro user", () => {

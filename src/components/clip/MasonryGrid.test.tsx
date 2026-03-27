@@ -340,6 +340,27 @@ describe("MasonryGrid", () => {
     });
   });
 
+  it("passes locked ids through to the matching clip cards", () => {
+    render(
+      <main data-masonry-scroll>
+        <MasonryGrid
+          clips={clips}
+          lockedClipIds={new Set(["clip-b", "clip-f"])}
+        />
+      </main>
+    );
+
+    expect(clipCardProps.find((props) => props.clip === clips[0])).toMatchObject({
+      locked: false,
+    });
+    expect(clipCardProps.find((props) => props.clip === clips[1])).toMatchObject({
+      locked: true,
+    });
+    expect(clipCardProps.find((props) => props.clip === clips[5])).toMatchObject({
+      locked: true,
+    });
+  });
+
   it("does not pass locked states through for legacy access-tier data", () => {
     const tieredClips = clips.map((clip, index) => ({
       ...clip,

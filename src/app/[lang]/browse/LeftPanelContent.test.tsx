@@ -141,6 +141,19 @@ describe("LeftPanelContent", () => {
     expect(screen.queryByRole("button", { name: "무기" })).not.toBeInTheDocument();
   });
 
+  it("does not render the random shortcut in the left panel", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: "무작위" })).not.toBeInTheDocument();
+    expect(screen.queryByText("무작위")).not.toBeInTheDocument();
+  });
+
   it("uses a shared background container for the folder section without a divider line", () => {
     render(
       <LeftPanelContent

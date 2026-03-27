@@ -112,6 +112,26 @@ describe("ClipCard", () => {
     expect(screen.queryByLabelText("Pro 전용 클립")).not.toBeInTheDocument();
   });
 
+  it("blurs and blocks interaction when locked", () => {
+    const onOpenQuickView = vi.fn();
+
+    render(<ClipCard clip={clip} locked onOpenQuickView={onOpenQuickView} />);
+
+    const card = screen.getByRole("button", { name: clip.name });
+    const image = screen.getByAltText(clip.name);
+
+    fireEvent.click(card);
+    fireEvent.doubleClick(card);
+    fireEvent.keyDown(card, { key: "Enter" });
+
+    expect(card).toHaveAttribute("aria-disabled", "true");
+    expect(card).toHaveAttribute("tabindex", "-1");
+    expect(card.className).toContain("cursor-not-allowed");
+    expect(image.className).toContain("blur-lg");
+    expect(setSelectedClipIdMock).not.toHaveBeenCalled();
+    expect(onOpenQuickView).not.toHaveBeenCalled();
+  });
+
   it("resolves the thumbnail path through the shared media URL helper", () => {
     render(<ClipCard clip={clip} />);
 

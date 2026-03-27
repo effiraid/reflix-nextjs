@@ -40,7 +40,7 @@ npm run release:mark-published # Record successful publish
 
 ## Tech Stack
 
-Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Zustand, @tanstack/react-virtual, next-themes, Pagefind, Cloudflare R2 (@aws-sdk/client-s3)
+Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Zustand, @tanstack/react-virtual, next-themes, Pagefind, Cloudflare R2 (@aws-sdk/client-s3), Supabase (@supabase/ssr), Stripe
 
 ## Next.js 16 Breaking Changes (CRITICAL)
 
@@ -59,6 +59,10 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
 - `NEXT_PUBLIC_MEDIA_URL` — leave unset for local/preview; set to `https://media.reflix.dev` for production
 - `EAGLE_LIBRARY_PATH` — path to Eagle `.library` folder (default: local desktop path)
 - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` — Cloudflare R2 credentials (only needed for `--r2` uploads)
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase project credentials
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only admin key (webhooks, server-side tier updates)
+- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID_PRO_MONTHLY` — Stripe billing
+- `MEDIA_SESSION_SECRET` — HMAC key for signed media session cookies (optional, enables media protection)
 
 ## Architecture
 
@@ -68,6 +72,11 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
 - **i18n:** `[lang]` route segment (`/ko/`, `/en/`), `proxy.ts` handles locale detection + redirect, dictionaries in `src/app/[lang]/dictionaries/`
 - **State:** Zustand stores (filterStore, clipStore, uiStore) with unidirectional URL sync (URL = source of truth)
 - **Media:** 3-stage loading: LQIP base64 (~300B) → Static WebP thumbnail (~4KB) → MP4 loop preview (~70KB). 상세: `docs/media-strategy.md`
+- **Auth:** Supabase Auth (magic link OTP + Google OAuth) → `AuthProvider` syncs session to Zustand `authStore` → tier-based access gating. Key files: `src/lib/supabase/{client,server,admin}.ts`, `src/components/auth/{AuthProvider,AccessGate}.tsx`, `src/stores/authStore.ts`, `src/lib/authRedirect.ts`
+- **Billing:** Stripe Checkout for Pro subscriptions → webhooks update Supabase `profiles.tier`. Routes: `/api/checkout` (session creation), `/api/webhooks/stripe` (6 events: checkout.completed, subscription.updated/deleted, charge.refunded, charge.dispute.created, invoice.payment_failed)
+- **Auth callback:** `src/lib/authRedirect.ts` builds callback URLs with open-redirect protection. `src/app/api/auth/callback/route.ts` exchanges code for session.
+- **Middleware (`proxy.ts`):** locale detection + redirect, guards `/account` for unauthenticated users, issues HMAC-signed `reflix-media-session` cookie (userId + tier)
+- **DB schema:** `supabase/migrations/001_initial_schema.sql` — tables: `profiles` (tier, stripe_customer_id), `subscriptions`, `daily_usage`, `boards` with RLS policies
 - **Path alias:** `@/*` maps to `./src/*`
 
 ## Browse / Detail Cache Rules
@@ -85,6 +94,17 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
   - double click the same clip and confirm quick view also shows `AI 분석`
 - Verify at least one clip that recently changed in export data, not only the first card.
 - Keep browser console clean during this check. `errors 0 / warnings 0` is the target.
+
+## Auth Flow
+
+- **테스트 계정:** `test@reflix.dev` — 로그인/인증 테스트 시 사용
+- **Login:** Magic link (email OTP) or Google OAuth — no password-based login
+- **Session:** `@supabase/ssr` manages cookies; `AuthProvider` listens to `onAuthStateChange` and populates `authStore` (user, tier, isLoading)
+- **Safety timeout:** AuthProvider resolves `isLoading` after 2s if `onAuthStateChange` never fires
+- **Access gating:** `AccessGate` component wraps Pro clips; `filterStore` hides Pro clips from free users; `ProBadge` shows lock overlay on grid cards
+- **Tier limits:** Free: 50 clips, 20 views/day, 1 board. Pro: full library, unlimited views, unlimited boards
+- **Cross-tab login:** `LoginForm` uses `BroadcastChannel` + polling to auto-redirect when user logs in from another tab
+- **Identity linking:** Account page allows linking Google to an existing email-based account via `supabase.auth.linkIdentity()`
 
 ## Conventions
 

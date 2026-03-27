@@ -32,9 +32,15 @@ async function getSessionTier(request: NextRequest): Promise<{
 
     if (!user) return { tier: "free" };
 
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tier")
+      .eq("id", user.id)
+      .single();
+
     return {
       userId: user.id,
-      tier: "pro",
+      tier: profile?.tier === "pro" ? "pro" : "free",
     };
   } catch {
     return { tier: "free" };

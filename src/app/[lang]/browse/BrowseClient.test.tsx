@@ -31,13 +31,21 @@ vi.mock("./ClipDataProvider", () => ({
 vi.mock("@/components/clip/MasonryGrid", () => ({
   MasonryGrid: ({
     clips,
+    lockedClipIds,
     onOpenQuickView,
   }: {
     clips: ClipIndex[];
+    lockedClipIds?: Set<string>;
     onOpenQuickView?: (clipId: string) => void;
   }) => (
     <div>
       <div data-testid="clip-order">{clips.map((clip) => clip.id).join(",")}</div>
+      <div data-testid="locked-order">
+        {clips
+          .filter((clip) => lockedClipIds?.has(clip.id))
+          .map((clip) => clip.id)
+          .join(",")}
+      </div>
       <div data-testid="clip-tags">
         {clips
           .map((clip) => `${clip.id}:${(clip.tags ?? []).join("|")}`)
@@ -47,6 +55,7 @@ vi.mock("@/components/clip/MasonryGrid", () => ({
         <button
           key={clip.id}
           type="button"
+          disabled={lockedClipIds?.has(clip.id)}
           onClick={() => onOpenQuickView?.(clip.id)}
         >
           Open {clip.id}
@@ -325,7 +334,7 @@ describe("BrowseClient", () => {
     expect(screen.getByText("1개 클립")).toHaveAttribute("aria-live", "polite");
   });
 
-  it("limits free search results to five and shows an upgrade banner", () => {
+  it("shows all free search results but locks everything after the first five", () => {
     const manyClips = Array.from({ length: 7 }, (_, index) => ({
       id: `clip-${index + 1}`,
       name: `Match ${index + 1}`,
@@ -372,11 +381,14 @@ describe("BrowseClient", () => {
     );
 
     expect(screen.getByTestId("clip-order")).toHaveTextContent(
-      "clip-1,clip-2,clip-3,clip-4,clip-5"
+      "clip-1,clip-2,clip-3,clip-4,clip-5,clip-6,clip-7"
     );
+    expect(screen.getByTestId("locked-order")).toHaveTextContent("clip-6,clip-7");
+    expect(screen.getByRole("button", { name: "Open clip-5" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Open clip-6" })).toBeDisabled();
     expect(screen.getByText("7개 클립")).toHaveAttribute("aria-live", "polite");
-    expect(screen.getByText("2개 결과가 더 있습니다")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Pro로 전체 보기" })).toHaveAttribute(
+    expect(screen.getByText("2개 결과는 Pro에서 열 수 있습니다")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Pro로 잠금 해제" })).toHaveAttribute(
       "href",
       "/ko/pricing"
     );

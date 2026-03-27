@@ -3,11 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  buildSessionReplacedLoginPath,
+  getActiveAuthTab,
+  getOrCreateAuthTabId,
+  isTabSessionRevoked,
+} from "@/lib/authTabSession";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
-
-const AUTH_CHANNEL = "reflix-auth";
 
 interface LoginFormProps {
   lang: Locale;
@@ -38,6 +42,7 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+
     const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
     if (!redirectTo) {
       setState("error");
@@ -46,6 +51,7 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
@@ -80,6 +86,7 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+
     const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
     if (!redirectTo) {
       setState("error");
@@ -88,6 +95,7 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -161,37 +169,31 @@ export function LoginForm({ lang }: LoginFormProps) {
 }
 
 function WaitingForLogin({ lang }: { lang: Locale }) {
-  const router = useRouter();
   const isKo = lang === "ko";
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) return;
+    const tabId = getOrCreateAuthTabId();
 
-    // 1. BroadcastChannel — instant cross-tab notification
-    let bc: BroadcastChannel | null = null;
-    try {
-      bc = new BroadcastChannel(AUTH_CHANNEL);
-      bc.onmessage = (e) => {
-        if (e.data === "SIGNED_IN") {
-          router.replace(`/${lang}/browse`);
-        }
-      };
-    } catch {
-      // BroadcastChannel not supported — polling is the fallback
-    }
-
-    // 2. Poll session every 2s — catches cookie-based cross-tab login
+    // Polling stays as the cross-tab fallback, but only the active tab
+    // is allowed to continue into the authenticated area.
     const interval = setInterval(async () => {
       const { data } = await supabase.auth.getUser();
       if (data.user) {
+        const activeTab = getActiveAuthTab();
+        if ((activeTab && activeTab.tabId !== tabId) || (!activeTab && isTabSessionRevoked())) {
+          router.replace(buildSessionReplacedLoginPath(window.location.pathname));
+          return;
+        }
+
         router.replace(`/${lang}/browse`);
       }
     }, 2000);
 
     return () => {
       clearInterval(interval);
-      bc?.close();
     };
   }, [lang, router]);
 

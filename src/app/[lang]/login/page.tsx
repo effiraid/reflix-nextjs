@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/app/[lang]/dictionaries";
 import { LoginForm } from "./LoginForm";
@@ -26,6 +27,26 @@ async function AuthErrorBannerInner({
   isKo: boolean;
 }) {
   const { error } = await searchParams;
+  if (error === "replaced") {
+    return (
+      <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+        {isKo
+          ? (
+              <>
+                <span className="block">다른 탭에서 다시 로그인되어 이 탭 세션이 종료되었습니다.</span>
+                <span className="block">계속하려면 다시 로그인해주세요.</span>
+              </>
+            )
+          : (
+              <>
+                <span className="block">This tab was signed out because the account was re-opened in another tab.</span>
+                <span className="block">Please sign in again to continue.</span>
+              </>
+            )}
+      </div>
+    );
+  }
+
   if (error !== "auth") return null;
   return (
     <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">

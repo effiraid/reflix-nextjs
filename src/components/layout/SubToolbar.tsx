@@ -1,7 +1,8 @@
 "use client";
 
 import { forwardRef, useLayoutEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
+
 import { MIN_THUMBNAIL_SIZE, MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { getCategoryLabel } from "@/lib/categories";
 import { getTagDisplayLabel } from "@/lib/tagDisplay";
@@ -15,7 +16,6 @@ import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Locale } from "@/lib/types";
-import { useShallow } from "zustand/react/shallow";
 
 interface SubToolbarProps {
   categories: CategoryTree;
@@ -30,7 +30,6 @@ export function SubToolbar({
   dict,
   tagI18n = {},
 }: SubToolbarProps) {
-  const router = useRouter();
   const {
     filterBarOpen,
     setFilterBarOpen,
@@ -63,11 +62,11 @@ export function SubToolbar({
       excludedTags: state.excludedTags,
     }))
   );
+
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
-  const proOnlyShuffleLabel =
-    lang === "ko" ? "Pro 전용 기능" : "Pro feature";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
+
   const isProUser = Boolean(user) && tier === "pro";
   const filterBadges = buildFilterBadges({
     categories,
@@ -77,6 +76,7 @@ export function SubToolbar({
     selectedTags,
     tagI18n,
   });
+
   const badgeTrackRef = useRef<HTMLDivElement | null>(null);
   const overflowMeasureRef = useRef<HTMLSpanElement | null>(null);
   const badgeMeasureRefs = useRef<(HTMLSpanElement | null)[]>([]);
@@ -173,20 +173,7 @@ export function SubToolbar({
             >
               <RefreshIcon />
             </button>
-          ) : (
-            <button
-              type="button"
-              aria-label={proOnlyShuffleLabel}
-              onClick={() => router.push(`/${lang}/pricing`)}
-              className="relative rounded p-1.5 text-muted/40 hover:bg-surface-hover"
-              title={lang === "ko" ? "Pro 전용" : "Pro only"}
-            >
-              <RefreshIcon />
-              <span className="absolute -right-1 -top-1 text-[8px] font-bold text-primary">
-                PRO
-              </span>
-            </button>
-          )}
+          ) : null}
         </div>
 
         <div className="min-w-0 px-2">

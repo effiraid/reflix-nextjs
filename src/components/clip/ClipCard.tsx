@@ -17,6 +17,7 @@ interface ClipCardProps {
   previewOnHover?: boolean;
   showInfo?: boolean;
   prioritizeThumbnail?: boolean;
+  locked?: boolean;
   onOpenQuickView?: (clipId: string) => void;
 }
 
@@ -28,6 +29,7 @@ export function ClipCard({
   previewOnHover = false,
   showInfo = true,
   prioritizeThumbnail = false,
+  locked = false,
   onOpenQuickView,
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
@@ -40,29 +42,42 @@ export function ClipCard({
   const previewUrl = getMediaUrl(clip.previewUrl);
   const previewFailed = failedPreviewUrl === previewUrl;
   const displayTags = getTagDisplayLabels(clip.tags ?? [], lang, tagI18n);
+  const lockedMediaClass = locked ? " blur-lg scale-110" : "";
 
   const handleClick = useCallback(() => {
+    if (locked) {
+      return;
+    }
+
     if (isSelected) {
       onOpenQuickView?.(clip.id);
       return;
     }
 
     setSelectedClipId(clip.id);
-  }, [clip.id, isSelected, onOpenQuickView, setSelectedClipId]);
+  }, [clip.id, isSelected, locked, onOpenQuickView, setSelectedClipId]);
 
   const handleDoubleClick = useCallback(() => {
+    if (locked) {
+      return;
+    }
+
     setSelectedClipId(clip.id);
     onOpenQuickView?.(clip.id);
-  }, [clip.id, onOpenQuickView, setSelectedClipId]);
+  }, [clip.id, locked, onOpenQuickView, setSelectedClipId]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (locked) {
+        return;
+      }
+
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         handleClick();
       }
     },
-    [handleClick]
+    [handleClick, locked]
   );
 
   const showPreview =
@@ -76,10 +91,13 @@ export function ClipCard({
     <div
       ref={ref}
       role="button"
-      tabIndex={0}
+      tabIndex={locked ? -1 : 0}
       aria-label={clip.name}
       aria-pressed={isSelected}
-      className={`group relative rounded-lg overflow-hidden cursor-pointer transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent bg-black ${
+      aria-disabled={locked || undefined}
+      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+        locked ? "cursor-not-allowed" : "cursor-pointer"
+      } ${
         isSelected ? "ring-2 ring-accent" : "hover:shadow-lg"
       }`}
       style={{ aspectRatio: THUMBNAIL_ASPECT_RATIO }}
@@ -98,7 +116,7 @@ export function ClipCard({
           height={clip.height}
           unoptimized
           sizes="33vw"
-          className="h-full w-full object-cover blur-lg scale-110"
+          className={`h-full w-full object-cover blur-lg scale-110${lockedMediaClass}`}
           aria-hidden="true"
         />
       )}
@@ -112,7 +130,7 @@ export function ClipCard({
           height={clip.height}
           loading={prioritizeThumbnail ? "eager" : undefined}
           sizes="33vw"
-          className="h-full w-full object-contain"
+          className={`h-full w-full object-contain${lockedMediaClass}`}
         />
       )}
 
@@ -128,7 +146,7 @@ export function ClipCard({
           disablePictureInPicture
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
-          className="absolute inset-0 h-full w-full object-contain"
+          className={`absolute inset-0 h-full w-full object-contain${lockedMediaClass}`}
           onContextMenu={(e) => e.preventDefault()}
           onError={() => setFailedPreviewUrl(previewUrl)}
         />

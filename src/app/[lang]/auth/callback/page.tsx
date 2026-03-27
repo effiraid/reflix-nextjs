@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  claimActiveAuthTab,
+  clearTabSessionRevoked,
+  getActiveAuthTab,
+  getOrCreateAuthTabId,
+  restoreActiveAuthTab,
+} from "@/lib/authTabSession";
 import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
 
 function parseHashParams(hash: string): Record<string, string> {
@@ -58,24 +65,21 @@ export default function AuthCallbackPage() {
     function onSuccess() {
       if (handled.current) return;
       handled.current = true;
-
-      // Notify original tab
-      try {
-        const bc = new BroadcastChannel("reflix-auth");
-        bc.postMessage("SIGNED_IN");
-        bc.close();
-      } catch {
-        // BroadcastChannel not supported
-      }
       router.replace(nextPath);
     }
 
     async function handleAuth() {
+      const tabId = getOrCreateAuthTabId();
+
       // 1. Try hash fragment tokens (implicit flow)
       const hash = window.location.hash;
       if (hash) {
         const hp = parseHashParams(hash);
         if (hp.access_token && hp.refresh_token) {
+          const previousActiveTab = getActiveAuthTab();
+          clearTabSessionRevoked();
+          claimActiveAuthTab(tabId);
+
           const { error } = await supabase!.auth.setSession({
             access_token: hp.access_token,
             refresh_token: hp.refresh_token,
@@ -89,12 +93,16 @@ export default function AuthCallbackPage() {
             onSuccess();
             return;
           }
+
+          restoreActiveAuthTab(previousActiveTab);
         }
       }
 
       // 2. Check if session already exists
       const { data } = await supabase!.auth.getUser();
       if (data.user) {
+        clearTabSessionRevoked();
+        claimActiveAuthTab(tabId);
         onSuccess();
         return;
       }

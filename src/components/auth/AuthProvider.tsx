@@ -1,14 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import {
+  buildSessionReplacedLoginPath,
+  claimActiveAuthTab,
+  clearActiveAuthTab,
+  clearTabSessionRevoked,
+  getActiveAuthTab,
+  getOrCreateAuthTabId,
+  isTabSessionRevoked,
+  markTabSessionRevoked,
+} from "@/lib/authTabSession";
 import { useAuthStore } from "@/stores/authStore";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+function AuthProviderEffects() {
   const { setUser, setTier, setLoading } = useAuthStore();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const supabase = createClient();
+    const tabId = getOrCreateAuthTabId();
 
     if (!supabase) {
       setUser(null);
@@ -18,6 +32,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const client = supabase;
+    let heartbeatInterval: number | null = null;
+
+    function stopHeartbeat() {
+      if (heartbeatInterval !== null) {
+        window.clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+      }
+    }
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      heartbeatInterval = window.setInterval(() => {
+        const active = getActiveAuthTab();
+        if (active?.tabId === tabId) {
+          claimActiveAuthTab(tabId);
+        }
+      }, 5000);
+    }
 
     async function loadProfile(userId: string) {
       try {
@@ -35,17 +67,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    function redirectSupersededTab() {
+      const nextPath = buildSessionReplacedLoginPath(
+        pathname ?? window.location.pathname
+      );
+
+      window.setTimeout(() => {
+        router.replace(nextPath);
+      }, 0);
+    }
+
+    function supersedeCurrentTab() {
+      stopHeartbeat();
+      markTabSessionRevoked();
+      setUser(null);
+      setTier("free");
+      setLoading(false);
+      redirectSupersededTab();
+    }
+
+    function acceptCurrentTabSession(user: Parameters<typeof setUser>[0] & { id: string }) {
+      clearTabSessionRevoked();
+      claimActiveAuthTab(tabId);
+      startHeartbeat();
+
+      setUser(user);
+      setLoading(false);
+      loadProfile(user.id);
+    }
+
     // Single listener: handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT
     // Avoids lock contention from concurrent getSession() + onAuthStateChange
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
-        setUser(session.user);
-        setLoading(false);
-        // Load tier & daily usage in background (non-blocking)
-        loadProfile(session.user.id);
+        const activeTab = getActiveAuthTab();
+
+        if (activeTab && activeTab.tabId !== tabId) {
+          supersedeCurrentTab();
+          return;
+        }
+
+        if (!activeTab && isTabSessionRevoked()) {
+          supersedeCurrentTab();
+          return;
+        }
+
+        acceptCurrentTabSession(session.user);
       } else {
+        stopHeartbeat();
+        clearActiveAuthTab(tabId);
         setUser(null);
         setTier("free");
         setLoading(false);
@@ -60,11 +132,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, 2000);
 
+    function handleBeforeUnload() {
+      clearActiveAuthTab(tabId);
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
+      stopHeartbeat();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
     };
-  }, [setUser, setTier, setLoading]);
+  }, [pathname, router, setUser, setTier, setLoading]);
 
-  return <>{children}</>;
+  return null;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      {children}
+      <Suspense fallback={null}>
+        <AuthProviderEffects />
+      </Suspense>
+    </>
+  );
 }

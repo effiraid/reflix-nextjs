@@ -11,6 +11,7 @@ interface MasonryGridProps {
   clips: BrowseClipRecord[];
   lang?: Locale;
   tagI18n?: Record<string, string>;
+  lockedClipIds?: Set<string>;
   onOpenQuickView?: (clipId: string) => void;
 }
 
@@ -18,6 +19,7 @@ export function MasonryGrid({
   clips,
   lang = "ko",
   tagI18n = {},
+  lockedClipIds = new Set<string>(),
   onOpenQuickView,
 }: MasonryGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -88,6 +90,7 @@ export function MasonryGrid({
           enablePreview={!quickViewOpen}
           previewOnHover={previewOnHover}
           showInfo={showInfo}
+          lockedClipIds={lockedClipIds}
           lang={lang}
           tagI18n={tagI18n}
           onOpenQuickView={onOpenQuickView}
@@ -103,6 +106,7 @@ function MasonryColumn({
   enablePreview,
   previewOnHover,
   showInfo,
+  lockedClipIds,
   lang,
   tagI18n,
   onOpenQuickView,
@@ -112,6 +116,7 @@ function MasonryColumn({
   enablePreview: boolean;
   previewOnHover: boolean;
   showInfo: boolean;
+  lockedClipIds: Set<string>;
   lang: Locale;
   tagI18n: Record<string, string>;
   onOpenQuickView?: (clipId: string) => void;
@@ -161,6 +166,7 @@ function MasonryColumn({
                 previewOnHover={previewOnHover}
                 showInfo={showInfo}
                 prioritizeThumbnail={virtualItem.index === 0}
+                locked={lockedClipIds.has(clip.id)}
                 onOpenQuickView={onOpenQuickView}
               />
             </div>

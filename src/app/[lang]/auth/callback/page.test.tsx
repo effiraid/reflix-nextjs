@@ -5,14 +5,10 @@ const {
   routerReplaceMock,
   setSessionMock,
   getUserMock,
-  broadcastPostMessageMock,
-  broadcastCloseMock,
 } = vi.hoisted(() => ({
   routerReplaceMock: vi.fn(),
   setSessionMock: vi.fn(),
   getUserMock: vi.fn(),
-  broadcastPostMessageMock: vi.fn(),
-  broadcastCloseMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -40,8 +36,9 @@ describe("AuthCallbackPage", () => {
     routerReplaceMock.mockReset();
     setSessionMock.mockReset();
     getUserMock.mockReset();
-    broadcastPostMessageMock.mockReset();
-    broadcastCloseMock.mockReset();
+    localStorage.clear();
+    sessionStorage.clear();
+    sessionStorage.setItem("reflix-auth-tab-id", "tab-fresh");
 
     window.history.replaceState(
       null,
@@ -51,19 +48,6 @@ describe("AuthCallbackPage", () => {
 
     setSessionMock.mockResolvedValue({ error: null });
     getUserMock.mockResolvedValue({ data: { user: null } });
-
-    vi.stubGlobal(
-      "BroadcastChannel",
-      class BroadcastChannel {
-        postMessage(message: string) {
-          broadcastPostMessageMock(message);
-        }
-
-        close() {
-          broadcastCloseMock();
-        }
-      }
-    );
 
     window.close = vi.fn();
   });
@@ -81,6 +65,9 @@ describe("AuthCallbackPage", () => {
       expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linked=google");
     });
 
+    expect(localStorage.getItem("reflix-active-auth-tab")).toContain(
+      "\"tabId\":\"tab-fresh\""
+    );
     expect(window.close).not.toHaveBeenCalled();
   });
 

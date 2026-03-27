@@ -119,7 +119,13 @@ export function BrowseClient({
       tier: s.tier,
     }))
   );
-  const { quickViewOpen, setQuickViewOpen, stepThumbnailSize, shuffleSeed, thumbnailSize } = useUIStore(
+  const {
+    quickViewOpen,
+    setQuickViewOpen,
+    stepThumbnailSize,
+    shuffleSeed,
+    thumbnailSize,
+  } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
       setQuickViewOpen: s.setQuickViewOpen,
@@ -188,7 +194,7 @@ export function BrowseClient({
               ? initialDisplayClips
               : shuffleClips(initialDisplayClips),
           totalResultCount: initialTotalCount,
-          hiddenCount: 0,
+          lockedClipIds: new Set<string>(),
         };
       }
 
@@ -200,17 +206,16 @@ export function BrowseClient({
         lang
       );
       const isLimited = hasSearchOrFilter && !isProUser;
-      const visibleResults = isLimited
-        ? allResults.slice(0, FREE_SEARCH_LIMIT)
-        : allResults;
+      const orderedResults =
+        shuffleSeed === 0 ? allResults : shuffleClips(allResults);
+      const lockedClipIds = isLimited
+        ? new Set(orderedResults.slice(FREE_SEARCH_LIMIT).map((clip) => clip.id))
+        : new Set<string>();
 
       return {
-        clips:
-          shuffleSeed === 0 ? visibleResults : shuffleClips(visibleResults),
+        clips: orderedResults,
         totalResultCount: allResults.length,
-        hiddenCount: isLimited
-          ? Math.max(0, allResults.length - FREE_SEARCH_LIMIT)
-          : 0,
+        lockedClipIds,
       };
     },
     [
@@ -228,15 +233,22 @@ export function BrowseClient({
       lang,
     ]
   );
+
   const filtered = browseResults.clips;
-  const hiddenCount = browseResults.hiddenCount;
+  const lockedClipIds = browseResults.lockedClipIds;
+  const lockedCount = lockedClipIds.size;
+
   const indexMap = useMemo(
     () => new Map(filtered.map((c, i) => [c.id, i])),
     [filtered]
   );
+
   const selectedIndex = selectedClipId ? (indexMap.get(selectedClipId) ?? -1) : -1;
   const selectedClip: BrowseClipRecord | null =
     selectedIndex >= 0 ? filtered[selectedIndex] : null;
+  const selectedClipLocked = selectedClip
+    ? lockedClipIds.has(selectedClip.id)
+    : false;
   const visibleResultCount =
     projectionClips && projectionStatus === "ready" && hasActiveBrowseFilters
       ? browseResults.totalResultCount
@@ -312,12 +324,12 @@ export function BrowseClient({
       {
         key: "Enter",
         action: () => setQuickViewOpen(true),
-        enabled: !!selectedClip && !quickViewOpen,
+        enabled: !!selectedClip && !selectedClipLocked && !quickViewOpen,
       },
       {
         key: " ",
         action: () => setQuickViewOpen(true),
-        enabled: !!selectedClip && !quickViewOpen,
+        enabled: !!selectedClip && !selectedClipLocked && !quickViewOpen,
       },
       // Cmd/Ctrl + Arrow: jump to top/bottom
       {
@@ -387,7 +399,16 @@ export function BrowseClient({
         enabled: !quickViewOpen,
       },
     ],
-    [quickViewOpen, selectedClip, selectedIndex, setSelectedClipId, setQuickViewOpen, stepThumbnailSize, navigateGrid]
+    [
+      quickViewOpen,
+      selectedClip,
+      selectedClipLocked,
+      selectedIndex,
+      setSelectedClipId,
+      setQuickViewOpen,
+      stepThumbnailSize,
+      navigateGrid,
+    ]
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -398,10 +419,14 @@ export function BrowseClient({
 
   const openQuickViewForClip = useCallback(
     (clipId: string) => {
+      if (lockedClipIds.has(clipId)) {
+        return;
+      }
+
       setSelectedClipId(clipId);
       setQuickViewOpen(true);
     },
-    [setSelectedClipId, setQuickViewOpen]
+    [lockedClipIds, setSelectedClipId, setQuickViewOpen]
   );
 
   if (filtered.length === 0) {
@@ -436,18 +461,18 @@ export function BrowseClient({
           </a>
         </div>
       ) : null}
-      {hiddenCount > 0 ? (
+      {lockedCount > 0 ? (
         <div className="flex items-center justify-between border-b border-border bg-surface-alt px-4 py-3">
           <p className="text-xs text-muted">
             {lang === "ko"
-              ? `${hiddenCount}개 결과가 더 있습니다`
-              : `${hiddenCount} more results available`}
+              ? `${lockedCount}개 결과는 Pro에서 열 수 있습니다`
+              : `${lockedCount} results require Pro to open`}
           </p>
           <a
             href={`/${lang}/pricing`}
             className="text-xs font-medium text-primary hover:underline"
           >
-            {lang === "ko" ? "Pro로 전체 보기" : "View all with Pro"}
+            {lang === "ko" ? "Pro로 잠금 해제" : "Unlock with Pro"}
           </a>
         </div>
       ) : null}
@@ -455,6 +480,7 @@ export function BrowseClient({
         clips={filtered}
         lang={lang}
         tagI18n={tagI18n}
+        lockedClipIds={lockedClipIds}
         onOpenQuickView={openQuickViewForClip}
       />
       {quickViewOpen && selectedClip ? (

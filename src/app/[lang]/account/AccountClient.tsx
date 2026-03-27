@@ -34,8 +34,8 @@ export function AccountClient({ lang }: AccountClientProps) {
   useEffect(() => {
     if (!user) return;
 
-    const supabase = createClient();
-    if (!supabase) {
+    const client = createClient();
+    if (!client) {
       setIdentitiesError(
         isKo
           ? "로그인 연결 기능이 아직 설정되지 않았습니다."
@@ -44,6 +44,8 @@ export function AccountClient({ lang }: AccountClientProps) {
       setIdentitiesLoading(false);
       return;
     }
+
+    const supabase = client;
 
     async function loadIdentities() {
       setIdentitiesLoading(true);

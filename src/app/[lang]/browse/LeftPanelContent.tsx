@@ -41,7 +41,7 @@ export function LeftPanelContent({
   const { initialTotalCount } = useBrowseData();
   const { updateURL } = useFilterSync();
   const contentMode = useFilterStore((s) => s.contentMode);
-  const { reshuffleClips, setFilterBarOpen, setActiveFilterTab } = useUIStore();
+  const { setFilterBarOpen, setActiveFilterTab } = useUIStore();
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
@@ -56,10 +56,12 @@ export function LeftPanelContent({
     () => new Set(clips.flatMap((c) => c.tags || [])).size,
     [clips]
   );
+
   const expandableFolderIds = useMemo(
     () => collectExpandableFolderIds(visibleCategories),
     [visibleCategories]
   );
+
   const allFoldersExpanded =
     expandableFolderIds.length > 0 &&
     expandableFolderIds.every((id) => expandedFolderIds.includes(id));
@@ -123,14 +125,6 @@ export function LeftPanelContent({
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           {dict.browse.recentlyUsed}
-        </button>
-        <button
-          type="button"
-          onClick={reshuffleClips}
-          className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover text-muted"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" /></svg>
-          {dict.browse.random}
         </button>
       </div>
 
