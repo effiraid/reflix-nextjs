@@ -133,7 +133,7 @@ describe("SubToolbar", () => {
           return 44;
         }
 
-        if (/^외 \d+건$/.test(text)) {
+        if (/^\+\d+$/.test(text)) {
           return 48;
         }
 
@@ -162,7 +162,7 @@ describe("SubToolbar", () => {
     expect(badgeTrack).toHaveClass("overflow-hidden");
     expect(within(badgeTrack).getByText("이동")).toBeInTheDocument();
     expect(within(badgeTrack).getByText("걷기")).toBeInTheDocument();
-    expect(within(badgeTrack).getByText("외 3건")).toBeInTheDocument();
+    expect(within(badgeTrack).getByText("+3")).toBeInTheDocument();
     expect(within(badgeTrack).queryByText("달리기")).not.toBeInTheDocument();
     expect(within(badgeTrack).queryByText("점프")).not.toBeInTheDocument();
     expect(within(badgeTrack).queryByText("-마법")).not.toBeInTheDocument();

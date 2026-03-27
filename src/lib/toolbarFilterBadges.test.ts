@@ -40,10 +40,10 @@ describe("toolbarFilterBadges", () => {
   });
 
   it("formats the overflow badge label in korean", () => {
-    expect(getOverflowBadgeLabel(3, "ko")).toBe("외 3건");
+    expect(getOverflowBadgeLabel(3)).toBe("+3");
   });
 
   it("formats the overflow badge label in english", () => {
-    expect(getOverflowBadgeLabel(2, "en")).toBe("+2 more");
+    expect(getOverflowBadgeLabel(2)).toBe("+2");
   });
 });

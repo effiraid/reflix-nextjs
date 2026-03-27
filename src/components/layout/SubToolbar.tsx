@@ -80,7 +80,7 @@ export function SubToolbar({
         return 0;
       }
 
-      overflowMeasureEl.textContent = getOverflowBadgeLabel(nextHiddenBadgeCount, lang);
+      overflowMeasureEl.textContent = getOverflowBadgeLabel(nextHiddenBadgeCount);
       return overflowMeasureEl.offsetWidth;
     }
 
@@ -177,7 +177,7 @@ export function SubToolbar({
                   ))}
                   {hiddenBadgeCount > 0 ? (
                     <FilterBadge
-                      label={getOverflowBadgeLabel(hiddenBadgeCount, lang)}
+                      label={getOverflowBadgeLabel(hiddenBadgeCount)}
                     />
                   ) : null}
                 </div>
@@ -197,7 +197,7 @@ export function SubToolbar({
                     />
                   ))}
                   <FilterBadge
-                    label={getOverflowBadgeLabel(filterBadges.length, lang)}
+                    label={getOverflowBadgeLabel(filterBadges.length)}
                     ref={overflowMeasureRef}
                   />
                 </div>
