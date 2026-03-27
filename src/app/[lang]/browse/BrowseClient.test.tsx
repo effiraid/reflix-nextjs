@@ -386,8 +386,10 @@ describe("BrowseClient", () => {
     expect(screen.getByTestId("locked-order")).toHaveTextContent("clip-6,clip-7");
     expect(screen.getByRole("button", { name: "Open clip-5" })).toBeEnabled();
     expect(screen.getByRole("button", { name: "Open clip-6" })).toBeDisabled();
-    expect(screen.getByText("7개 클립")).toHaveAttribute("aria-live", "polite");
-    expect(screen.getByText("2개 결과는 Pro에서 열 수 있습니다")).toBeInTheDocument();
+    const statusBar = screen.getByRole("paragraph");
+    expect(statusBar).toHaveAttribute("aria-live", "polite");
+    expect(statusBar).toHaveTextContent(/7개 클립/);
+    expect(statusBar).toHaveTextContent(/2개 결과는 Pro 전용/);
     expect(screen.getByRole("link", { name: "Pro로 잠금 해제" })).toHaveAttribute(
       "href",
       "/ko/pricing"
@@ -471,7 +473,8 @@ describe("BrowseClient", () => {
     );
 
     expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-a,clip-b");
-    expect(screen.getByText("필터 조합은 Pro 전용입니다")).toBeInTheDocument();
+    const statusBar = screen.getByRole("paragraph");
+    expect(statusBar).toHaveTextContent(/필터 조합은 Pro 전용입니다/);
   });
 
   it("keeps the initial summary page when projection is ready but no filters are active", () => {

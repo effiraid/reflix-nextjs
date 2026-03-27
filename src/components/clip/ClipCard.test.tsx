@@ -119,6 +119,7 @@ describe("ClipCard", () => {
 
     const card = screen.getByRole("button", { name: clip.name });
     const image = screen.getByAltText(clip.name);
+    const overlay = screen.getByTestId("clip-lock-overlay");
 
     fireEvent.click(card);
     fireEvent.doubleClick(card);
@@ -128,6 +129,8 @@ describe("ClipCard", () => {
     expect(card).toHaveAttribute("tabindex", "-1");
     expect(card.className).toContain("cursor-not-allowed");
     expect(image.className).toContain("blur-lg");
+    expect(overlay).toHaveClass("bg-black/10");
+    expect(overlay.firstElementChild).toHaveClass("size-8");
     expect(setSelectedClipIdMock).not.toHaveBeenCalled();
     expect(onOpenQuickView).not.toHaveBeenCalled();
   });

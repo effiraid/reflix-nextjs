@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
+import { LockIcon } from "lucide-react";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
@@ -151,6 +152,18 @@ export function ClipCard({
           onError={() => setFailedPreviewUrl(previewUrl)}
         />
       )}
+
+      {locked ? (
+        <div
+          data-testid="clip-lock-overlay"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10"
+        >
+          <div className="flex size-8 items-center justify-center rounded-full border border-white/12 bg-black/32 backdrop-blur-[2px]">
+            <LockIcon className="size-3.5 text-white/80" strokeWidth={2.1} />
+          </div>
+        </div>
+      ) : null}
 
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">

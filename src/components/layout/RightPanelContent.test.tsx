@@ -101,7 +101,14 @@ describe("RightPanelContent", () => {
 
     render(<RightPanelContent categories={categories} lang="ko" dict={dict} />);
 
-    expect(screen.getByText("로딩 중...")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "로딩 중..." })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "로딩 중..." })).toHaveClass(
+      "min-h-full"
+    );
+    expect(screen.getByTestId("inspector-loading-spinner")).toBeInTheDocument();
+    expect(screen.queryByText("로딩 중...")).not.toBeInTheDocument();
     expect(screen.queryByText(/Inspector:/)).not.toBeInTheDocument();
   });
 

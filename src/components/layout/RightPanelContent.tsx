@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Loader2 } from "lucide-react";
 import { useClipStore } from "@/stores/clipStore";
 import { RightPanelInspector } from "./RightPanelInspector";
 import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
@@ -50,7 +51,20 @@ export function RightPanelContent({
       );
     }
 
-    return <div className="p-4 text-sm text-muted">{dict.common.loading}</div>;
+    return (
+      <div
+        role="status"
+        aria-label={dict.common.loading}
+        className="flex min-h-full w-full items-center justify-center p-6 text-muted"
+      >
+        <Loader2
+          data-testid="inspector-loading-spinner"
+          aria-hidden="true"
+          className="size-5 animate-spin"
+          strokeWidth={1.9}
+        />
+      </div>
+    );
   }
 
   return (

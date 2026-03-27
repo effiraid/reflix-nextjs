@@ -439,41 +439,30 @@ export function BrowseClient({
 
   return (
     <>
-      {hasSearchOrFilter ? (
-        <div className="border-b border-border px-4 py-2">
+      {hasSearchOrFilter || lockedCount > 0 || isFilterCombinationLimited ? (
+        <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <p className="text-xs text-muted" aria-live="polite">
-            {resultCountLabel}
+            {hasSearchOrFilter ? resultCountLabel : null}
+            {hasSearchOrFilter && lockedCount > 0 ? " · " : null}
+            {lockedCount > 0
+              ? lang === "ko"
+                ? `${lockedCount}개 결과는 Pro 전용`
+                : `${lockedCount} results require Pro`
+              : null}
+            {isFilterCombinationLimited
+              ? lang === "ko"
+                ? "필터 조합은 Pro 전용입니다"
+                : "Filter combinations require Pro"
+              : null}
           </p>
-        </div>
-      ) : null}
-      {isFilterCombinationLimited ? (
-        <div className="border-b border-border bg-surface-alt px-4 py-2">
-          <p className="text-xs text-muted">
-            {lang === "ko"
-              ? "필터 조합은 Pro 전용입니다"
-              : "Filter combinations require Pro"}
-          </p>
-          <a
-            href={`/${lang}/pricing`}
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            {lang === "ko" ? "Pro 구독하기" : "Get Pro"}
-          </a>
-        </div>
-      ) : null}
-      {lockedCount > 0 ? (
-        <div className="flex items-center justify-between border-b border-border bg-surface-alt px-4 py-3">
-          <p className="text-xs text-muted">
-            {lang === "ko"
-              ? `${lockedCount}개 결과는 Pro에서 열 수 있습니다`
-              : `${lockedCount} results require Pro to open`}
-          </p>
-          <a
-            href={`/${lang}/pricing`}
-            className="text-xs font-medium text-primary hover:underline"
-          >
-            {lang === "ko" ? "Pro로 잠금 해제" : "Unlock with Pro"}
-          </a>
+          {(lockedCount > 0 || isFilterCombinationLimited) ? (
+            <a
+              href={`/${lang}/pricing`}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              {lang === "ko" ? "Pro로 잠금 해제" : "Unlock with Pro"}
+            </a>
+          ) : null}
         </div>
       ) : null}
       <MasonryGrid

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { useFilterStore } from "@/stores/filterStore";
 import type { ContentMode, SortBy } from "@/lib/types";
 
@@ -10,11 +10,10 @@ import type { ContentMode, SortBy } from "@/lib/types";
  *
  * URL is the single source of truth:
  * - On mount and browser back/forward: URL → Zustand
- * - On filter change: update URL via router.replace, which triggers the URL → Zustand sync
+ * - On filter change: Zustand updated optimistically, URL synced via history.replaceState
  */
 export function useFilterSync() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const pathname = usePathname();
 
   // URL → Zustand (on mount and on URL change including back/forward)
@@ -60,7 +59,10 @@ export function useFilterSync() {
       sortBy: SortBy;
       searchQuery: string;
     }>) => {
-      const state = { ...useFilterStore.getState(), ...updates };
+      // Optimistically update Zustand immediately (no server round-trip)
+      useFilterStore.setState(updates);
+
+      const state = useFilterStore.getState();
       const params = new URLSearchParams();
 
       if (state.category) params.set("category", state.category);
@@ -75,7 +77,7 @@ export function useFilterSync() {
 
       const qs = params.toString();
       const newPath = qs ? `${pathname}?${qs}` : pathname;
-      router.replace(newPath, { scroll: false });
+      window.history.replaceState(null, "", newPath);
     },
   };
 }
