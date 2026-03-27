@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -24,6 +25,8 @@ import {
   orderReviewSuggestions,
   renderReviewReport,
 } from "./release-review.mjs";
+import { runExportPipeline } from "./export-pipeline.mjs";
+import { runAiTagBackfill } from "./ai-tag-backfill.mjs";
 
 const DEFAULT_PROJECT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -490,15 +493,13 @@ function buildReviewBackupDir({ projectRoot, timestamp }) {
   );
 }
 
+const VALID_COMMANDS = new Set([
+  "scan", "review", "approve", "mark-published", "mark-failed", "go", "status",
+]);
+
 export function parseReleaseApprovalCliArgs(argv = process.argv.slice(2)) {
   const [command = "scan"] = argv;
-  if (
-    command !== "scan" &&
-    command !== "review" &&
-    command !== "approve" &&
-    command !== "mark-published" &&
-    command !== "mark-failed"
-  ) {
+  if (!VALID_COMMANDS.has(command)) {
     throw new Error(`Unsupported release approval command: ${command}`);
   }
 
@@ -509,6 +510,8 @@ export function parseReleaseApprovalCliArgs(argv = process.argv.slice(2)) {
     proposalBatchPath: getStringFlagValue(argv, "--proposal-batch"),
     includeAllEligible: argv.includes("--all"),
     timestamp: getStringFlagValue(argv, "--timestamp") || new Date().toISOString(),
+    review: argv.includes("--review"),
+    r2: argv.includes("--r2"),
   };
 }
 
@@ -909,4 +912,268 @@ export async function runReleaseMarkFailed(parsed) {
     removeTags: ["reflix:published", REVIEW_REQUESTED_TAG],
     persistPublishedState: false,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Smoke check — verify export artifacts match the batch
+// ---------------------------------------------------------------------------
+
+export function smokeCheckExportArtifacts({ projectRoot, batchIds }) {
+  const errors = [];
+  const publicRoot = path.join(projectRoot, "public");
+
+  for (const id of batchIds) {
+    const clipJson = path.join(publicRoot, "data", "clips", `${id}.json`);
+    if (!fs.existsSync(clipJson)) {
+      errors.push(`clip JSON 누락: ${id}`);
+    }
+    for (const [dir, ext] of [["videos", "mp4"], ["previews", "mp4"], ["thumbnails", "webp"]]) {
+      const filePath = path.join(publicRoot, dir, `${id}.${ext}`);
+      if (!fs.existsSync(filePath)) {
+        errors.push(`${dir} 누락: ${id}.${ext}`);
+      }
+    }
+  }
+
+  const summaryPath = path.join(publicRoot, "data", "browse", "summary.json");
+  const projectionPath = path.join(publicRoot, "data", "browse", "projection.json");
+  if (!fs.existsSync(summaryPath)) errors.push("browse summary.json 누락");
+  if (!fs.existsSync(projectionPath)) errors.push("browse projection.json 누락");
+
+  const indexPath = path.join(projectRoot, "src", "data", "index.json");
+  if (fs.existsSync(indexPath)) {
+    const index = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+    const indexClipCount = Array.isArray(index?.clips) ? index.clips.length : 0;
+    if (indexClipCount < batchIds.length) {
+      errors.push(`index.json clip 수 (${indexClipCount}) < batch 크기 (${batchIds.length})`);
+    }
+  } else {
+    errors.push("index.json 누락");
+  }
+
+  return { passed: errors.length === 0, errors };
+}
+
+// ---------------------------------------------------------------------------
+// release:go — one-command publish pipeline
+// ---------------------------------------------------------------------------
+
+function waitForUserInput(message) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(message, () => {
+      rl.close();
+      resolve();
+    });
+  });
+}
+
+export async function runReleaseGo(parsed, {
+  runScan = runReleaseScan,
+  runReview = runReleaseReview,
+  runApprove = runReleaseApprove,
+  runExport = runExportPipeline,
+  runBackfill = runAiTagBackfill,
+  runMarkPublished = runReleaseMarkPublished,
+  smokeCheck = smokeCheckExportArtifacts,
+  waitForInput = waitForUserInput,
+  readLibrary = readEagleLibrary,
+} = {}) {
+  const projectRoot = parsed?.projectRoot || DEFAULT_PROJECT_ROOT;
+  const libraryPath = parsed?.libraryPath || resolveEagleLibraryPath();
+  const timestamp = parsed?.timestamp || new Date().toISOString();
+  const useReview = parsed?.review ?? false;
+  const useR2 = parsed?.r2 ?? false;
+
+  const baseParsed = { libraryPath, projectRoot, timestamp };
+
+  // Step 1: Scan
+  console.log("\n📋 Step 1/6: 후보 스캔...");
+  const scanResult = await runScan({ ...baseParsed, command: "scan" });
+  console.log(`   적격: ${scanResult.summary.eligibleCount}개, 선택: ${scanResult.summary.selectedCount}개, 보류: ${scanResult.summary.heldCount}개`);
+
+  if (scanResult.selectedIds.length === 0) {
+    console.log("\n✅ 새로 게시할 아이템이 없습니다.");
+    return { command: "go", skipped: true, reason: "no-candidates" };
+  }
+
+  // Step 2: Review (optional) + Approve or Auto-approve
+  let batchIds;
+  if (useReview) {
+    console.log("\n🔍 Step 2/6: 검토 요청...");
+    await runReview({ ...baseParsed, command: "review" });
+
+    await waitForInput(
+      "\n🦅 Eagle에서 검토해주세요.\n" +
+      "   - reflix:approved → 이번 배치에 포함\n" +
+      "   - reflix:hold → 이번 배치에서 제외\n\n" +
+      "   검토 완료 후 Enter를 누르세요..."
+    );
+
+    console.log("\n✅ Step 2/6: 승인 처리...");
+    const approveResult = await runApprove({ ...baseParsed, command: "approve" });
+    batchIds = approveResult.approvedIds;
+  } else {
+    console.log("\n✅ Step 2/6: 자동 승인...");
+    batchIds = scanResult.selectedIds;
+    const releaseBatchPath = path.join(projectRoot, "config", "release-batch.json");
+    const batchName = `batch-${timestamp.slice(0, 10).replace(/:/g, "-")}`;
+    writeAtomicJson(releaseBatchPath, { name: batchName, ids: batchIds });
+    console.log(`   배치 저장: ${batchIds.length}개 → config/release-batch.json`);
+  }
+
+  if (batchIds.length === 0) {
+    console.log("\n✅ 승인된 아이템이 없습니다.");
+    return { command: "go", skipped: true, reason: "no-approved" };
+  }
+
+  // Step 3: AI tag backfill (if needed)
+  console.log("\n🤖 Step 3/6: AI 태그 확인...");
+  const items = readLibrary(libraryPath, { ids: batchIds });
+  const itemsMissingAiTags = items.filter(
+    (item) => !Object.prototype.hasOwnProperty.call(item, "aiTags") || item.aiTags == null
+  );
+
+  let backfillResult = null;
+  if (itemsMissingAiTags.length > 0) {
+    console.log(`   aiTags 누락/null ${itemsMissingAiTags.length}개 → backfill 실행`);
+    backfillResult = await runBackfill(items, {
+      projectRoot,
+      ids: batchIds,
+    });
+    console.log(`   완료: 성공 ${backfillResult.successCount}, 실패 ${backfillResult.failureCount}`);
+    if (backfillResult.failureCount > 0) {
+      console.log("\n❌ AI 태그 backfill 실패. 실패한 아이템을 확인 후 다시 실행하세요.");
+      return {
+        command: "go",
+        skipped: false,
+        error: "backfill-failed",
+        backfillResult,
+      };
+    }
+  } else {
+    console.log("   모든 아이템에 aiTags 존재");
+  }
+
+  // Step 4: Export
+  console.log("\n📦 Step 4/6: Export...");
+  const exportFlags = {
+    r2: useR2,
+    prune: true,
+    mediaConcurrency: 4,
+    uploadConcurrency: 6,
+  };
+  const exportResult = await runExport(exportFlags, {
+    projectRoot,
+    eagleLibraryPath: libraryPath,
+  });
+  console.log(`   run: ${exportResult.runId}, 실패: ${exportResult.failed}개`);
+
+  if (exportResult.failed > 0) {
+    console.log("\n❌ Export 실패. release:go를 다시 실행하면 export부터 재시작됩니다.");
+    return {
+      command: "go",
+      skipped: false,
+      error: "export-failed",
+      exportResult,
+    };
+  }
+
+  // Step 5: Smoke check
+  console.log("\n🔎 Step 5/6: Smoke check...");
+  const check = smokeCheck({ projectRoot, batchIds });
+  if (!check.passed) {
+    console.log("   ❌ 문제 발견:");
+    for (const err of check.errors) {
+      console.log(`      - ${err}`);
+    }
+    return {
+      command: "go",
+      skipped: false,
+      error: "smoke-check-failed",
+      smokeCheckErrors: check.errors,
+    };
+  }
+  console.log("   ✅ 모든 파일 확인 완료");
+
+  // Step 6: Mark published
+  console.log("\n🏷️  Step 6/6: 게시 완료 기록...");
+  const publishResult = await runMarkPublished({ ...baseParsed, command: "mark-published" });
+  console.log(`   ${publishResult.updatedIds.length}개 게시 완료`);
+
+  console.log("\n🎉 완료!");
+  return {
+    command: "go",
+    skipped: false,
+    batchIds,
+    exportResult,
+    publishResult,
+    backfillResult,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// release:status — pipeline dashboard
+// ---------------------------------------------------------------------------
+
+export async function runReleaseStatus(parsed, {
+  readLibrary = readEagleLibrary,
+} = {}) {
+  const projectRoot = parsed?.projectRoot || DEFAULT_PROJECT_ROOT;
+  const libraryPath = parsed?.libraryPath || resolveEagleLibraryPath();
+
+  // Active batch
+  const releaseBatchPath = resolveReleaseBatchPath({ projectRoot });
+  let releaseBatch = null;
+  try {
+    releaseBatch = loadReleaseBatch(releaseBatchPath);
+  } catch {
+    // no active batch
+  }
+
+  // Published state
+  const publishedState = loadPublishedState({ projectRoot });
+  const publishedCount = Object.keys(publishedState.entries).length;
+
+  // Eagle library scan
+  let eligibleCount = 0;
+  let missingAiTagsCount = 0;
+  try {
+    const items = readLibrary(libraryPath);
+    for (const item of items) {
+      if (isEligiblePhase1Item(item)) {
+        eligibleCount += 1;
+        if (!Object.prototype.hasOwnProperty.call(item, "aiTags")) {
+          missingAiTagsCount += 1;
+        }
+      }
+    }
+  } catch {
+    // library unavailable
+  }
+
+  const batchSize = releaseBatch?.ids?.length ?? 0;
+  const batchPublished = releaseBatch
+    ? releaseBatch.ids.filter((id) => publishedState.entries[id]).length
+    : 0;
+
+  return {
+    command: "status",
+    batch: releaseBatch
+      ? {
+          name: releaseBatch.name,
+          size: batchSize,
+          published: batchPublished,
+        }
+      : null,
+    published: {
+      total: publishedCount,
+      lastUpdated: publishedState.updatedAt || null,
+    },
+    library: {
+      eligible: eligibleCount,
+      missingAiTags: missingAiTagsCount,
+      availableForNextBatch: eligibleCount - publishedCount,
+    },
+  };
 }

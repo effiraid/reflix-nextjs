@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+export const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview";
 const DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 function uniqStrings(values) {

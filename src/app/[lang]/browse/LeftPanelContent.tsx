@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
@@ -38,14 +38,17 @@ export function LeftPanelContent({
   dict,
 }: LeftPanelContentProps) {
   const clips = useClipData();
-  const { initialTotalCount } = useBrowseData();
+  const { totalClipCount } = useBrowseData();
   const { updateURL } = useFilterSync();
   const contentMode = useFilterStore((s) => s.contentMode);
+  const selectedFolders = useFilterStore((s) => s.selectedFolders);
   const { setFilterBarOpen, setActiveFilterTab, setViewMode } = useUIStore();
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
   );
+  const [pendingScrollFolderId, setPendingScrollFolderId] = useState<string | null>(null);
+  const treeContainerRef = useRef<HTMLDivElement | null>(null);
 
   const visibleCategories = useMemo(
     () => filterCategoriesByMode(categories, contentMode),
@@ -87,13 +90,64 @@ export function LeftPanelContent({
     setExpandedFolderIds(expanded ? expandableFolderIds : []);
   }
 
+  useEffect(() => {
+    const targetFolderId = selectedFolders.at(-1);
+
+    if (!targetFolderId) {
+      setPendingScrollFolderId(null);
+      return;
+    }
+
+    setFoldersExpanded(true);
+
+    const ancestorIds = collectAncestorFolderIds(targetFolderId, visibleCategories);
+    if (ancestorIds.length > 0) {
+      setExpandedFolderIds((current) => {
+        const next = Array.from(new Set([...current, ...ancestorIds]));
+        return next.length === current.length &&
+          next.every((id, index) => id === current[index])
+          ? current
+          : next;
+      });
+    }
+
+    setPendingScrollFolderId(targetFolderId);
+  }, [selectedFolders, visibleCategories]);
+
+  useEffect(() => {
+    if (!pendingScrollFolderId || !foldersExpanded) {
+      return;
+    }
+
+    const targetElement = Array.from(
+      treeContainerRef.current?.querySelectorAll<HTMLElement>("[data-folder-id]") ?? []
+    ).find((element) => element.dataset.folderId === pendingScrollFolderId);
+
+    if (!targetElement) {
+      return;
+    }
+
+    targetElement.scrollIntoView({ block: "nearest" });
+    setPendingScrollFolderId((current) =>
+      current === pendingScrollFolderId ? null : current
+    );
+  }, [expandedFolderIds, foldersExpanded, pendingScrollFolderId]);
+
   return (
     <div className="p-3 space-y-4 text-sm">
       {/* Quick filters */}
       <div className="space-y-0.5">
         <button
           onClick={() => {
-            updateURL({ category: null, selectedTags: [], selectedFolders: [], starFilter: null, sortBy: "newest" });
+            updateURL({
+              category: null,
+              selectedTags: [],
+              excludedTags: [],
+              selectedFolders: [],
+              excludedFolders: [],
+              starFilter: null,
+              sortBy: "newest",
+            });
             setViewMode("feed");
           }}
           className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover"
@@ -102,7 +156,7 @@ export function LeftPanelContent({
             <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
             {dict.browse.all}
           </span>
-          <span className="text-muted text-xs">{initialTotalCount.toLocaleString()}</span>
+          <span className="text-muted text-xs">{totalClipCount.toLocaleString()}</span>
         </button>
         <button
           type="button"
@@ -135,7 +189,7 @@ export function LeftPanelContent({
       <ContentModeToggle
         contentMode={contentMode}
         onChange={(mode) => {
-          updateURL({ contentMode: mode, selectedFolders: [] });
+          updateURL({ contentMode: mode, selectedFolders: [], excludedFolders: [] });
         }}
         dict={dict.browse}
       />
@@ -173,7 +227,7 @@ export function LeftPanelContent({
           </button>
         </div>
         {foldersExpanded && (
-          <div className="pt-1">
+          <div ref={treeContainerRef} className="pt-1">
             <FolderTree
               categories={visibleCategories}
               folderCounts={folderCounts}
@@ -229,6 +283,36 @@ function getDefaultExpandedFolderIds(categories: CategoryTree): string[] {
   return Object.entries(categories)
     .filter(([, node]) => node.children && Object.keys(node.children).length > 0)
     .map(([id]) => id);
+}
+
+function collectAncestorFolderIds(
+  targetId: string,
+  tree: CategoryTree
+): string[] {
+  const path = findFolderPath(targetId, tree);
+  return path ? path.slice(0, -1) : [];
+}
+
+function findFolderPath(
+  targetId: string,
+  tree: CategoryTree
+): string[] | null {
+  for (const [id, node] of Object.entries(tree)) {
+    if (id === targetId) {
+      return [id];
+    }
+
+    if (!node.children) {
+      continue;
+    }
+
+    const childPath = findFolderPath(targetId, node.children);
+    if (childPath) {
+      return [id, ...childPath];
+    }
+  }
+
+  return null;
 }
 
 const CONTENT_MODES: { value: ContentMode | null; dictKey: "modeAll" | "modeDirection" | "modeGame" }[] = [

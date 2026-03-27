@@ -1,5 +1,5 @@
-import { render, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, waitFor, act } from "@testing-library/react";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
 const {
   routerReplaceMock,
@@ -33,6 +33,7 @@ import AuthCallbackPage from "./page";
 
 describe("AuthCallbackPage", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     routerReplaceMock.mockReset();
     setSessionMock.mockReset();
     getUserMock.mockReset();
@@ -52,6 +53,10 @@ describe("AuthCallbackPage", () => {
     window.close = vi.fn();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("redirects linked Google flows back to account without closing the tab", async () => {
     window.history.replaceState(
       null,
@@ -61,9 +66,10 @@ describe("AuthCallbackPage", () => {
 
     render(<AuthCallbackPage />);
 
-    await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linked=google");
-    });
+    // Wait for async auth to complete, then advance past minDelay
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linked=google");
 
     expect(localStorage.getItem("reflix-active-auth-tab")).toContain(
       "\"tabId\":\"tab-fresh\""
@@ -78,9 +84,10 @@ describe("AuthCallbackPage", () => {
 
     render(<AuthCallbackPage />);
 
-    await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/ko/browse");
-    });
+    // Wait for async auth to complete, then advance past minDelay
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/ko/browse");
   });
 
   it("routes failed link callbacks back to account with an inline error flag", async () => {
@@ -92,8 +99,9 @@ describe("AuthCallbackPage", () => {
 
     render(<AuthCallbackPage />);
 
-    await waitFor(() => {
-      expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linkError=google");
-    });
+    // Wait for async auth to complete, then advance past minDelay
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+
+    expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linkError=google");
   });
 });

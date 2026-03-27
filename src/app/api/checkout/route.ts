@@ -50,7 +50,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { lang = "ko" } = await request.json();
+  const { lang = "ko", interval = "monthly" } = await request.json();
+
+  if (interval !== "monthly" && interval !== "yearly") {
+    return NextResponse.json({ error: "Invalid interval" }, { status: 400 });
+  }
+
+  const priceId =
+    interval === "yearly"
+      ? process.env.STRIPE_PRICE_YEARLY
+      : process.env.STRIPE_PRICE_MONTHLY;
+
+  if (!priceId) {
+    return NextResponse.json(
+      { error: `Price not configured for ${interval} interval` },
+      { status: 500 }
+    );
+  }
 
   // Check for existing active subscription — prevent duplicate checkouts
   const { data: existingSub } = await getSupabaseAdmin()
@@ -116,7 +132,7 @@ export async function POST(request: NextRequest) {
     mode: "subscription",
     line_items: [
       {
-        price: process.env.STRIPE_PRICE_MONTHLY!,
+        price: priceId,
         quantity: 1,
       },
     ],

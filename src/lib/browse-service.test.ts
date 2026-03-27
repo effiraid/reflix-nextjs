@@ -55,6 +55,7 @@ describe("browse-service", () => {
     expect(filters).toEqual({
       category: null,
       selectedFolders: ["folder-1"],
+      excludedFolders: [],
       selectedTags: ["마법"],
       excludedTags: [],
       starFilter: 3,
@@ -71,6 +72,7 @@ describe("browse-service", () => {
       filters: {
         category: null,
         selectedFolders: [],
+        excludedFolders: [],
         selectedTags: ["폭발"],
         excludedTags: [],
         starFilter: null,
@@ -84,5 +86,13 @@ describe("browse-service", () => {
     expect(result.totalCount).toBe(1);
     expect(result.items.map((item) => item.id)).toEqual(["A"]);
     expect(result.nextOffset).toBeNull();
+  });
+
+  it("parses excluded folders from browse deep-link query params", () => {
+    const filters = parseBrowsePageQuery(
+      new URLSearchParams("folder=folder-1&excludeFolder=folder-2")
+    );
+
+    expect(filters.excludedFolders).toEqual(["folder-2"]);
   });
 });

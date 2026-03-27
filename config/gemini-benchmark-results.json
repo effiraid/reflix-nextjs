@@ -1,0 +1,1214 @@
+{
+  "timestamp": "2026-03-27T07:34:54.517Z",
+  "sampleIds": [
+    "L3TR52T310BLE",
+    "L3TR52T22TPVR",
+    "L3TR52T2K3FY9"
+  ],
+  "models": [
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite-preview"
+  ],
+  "results": [
+    {
+      "clipId": "L3TR52T310BLE",
+      "model": "gemini-2.5-flash-lite",
+      "elapsed": 7638,
+      "error": null,
+      "score": {
+        "total": 95,
+        "breakdown": {
+          "tagCount": 23,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 25,
+          "descLenKo": 106,
+          "descLenEn": 225
+        }
+      },
+      "cost": {
+        "inTokens": 12999,
+        "outTokens": 341,
+        "cost": 0.0014363000000000002
+      },
+      "tokenUsage": {
+        "promptTokenCount": 12999,
+        "candidatesTokenCount": 341,
+        "totalTokenCount": 13340,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 314
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11309
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 1376
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "몸싸움",
+          "격투",
+          "전투",
+          "교전",
+          "제압",
+          "내던지기",
+          "구타"
+        ],
+        "emotion": [
+          "분노",
+          "고통",
+          "결의",
+          "공포",
+          "승리감"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄샷",
+          "로우앵글",
+          "오버더숄더샷"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "주인공",
+          "적대자",
+          "들러리"
+        ],
+        "effects": [
+          "먼지",
+          "피",
+          "카메라 흔들림",
+          "잔상"
+        ],
+        "description": {
+          "ko": "이 장면은 격렬한 몸싸움과 전투를 보여줍니다. 캐릭터들은 서로를 제압하고 공격하며, 격렬한 감정과 고통이 화면을 지배합니다. 역동적인 카메라 워크와 시각 효과는 전투의 긴장감을 극대화합니다.",
+          "en": "This scene depicts a fierce physical fight and combat. Characters grapple and attack each other, with intense emotions and pain dominating the screen. Dynamic camera work and visual effects maximize the tension of the battle."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T310BLE",
+      "model": "gemini-2.5-flash",
+      "elapsed": 16244,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 35,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 180,
+          "descLenEn": 422
+        }
+      },
+      "cost": {
+        "inTokens": 12999,
+        "outTokens": 404,
+        "cost": 0.0049096999999999995
+      },
+      "tokenUsage": {
+        "promptTokenCount": 12999,
+        "candidatesTokenCount": 404,
+        "totalTokenCount": 15408,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 314
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11309
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 1376
+          }
+        ],
+        "thoughtsTokenCount": 2005
+      },
+      "parsed": {
+        "actionType": [
+          "싸움",
+          "격투",
+          "공격",
+          "방어",
+          "주먹",
+          "발차기",
+          "던지기",
+          "피격",
+          "넘어짐",
+          "부상",
+          "승리"
+        ],
+        "emotion": [
+          "분노",
+          "고통",
+          "결의",
+          "지침",
+          "만족",
+          "걱정",
+          "당황",
+          "미소"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "풀샷",
+          "탑 뷰",
+          "블러 처리",
+          "로우 앵글"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "전사",
+          "싸움꾼",
+          "청소년"
+        ],
+        "effects": [
+          "먼지 파티클",
+          "그림자",
+          "피 흘림",
+          "땀",
+          "카메라 흔들림",
+          "충격 효과",
+          "깨진 고글"
+        ],
+        "description": {
+          "ko": "이 애니메이션 클립은 여러 캐릭터들이 참여하는 격렬한 패싸움 장면을 보여줍니다. 주인공 Vi와 그녀의 동료들이 여러 상대방과 육탄전을 벌이며, 주먹, 발차기, 던지기 등 다양한 격투 기술을 사용합니다. 전투는 빠르고 역동적인 카메라워크와 함께 강렬한 충격 효과, 먼지 파티클, 피 흘림 등의 시각 효과로 현장감을 더합니다.",
+          "en": "This animation clip depicts an intense brawl involving multiple characters. The protagonist, Vi, and her companions engage in hand-to-hand combat against several opponents, utilizing various fighting techniques such as punches, kicks, and throws. The battle is rendered with fast and dynamic camera work, enhanced by visual effects like strong impact effects, dust particles, and blood, adding to the realism of the scene."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T310BLE",
+      "model": "gemini-2.5-pro",
+      "elapsed": 20526,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 27,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 152,
+          "descLenEn": 326
+        }
+      },
+      "cost": {
+        "inTokens": 12999,
+        "outTokens": 364,
+        "cost": 0.01988875
+      },
+      "tokenUsage": {
+        "promptTokenCount": 12999,
+        "candidatesTokenCount": 364,
+        "totalTokenCount": 14447,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 314
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 11309
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 1376
+          }
+        ],
+        "thoughtsTokenCount": 1084
+      },
+      "parsed": {
+        "actionType": [
+          "난투",
+          "패싸움",
+          "맨몸 격투",
+          "타격",
+          "발차기",
+          "던지기",
+          "제압"
+        ],
+        "emotion": [
+          "분노",
+          "결의",
+          "고통",
+          "긴박함",
+          "처절함"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄샷",
+          "로우앵글",
+          "하이앵글",
+          "역동적인 카메라",
+          "핸드헬드"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "청소년",
+          "싸움꾼",
+          "갱단"
+        ],
+        "effects": [
+          "카메라 흔들림",
+          "모션 블러",
+          "먼지 파티클",
+          "역광",
+          "극적인 조명",
+          "임팩트 프레임"
+        ],
+        "description": {
+          "ko": "여러 인물들이 뒤엉켜 격렬한 난투를 벌인다. 카메라는 빠른 속도로 컷을 전환하며 주먹과 발길질, 던지기 등 맨몸 격투의 타격감을 생생하게 전달한다. 로우앵글과 역동적인 카메라 워크, 먼지 파티클과 카메라 흔들림 효과가 사용되어 전투의 혼란스럽고 긴박한 분위기를 극대화한다.",
+          "en": "Multiple characters engage in a chaotic and intense brawl. The scene uses rapid cuts to vividly convey the impact of punches, kicks, and throws in the hand-to-hand combat. Low angles, dynamic camera work, and effects like dust particles and camera shake are utilized to maximize the chaotic and urgent atmosphere of the fight."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T310BLE",
+      "model": "gemini-3-flash-preview",
+      "elapsed": 8039,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 22,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 135,
+          "descLenEn": 279
+        }
+      },
+      "cost": {
+        "inTokens": 4131,
+        "outTokens": 313,
+        "cost": 0.0030045000000000002
+      },
+      "tokenUsage": {
+        "promptTokenCount": 4131,
+        "candidatesTokenCount": 313,
+        "totalTokenCount": 5038,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 314
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 3817
+          }
+        ],
+        "thoughtsTokenCount": 594
+      },
+      "parsed": {
+        "actionType": [
+          "격투",
+          "몸싸움",
+          "근접전",
+          "타격",
+          "그래플링",
+          "환경물 활용"
+        ],
+        "emotion": [
+          "공격적인",
+          "결연한",
+          "긴장감 넘치는",
+          "고통스러운"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "다이나믹 카메라",
+          "로우 앵글",
+          "쉐이키 캠"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "청소년",
+          "부랑자",
+          "전사"
+        ],
+        "effects": [
+          "먼지 파티클",
+          "화면 흔들림",
+          "모션 블러",
+          "강렬한 조명 대비"
+        ],
+        "description": {
+          "ko": "애니메이션 '아케인'의 한 장면으로, 거친 거리에서의 난투극을 역동적인 카메라 워킹과 타격감 넘치는 연출로 그려냈습니다. 캐릭터들의 절박한 움직임과 주변 지형지물을 활용한 전투 방식이 돋보이며, 노을 진 배경과 먼지 효과가 긴박함을 더합니다.",
+          "en": "A scene from the animation 'Arcane' depicting a gritty street brawl with dynamic camera work and impactful choreography. It highlights the characters' desperate movements and environmental combat tactics, enhanced by the sunset backdrop and dust effects that amplify the tension."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T310BLE",
+      "model": "gemini-3.1-flash-lite-preview",
+      "elapsed": 5328,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 24,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 127,
+          "descLenEn": 319
+        }
+      },
+      "cost": {
+        "inTokens": 4131,
+        "outTokens": 319,
+        "cost": 0.00151125
+      },
+      "tokenUsage": {
+        "promptTokenCount": 4131,
+        "candidatesTokenCount": 319,
+        "totalTokenCount": 4450,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 314
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 3817
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "격투",
+          "몸싸움",
+          "타격",
+          "회피",
+          "투척",
+          "제압"
+        ],
+        "emotion": [
+          "긴장감",
+          "치열함",
+          "결의",
+          "고통"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "로우 앵글",
+          "핸드헬드 카메라",
+          "클로즈업",
+          "동적 구도"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "전투원",
+          "주인공",
+          "적대자"
+        ],
+        "effects": [
+          "카메라 흔들림",
+          "파티클",
+          "먼지 효과",
+          "잔상",
+          "블러 효과",
+          "조명 대비"
+        ],
+        "description": {
+          "ko": "애니메이션 '아케인'의 격렬한 전투 장면으로, 거친 핸드헬드 기법과 빠른 카메라 움직임이 타격감을 극대화합니다. 어두운 배경에 대비되는 따뜻한 색감의 조명과 자욱한 먼지 파티클이 치열한 근접 격투의 현장감을 생생하게 전달합니다.",
+          "en": "This intense fight sequence from 'Arcane' uses rough handheld-style cinematography and rapid camera movements to maximize the impact of each strike. The contrast between the dim background and warm-toned lighting, along with swirling dust particles, vividly captures the visceral intensity of the close-quarters combat."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T22TPVR",
+      "model": "gemini-2.5-flash-lite",
+      "elapsed": 4218,
+      "error": null,
+      "score": {
+        "total": 95,
+        "breakdown": {
+          "tagCount": 13,
+          "richness": 35,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 123,
+          "descLenEn": 277
+        }
+      },
+      "cost": {
+        "inTokens": 2988,
+        "outTokens": 304,
+        "cost": 0.0004204000000000001
+      },
+      "tokenUsage": {
+        "promptTokenCount": 2988,
+        "candidatesTokenCount": 304,
+        "totalTokenCount": 3292,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 333
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 2367
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 288
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "일어나기",
+          "움직임"
+        ],
+        "emotion": [
+          "고통",
+          "힘듦",
+          "괴로움",
+          "고뇌"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄샷",
+          "전신샷"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "인간형"
+        ],
+        "effects": [
+          "어두운 조명",
+          "차가운 색감",
+          "극적인 조명"
+        ],
+        "description": {
+          "ko": "캐릭터가 고통스러운 듯 힘겹게 몸을 일으킨다. 얼굴의 주름과 눈빛으로 그의 괴로움이 강조되며, 주변의 어두운 조명과 차가운 색감이 분위기를 고조시킨다. 전반적인 연출은 캐릭터의 고통스러운 심리 상태를 효과적으로 드러낸다.",
+          "en": "The character struggles to sit up, appearing to be in pain. The wrinkles on his face and his gaze emphasize his distress, while the dark lighting and cool color palette of the surroundings intensify the mood. The overall direction effectively conveys the character's suffering."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T22TPVR",
+      "model": "gemini-2.5-flash",
+      "elapsed": 13457,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 23,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 134,
+          "descLenEn": 318
+        }
+      },
+      "cost": {
+        "inTokens": 2988,
+        "outTokens": 398,
+        "cost": 0.0018914000000000001
+      },
+      "tokenUsage": {
+        "promptTokenCount": 2988,
+        "candidatesTokenCount": 398,
+        "totalTokenCount": 4793,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 333
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 2367
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 288
+          }
+        ],
+        "thoughtsTokenCount": 1407
+      },
+      "parsed": {
+        "actionType": [
+          "일어나기",
+          "고군분투",
+          "비틀거리기",
+          "자세 바로잡기",
+          "움직임"
+        ],
+        "emotion": [
+          "고통",
+          "괴로움",
+          "지침",
+          "힘겨움",
+          "연약함"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "패닝",
+          "로우 앵글"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "성인 남성",
+          "부상자",
+          "마법사"
+        ],
+        "effects": [
+          "어두운 조명",
+          "녹색 조명",
+          "그림자",
+          "혈흔",
+          "비정상적인 눈",
+          "느린 움직임"
+        ],
+        "description": {
+          "ko": "부상을 입은 듯한 한 남성이 고통스러운 표정으로 의자에서 힘겹게 일어납니다. 그는 온몸이 지쳐 비틀거리면서도 피로 얼룩진 테이블 쪽으로 몸을 이끌고 서서히 자세를 바로잡습니다. 어둡고 음침한 녹색 조명은 그의 괴로운 상황을 더욱 강조합니다.",
+          "en": "An injured man with a pained expression struggles to rise from a chair, his movements slow and labored. Exhausted and faltering, he slowly straightens his posture as he moves towards a blood-stained table. The dim, eerie green lighting accentuates his distressing condition, emphasizing his struggle and vulnerability."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T22TPVR",
+      "model": "gemini-2.5-pro",
+      "elapsed": 23787,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 20,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 157,
+          "descLenEn": 306
+        }
+      },
+      "cost": {
+        "inTokens": 2988,
+        "outTokens": 325,
+        "cost": 0.006985
+      },
+      "tokenUsage": {
+        "promptTokenCount": 2988,
+        "candidatesTokenCount": 325,
+        "totalTokenCount": 5149,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 333
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 2367
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 288
+          }
+        ],
+        "thoughtsTokenCount": 1836
+      },
+      "parsed": {
+        "actionType": [
+          "일어서기",
+          "비틀거리기",
+          "다가가기",
+          "느린 움직임",
+          "휘청거리기"
+        ],
+        "emotion": [
+          "고통",
+          "지침",
+          "분노",
+          "결의",
+          "괴로움"
+        ],
+        "composition": [
+          "익스트림 클로즈업",
+          "로우앵글",
+          "미디엄 샷",
+          "어두운 조명"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "악당",
+          "인간",
+          "부상자"
+        ],
+        "effects": [
+          "발광",
+          "모션 블러",
+          "그림자"
+        ],
+        "description": {
+          "ko": "어두운 녹색 조명 아래, 한 남자가 극심한 고통과 피로를 느끼며 힘겹게 의자에서 일어선다. 그는 비틀거리며 탁자를 향해 다가가고, 그의 한쪽 눈은 기이하게 빛나고 있어 그의 불안정한 상태를 강조한다. 이 장면은 로우앵글과 클로즈업을 통해 캐릭터의 고통과 의지를 효과적으로 전달한다.",
+          "en": "Under dim green light, a man struggles to rise from a stool, clearly in immense pain and exhaustion. He staggers towards a table, one of his eyes glowing eerily, which emphasizes his unstable condition. The scene effectively conveys the character's suffering and willpower through low angles and close-ups."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T22TPVR",
+      "model": "gemini-3-flash-preview",
+      "elapsed": 7987,
+      "error": null,
+      "score": {
+        "total": 98,
+        "breakdown": {
+          "tagCount": 21,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 28,
+          "descLenKo": 117,
+          "descLenEn": 255
+        }
+      },
+      "cost": {
+        "inTokens": 1123,
+        "outTokens": 286,
+        "cost": 0.0014195000000000002
+      },
+      "tokenUsage": {
+        "promptTokenCount": 1123,
+        "candidatesTokenCount": 286,
+        "totalTokenCount": 2140,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 333
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 790
+          }
+        ],
+        "thoughtsTokenCount": 731
+      },
+      "parsed": {
+        "actionType": [
+          "일어나기",
+          "비틀거리기",
+          "지탱하기",
+          "몸부림",
+          "휘청거림"
+        ],
+        "emotion": [
+          "고통",
+          "피로",
+          "의지",
+          "괴로움",
+          "처절함"
+        ],
+        "composition": [
+          "클로즈업",
+          "미디엄 샷",
+          "풀샷",
+          "로우 앵글"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "중년 남성",
+          "부상자",
+          "지도자"
+        ],
+        "effects": [
+          "그린 톤 조명",
+          "블러 효과",
+          "먼지 파티클",
+          "혈흔"
+        ],
+        "description": {
+          "ko": "부상을 입은 캐릭터가 고통을 참고 책상을 짚으며 힘겹게 일어나는 과정을 보여줍니다. 클로즈업에서 풀샷으로 멀어지는 카메라 워킹을 통해 캐릭터의 불안정한 움직임과 비틀거리는 신체적 상태를 효과적으로 연출했습니다.",
+          "en": "The scene depicts an injured character struggling to stand up while leaning on a table, enduring visible pain. The camera transitions from a close-up to a full shot, effectively emphasizing the character's unstable movements and staggering physical state."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T22TPVR",
+      "model": "gemini-3.1-flash-lite-preview",
+      "elapsed": 3387,
+      "error": null,
+      "score": {
+        "total": 98,
+        "breakdown": {
+          "tagCount": 20,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 28,
+          "descLenKo": 114,
+          "descLenEn": 264
+        }
+      },
+      "cost": {
+        "inTokens": 1123,
+        "outTokens": 289,
+        "cost": 0.00071425
+      },
+      "tokenUsage": {
+        "promptTokenCount": 1123,
+        "candidatesTokenCount": 289,
+        "totalTokenCount": 1412,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 333
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 790
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "일어나기",
+          "비틀거리기",
+          "휘청거리기",
+          "고개 숙이기",
+          "앉아 있기"
+        ],
+        "emotion": [
+          "고통",
+          "괴로움",
+          "지침",
+          "피로",
+          "혼란",
+          "절망"
+        ],
+        "composition": [
+          "클로즈업",
+          "풀샷",
+          "로우앵글",
+          "딥 포커스"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "아케인 실코",
+          "상처 입은 캐릭터"
+        ],
+        "effects": [
+          "어두운 조명",
+          "먼지 파티클",
+          "그림자 연출"
+        ],
+        "description": {
+          "ko": "아케인의 실코가 부상을 입은 채 비몽사몽한 상태로 의자에서 힘겹게 일어나는 장면입니다. 어두운 조명 아래 비틀거리는 움직임과 거친 호흡을 통해 캐릭터의 극심한 고통과 신체적 한계를 효과적으로 연출했습니다.",
+          "en": "In this scene from Arcane, Silco struggles to stand up from his chair in a dazed and injured state. Through his unsteady movements and labored breathing under low-key lighting, the animation effectively conveys the character's intense pain and physical exhaustion."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T2K3FY9",
+      "model": "gemini-2.5-flash-lite",
+      "elapsed": 3929,
+      "error": null,
+      "score": {
+        "total": 82,
+        "breakdown": {
+          "tagCount": 11,
+          "richness": 29,
+          "completeness": 30,
+          "depth": 22,
+          "descLenKo": 107,
+          "descLenEn": 190
+        }
+      },
+      "cost": {
+        "inTokens": 1188,
+        "outTokens": 218,
+        "cost": 0.00020600000000000002
+      },
+      "tokenUsage": {
+        "promptTokenCount": 1188,
+        "candidatesTokenCount": 218,
+        "totalTokenCount": 1406,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 303
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 789
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 96
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "힘겨워함",
+          "숨을 쉼"
+        ],
+        "emotion": [
+          "고통",
+          "어려움",
+          "노력"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우 앵글"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "남성",
+          "영웅"
+        ],
+        "effects": [
+          "푸른 빛",
+          "배경 흐림"
+        ],
+        "description": {
+          "ko": "남성 캐릭터가 고통스러운 듯 힘겨워하며 숨을 몰아쉬고 있다. 그의 눈빛은 흔들리고 있으며, 앞으로 닥칠 위협에 대한 긴장감이 느껴진다. 푸른 빛이 그의 얼굴을 비추며 극적인 분위기를 연출한다.",
+          "en": "A male character is struggling and gasping for breath. His eyes are unsteady, conveying tension about the impending threat. A blue light illuminates his face, creating a dramatic atmosphere."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T2K3FY9",
+      "model": "gemini-2.5-flash",
+      "elapsed": 12519,
+      "error": null,
+      "score": {
+        "total": 95,
+        "breakdown": {
+          "tagCount": 19,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 25,
+          "descLenKo": 108,
+          "descLenEn": 224
+        }
+      },
+      "cost": {
+        "inTokens": 1188,
+        "outTokens": 284,
+        "cost": 0.0010664
+      },
+      "tokenUsage": {
+        "promptTokenCount": 1188,
+        "candidatesTokenCount": 284,
+        "totalTokenCount": 2857,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 303
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 789
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 96
+          }
+        ],
+        "thoughtsTokenCount": 1385
+      },
+      "parsed": {
+        "actionType": [
+          "노력",
+          "고군분투",
+          "저항",
+          "격렬한 호흡"
+        ],
+        "emotion": [
+          "힘겨움",
+          "충격",
+          "고통",
+          "결의",
+          "긴장",
+          "불안"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우 앵글",
+          "상반신 샷"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "남자",
+          "전사",
+          "주인공"
+        ],
+        "effects": [
+          "발광 효과",
+          "어두운 조명",
+          "드라마틱한 분위기"
+        ],
+        "description": {
+          "ko": "어두운 공간에서 한 남자가 푸른빛을 내는 무기를 든 채 고통과 힘겨움이 섞인 표정을 짓고 있습니다. 거친 호흡과 함께 충격과 결의가 뒤섞인 그의 얼굴이 클로즈업되어 상황의 긴장감을 고조시킵니다.",
+          "en": "In a dark space, a man holds a glowing blue weapon, his face contorted with a mix of pain and struggle. His expression, a blend of shock and determination, is captured in a close-up, heightening the tension of the situation."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T2K3FY9",
+      "model": "gemini-2.5-pro",
+      "elapsed": 22035,
+      "error": null,
+      "score": {
+        "total": 97,
+        "breakdown": {
+          "tagCount": 17,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 27,
+          "descLenKo": 124,
+          "descLenEn": 242
+        }
+      },
+      "cost": {
+        "inTokens": 1188,
+        "outTokens": 328,
+        "cost": 0.004765
+      },
+      "tokenUsage": {
+        "promptTokenCount": 1188,
+        "candidatesTokenCount": 328,
+        "totalTokenCount": 2895,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 303
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 789
+          },
+          {
+            "modality": "AUDIO",
+            "tokenCount": 96
+          }
+        ],
+        "thoughtsTokenCount": 1379
+      },
+      "parsed": {
+        "actionType": [
+          "숨쉬기",
+          "버티기"
+        ],
+        "emotion": [
+          "지침",
+          "힘겨움",
+          "충격",
+          "고통",
+          "탈진"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우앵글"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "인간",
+          "남성",
+          "영웅"
+        ],
+        "effects": [
+          "조명 효과",
+          "렌즈 플레어",
+          "카메라 흔들림",
+          "얕은 피사계 심도",
+          "차가운 색감"
+        ],
+        "description": {
+          "ko": "어두운 공간에서 푸른 빛을 내는 마법공학 망치를 든 캐릭터가 힘겹게 숨을 몰아쉬고 있다. 로우앵글 클로즈업 구도는 캐릭터의 지치고 충격받은 표정을 강조하며, 미세한 카메라 흔들림이 그의 불안정한 상태를 효과적으로 전달한다.",
+          "en": "A character, holding a glowing blue hextech hammer in a dark space, breathes heavily with exhaustion. The low-angle close-up shot emphasizes his tired and shocked expression, while a subtle camera shake effectively conveys his unstable state."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T2K3FY9",
+      "model": "gemini-3-flash-preview",
+      "elapsed": 6878,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 20,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 119,
+          "descLenEn": 278
+        }
+      },
+      "cost": {
+        "inTokens": 582,
+        "outTokens": 289,
+        "cost": 0.001158
+      },
+      "tokenUsage": {
+        "promptTokenCount": 582,
+        "candidatesTokenCount": 289,
+        "totalTokenCount": 1467,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 303
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 279
+          }
+        ],
+        "thoughtsTokenCount": 596
+      },
+      "parsed": {
+        "actionType": [
+          "가쁜 호흡",
+          "무기 파지",
+          "정지된 동작",
+          "시선 처리"
+        ],
+        "emotion": [
+          "충격",
+          "지침",
+          "공포",
+          "혼란",
+          "절박함"
+        ],
+        "composition": [
+          "클로즈업",
+          "바스트샷",
+          "로우앵글",
+          "얕은 심도"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "남성",
+          "전사",
+          "주인공"
+        ],
+        "effects": [
+          "발광 효과",
+          "강한 명암 대비",
+          "입자 효과",
+          "시네마틱 라이팅"
+        ],
+        "description": {
+          "ko": "캐릭터가 푸른 빛을 내는 무기를 든 채 가쁜 숨을 몰아쉬며 충격에 빠진 표정을 짓고 있습니다. 어두운 배경 속에서 클로즈업된 구도와 강렬한 조명 대비가 캐릭터의 심리적 압박감과 육체적 피로도를 극적으로 강조합니다.",
+          "en": "The character is breathing heavily while holding a glowing blue weapon, displaying a facial expression of shock and distress. The close-up composition and high-contrast lighting against a dark background dramatically emphasize his psychological pressure and physical exhaustion."
+        }
+      }
+    },
+    {
+      "clipId": "L3TR52T2K3FY9",
+      "model": "gemini-3.1-flash-lite-preview",
+      "elapsed": 2204,
+      "error": null,
+      "score": {
+        "total": 100,
+        "breakdown": {
+          "tagCount": 15,
+          "richness": 40,
+          "completeness": 30,
+          "depth": 30,
+          "descLenKo": 118,
+          "descLenEn": 276
+        }
+      },
+      "cost": {
+        "inTokens": 582,
+        "outTokens": 254,
+        "cost": 0.0005265000000000001
+      },
+      "tokenUsage": {
+        "promptTokenCount": 582,
+        "candidatesTokenCount": 254,
+        "totalTokenCount": 836,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 303
+          },
+          {
+            "modality": "VIDEO",
+            "tokenCount": 279
+          }
+        ]
+      },
+      "parsed": {
+        "actionType": [
+          "가쁜 호흡",
+          "지침",
+          "긴장",
+          "응시"
+        ],
+        "emotion": [
+          "충격",
+          "당혹감",
+          "고뇌",
+          "피로"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우앵글"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "주인공",
+          "연구자"
+        ],
+        "effects": [
+          "빛 번짐 효과",
+          "역광",
+          "입자 효과"
+        ],
+        "description": {
+          "ko": "애니메이션 아케인의 주인공 제이스가 전투 후 거친 숨을 몰아쉬며 당혹스러운 표정으로 허공을 응시하고 있습니다. 차가운 푸른색의 빛이 그의 얼굴을 비추며, 고조된 긴장감과 피로한 심리 상태를 효과적으로 전달합니다.",
+          "en": "Jayce, the protagonist from the animated series Arcane, is gasping for air after a battle, staring into the distance with an expression of shock and bewilderment. A cold, blue light illuminates his face, effectively conveying his heightened tension and exhausted mental state."
+        }
+      }
+    }
+  ],
+  "summary": {
+    "gemini-2.5-flash-lite": {
+      "avgTime": 5262,
+      "avgScore": 91,
+      "avgCostPerClip": 0.0006875666666666668,
+      "errorRate": 0
+    },
+    "gemini-3.1-flash-lite-preview": {
+      "avgTime": 3640,
+      "avgScore": 99,
+      "avgCostPerClip": 0.0009173333333333334,
+      "errorRate": 0
+    },
+    "gemini-2.5-flash": {
+      "avgTime": 14073,
+      "avgScore": 98,
+      "avgCostPerClip": 0.0026225,
+      "errorRate": 0
+    },
+    "gemini-3-flash-preview": {
+      "avgTime": 7635,
+      "avgScore": 99,
+      "avgCostPerClip": 0.001860666666666667,
+      "errorRate": 0
+    },
+    "gemini-2.5-pro": {
+      "avgTime": 22116,
+      "avgScore": 99,
+      "avgCostPerClip": 0.01054625,
+      "errorRate": 0
+    }
+  }
+}

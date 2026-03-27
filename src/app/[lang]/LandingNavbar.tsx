@@ -48,13 +48,15 @@ export function LandingNavbar({
       {/* Left: Logo + Brand */}
       <Link href={`/${lang}`} className="flex items-center gap-2">
         <div
-          className="rounded-md"
+          className="flex items-center justify-center rounded-md text-[15px] font-bold text-white"
           style={{
             width: 28,
             height: 28,
             background: "linear-gradient(135deg, #6366f1, #4f46e5)",
           }}
-        />
+        >
+          R
+        </div>
         <span className="text-[16px] font-semibold text-white">Reflix</span>
       </Link>
 
@@ -68,13 +70,17 @@ export function LandingNavbar({
         >
           {navDict.browse}
         </Link>
-        <Link
-          href={`/${lang}/pricing`}
-          className="hidden md:flex items-center px-2 text-[#777] transition-colors hover:text-white"
+        <a
+          href="#pricing"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+          }}
+          className="hidden md:flex items-center px-2 text-[#777] transition-colors hover:text-white cursor-pointer"
           style={{ minHeight: 44 }}
         >
           {pricingDict.title}
-        </Link>
+        </a>
 
         {/* Divider — desktop only */}
         <div

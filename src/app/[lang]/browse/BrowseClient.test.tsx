@@ -216,6 +216,7 @@ describe("BrowseClient", () => {
     useFilterStore.setState({
       category: null,
       selectedFolders: [],
+      excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
       searchQuery: "",

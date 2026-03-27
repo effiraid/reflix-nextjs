@@ -21,6 +21,7 @@ interface BrowseDataContextValue {
   projectionClips: BrowseProjectionRecord[] | null;
   projectionStatus: ProjectionStatus;
   initialTotalCount: number;
+  totalClipCount: number;
 }
 
 const ClipDataContext = createContext<BrowseDataContextValue>({
@@ -28,15 +29,18 @@ const ClipDataContext = createContext<BrowseDataContextValue>({
   projectionClips: null,
   projectionStatus: "loading",
   initialTotalCount: 0,
+  totalClipCount: 0,
 });
 
 export function ClipDataProvider({
   clips,
   initialTotalCount = clips.length,
+  totalClipCount = initialTotalCount,
   children,
 }: {
   clips: BrowseSummaryRecord[];
   initialTotalCount?: number;
+  totalClipCount?: number;
   children: ReactNode;
 }) {
   const [projectionClips, setProjectionClips] =
@@ -91,6 +95,7 @@ export function ClipDataProvider({
         projectionClips,
         projectionStatus,
         initialTotalCount,
+        totalClipCount,
       }}
     >
       {children}

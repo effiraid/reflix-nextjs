@@ -163,6 +163,7 @@ describe("RightPanelContent", () => {
 
     expect(updateURLMock).toHaveBeenCalledWith({
       selectedFolders: ["ultimate"],
+      excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
     });
@@ -198,6 +199,7 @@ describe("RightPanelContent", () => {
     expect(updateURLMock).toHaveBeenCalledWith({
       selectedTags: ["검"],
       selectedFolders: [],
+      excludedFolders: [],
       excludedTags: [],
     });
     expect(setSelectedClipId).not.toHaveBeenCalled();

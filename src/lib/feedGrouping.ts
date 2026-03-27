@@ -1,9 +1,20 @@
-import type { BrowseSummaryRecord, CategoryTree } from "./types";
+import type { BrowseSummaryRecord, CategoryNode, CategoryTree } from "./types";
 
 export interface TopCategoryInfo {
   topSlug: string;
   topFolderId: string;
   topI18n: { ko: string; en: string };
+}
+
+function walkDescendants(
+  node: CategoryNode,
+  visitor: (child: CategoryNode) => void
+): void {
+  if (!node.children) return;
+  for (const child of Object.values(node.children)) {
+    visitor(child);
+    walkDescendants(child, visitor);
+  }
 }
 
 /**
@@ -21,11 +32,7 @@ export function buildLeafToTopMap(
       topI18n: node.i18n,
     };
     map.set(node.slug, topInfo);
-    if (node.children) {
-      for (const child of Object.values(node.children)) {
-        map.set(child.slug, topInfo);
-      }
-    }
+    walkDescendants(node, (child) => map.set(child.slug, topInfo));
   }
   return map;
 }
@@ -59,9 +66,11 @@ const MAX_SUBS = 3;
  * Stable sort: ties preserve original array order (proxy for newest-first).
  */
 export function pickHeroAndSubs(clips: BrowseSummaryRecord[]): {
-  hero: BrowseSummaryRecord;
+  hero: BrowseSummaryRecord | null;
   subs: BrowseSummaryRecord[];
 } {
+  if (clips.length === 0) return { hero: null, subs: [] };
+
   const sorted = clips
     .map((clip, idx) => ({ clip, idx }))
     .sort((a, b) => b.clip.star - a.clip.star || a.idx - b.idx);

@@ -78,6 +78,7 @@ export function RightPanelContent({
       onSelectFolder={(folderId) =>
         updateURL({
           selectedFolders: [folderId],
+          excludedFolders: [],
           selectedTags: [],
           excludedTags: [],
         })
@@ -87,6 +88,7 @@ export function RightPanelContent({
         updateURL({
           selectedTags: [tag],
           selectedFolders: [],
+          excludedFolders: [],
           excludedTags: [],
         })
       }

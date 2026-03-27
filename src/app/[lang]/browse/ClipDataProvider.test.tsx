@@ -4,7 +4,13 @@ import { ClipDataProvider, useBrowseData } from "./ClipDataProvider";
 import type { BrowseProjectionRecord, BrowseSummaryRecord } from "@/lib/types";
 
 function Probe() {
-  const { initialClips, projectionClips, projectionStatus, initialTotalCount } =
+  const {
+    initialClips,
+    projectionClips,
+    projectionStatus,
+    initialTotalCount,
+    totalClipCount,
+  } =
     useBrowseData();
 
   return (
@@ -13,6 +19,7 @@ function Probe() {
       <div data-testid="projection-count">{projectionClips?.length ?? 0}</div>
       <div data-testid="status">{projectionStatus}</div>
       <div data-testid="total">{initialTotalCount}</div>
+      <div data-testid="library-total">{totalClipCount}</div>
     </div>
   );
 }
@@ -83,10 +90,34 @@ describe("ClipDataProvider", () => {
     expect(screen.getByTestId("projection-count")).toHaveTextContent("0");
     expect(screen.getByTestId("status")).toHaveTextContent("loading");
     expect(screen.getByTestId("total")).toHaveTextContent("42");
+    expect(screen.getByTestId("library-total")).toHaveTextContent("42");
 
     await waitFor(() => {
       expect(screen.getByTestId("projection-count")).toHaveTextContent("2");
     });
     expect(screen.getByTestId("status")).toHaveTextContent("ready");
+  });
+
+  it("can keep the full library count separate from the initial filtered result count", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => projectionClips,
+      })
+    );
+
+    render(
+      <ClipDataProvider
+        clips={initialClips}
+        initialTotalCount={1}
+        totalClipCount={24}
+      >
+        <Probe />
+      </ClipDataProvider>
+    );
+
+    expect(screen.getByTestId("total")).toHaveTextContent("1");
+    expect(screen.getByTestId("library-total")).toHaveTextContent("24");
   });
 });

@@ -7,6 +7,7 @@ import type { CategoryNode, CategoryTree, ContentMode, Locale } from "./types";
  */
 const CONTENT_MODE_SLUGS: Record<ContentMode, Set<string>> = {
   direction: new Set([
+    "movement",
     "direction-video",
     "dialogue",
     "reaction",

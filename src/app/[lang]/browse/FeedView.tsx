@@ -6,17 +6,18 @@ import { filterCategoriesByMode } from "@/lib/categories";
 import { useFilterStore } from "@/stores/filterStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useUIStore } from "@/stores/uiStore";
+import { useClipData } from "./ClipDataProvider";
 import { FeedCategorySection } from "./FeedCategorySection";
-import type { BrowseSummaryRecord, CategoryTree, Locale } from "@/lib/types";
+import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 
 interface FeedViewProps {
-  clips: BrowseSummaryRecord[];
   categories: CategoryTree;
   lang: Locale;
   onOpenQuickView: (clipId: string) => void;
 }
 
-export function FeedView({ clips, categories, lang, onOpenQuickView }: FeedViewProps) {
+export function FeedView({ categories, lang, onOpenQuickView }: FeedViewProps) {
+  const clips = useClipData();
   const contentMode = useFilterStore((s) => s.contentMode);
   const { updateURL } = useFilterSync();
   const setViewMode = useUIStore((s) => s.setViewMode);
@@ -40,7 +41,7 @@ export function FeedView({ clips, categories, lang, onOpenQuickView }: FeedViewP
       topSlug: string;
       topFolderId: string;
       title: string;
-      clips: BrowseSummaryRecord[];
+      clips: BrowseClipRecord[];
     }[] = [];
 
     // Iterate categories in their original order (Object.entries preserves insertion order)
@@ -61,7 +62,7 @@ export function FeedView({ clips, categories, lang, onOpenQuickView }: FeedViewP
 
   const handleViewAll = useCallback(
     (topFolderId: string) => {
-      updateURL({ selectedFolders: [topFolderId] });
+      updateURL({ selectedFolders: [topFolderId], excludedFolders: [] });
       setViewMode("masonry");
     },
     [updateURL, setViewMode]
@@ -80,6 +81,7 @@ export function FeedView({ clips, categories, lang, onOpenQuickView }: FeedViewP
       <div className="max-w-[720px] mx-auto px-5 py-6">
         {sections.map((section) => {
           const { hero, subs } = pickHeroAndSubs(section.clips);
+          if (!hero) return null;
           return (
             <FeedCategorySection
               key={section.topSlug}

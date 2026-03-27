@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 
@@ -19,6 +22,12 @@ interface LandingPricingProps {
     pricingProFeatures: string;
     pricingProCta: string;
     pricingProBadge: string;
+    pricingToggleMonthly: string;
+    pricingToggleYearly: string;
+    pricingYearlyBadge: string;
+    pricingProPriceYearly: string;
+    pricingProPeriodYearly: string;
+    pricingProPriceYearlyMonthly: string;
     [key: string]: string;
   };
 }
@@ -53,19 +62,107 @@ function CheckIcon() {
 }
 
 export function LandingPricing({ lang, dict }: LandingPricingProps) {
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const isYearly = billingInterval === "yearly";
+  const yearlyDiscountRate = "-17%";
+  const yearlyDiscountCapsuleStyle = {
+    background: "rgba(34,197,94,0.12)",
+    color: "#22c55e",
+  } as const;
+  const yearlyDiscountCapsuleSelectedStyle = {
+    background: "rgba(22,101,52,0.12)",
+    color: "#166534",
+  } as const;
+
   const freeFeatures = dict.pricingFreeFeatures.split(",");
   const proFeatures = dict.pricingProFeatures.split(",");
 
+  const proPrice = isYearly
+    ? dict.pricingProPriceYearly
+    : dict.pricingProPrice;
+  const proPeriod = isYearly
+    ? dict.pricingProPeriodYearly
+    : dict.pricingProPeriod;
+
+  const proCta = isYearly
+    ? `/${lang}/pricing?interval=yearly`
+    : `/${lang}/pricing`;
+  const yearlyBillingNote = (
+    <>
+      <span
+        className="text-[#555]"
+        style={{ textDecoration: "line-through" }}
+      >
+        {dict.pricingProPrice}
+      </span>{" "}
+      <span className="text-[#aaa]">{dict.pricingProPriceYearlyMonthly}</span>
+    </>
+  );
+
   return (
-    <section className="px-6 py-20 md:py-24">
+    <section
+      id="pricing"
+      className="px-6 py-20 md:py-24"
+      style={{ scrollMarginTop: 72 }}
+    >
       <div className="mx-auto max-w-3xl text-center">
         <h2
-          className="text-[32px] font-bold text-white"
-          style={{ letterSpacing: "-1px" }}
+          className="whitespace-pre-line text-[32px] font-bold text-white"
+          style={{ letterSpacing: "-1px", wordBreak: "keep-all" }}
         >
           {dict.pricingTitle}
         </h2>
-        <p className="mt-3 text-[15px] text-[#777]">{dict.pricingSub}</p>
+        <p
+          className="mt-3 whitespace-pre-line text-[15px] text-[#777]"
+          style={{ wordBreak: "keep-all" }}
+        >
+          {dict.pricingSub}
+        </p>
+      </div>
+
+      {/* Billing toggle */}
+      <div className="mx-auto mt-8 flex items-center justify-center">
+        <div
+          className="inline-flex rounded-full p-1"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setBillingInterval("monthly")}
+            className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-all"
+            style={{
+              background: !isYearly ? "white" : "transparent",
+              color: !isYearly ? "black" : "#666",
+            }}
+          >
+            {dict.pricingToggleMonthly}
+          </button>
+          <button
+            type="button"
+            onClick={() => setBillingInterval("yearly")}
+            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all"
+            style={{
+              background: isYearly ? "white" : "transparent",
+              color: isYearly ? "black" : "#666",
+            }}
+          >
+            <span>{dict.pricingToggleYearly}</span>
+            <span
+              aria-hidden="true"
+              className="whitespace-nowrap rounded-full px-1.5 py-1 text-[10px] font-semibold leading-none"
+              style={
+                isYearly
+                  ? yearlyDiscountCapsuleSelectedStyle
+                  : yearlyDiscountCapsuleStyle
+              }
+            >
+              {yearlyDiscountRate}
+            </span>
+          </button>
+        </div>
       </div>
 
       <div className="mx-auto mt-12 flex max-w-2xl flex-col md:flex-row">
@@ -85,7 +182,10 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
                 </span>
               )}
             </div>
-            <p className="mt-2 text-[14px] text-[#777]">
+            <p
+              className="mt-2 whitespace-pre-line text-[14px] text-[#777]"
+              style={{ wordBreak: "keep-all" }}
+            >
               {dict.pricingFreeDesc}
             </p>
           </div>
@@ -160,15 +260,24 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
             </div>
             <div className="mt-3">
               <span className="text-[36px] font-bold text-white">
-                {dict.pricingProPrice}
+                {proPrice}
               </span>
-              {dict.pricingProPeriod && (
-                <span className="text-[14px] text-[#777]">
-                  {dict.pricingProPeriod}
-                </span>
+              {proPeriod && (
+                <span className="text-[14px] text-[#777]">{proPeriod}</span>
               )}
             </div>
-            <p className="mt-2 text-[14px] text-[#777]">
+            <p
+              data-testid="landing-pricing-pro-billing-note"
+              aria-hidden={!isYearly}
+              className="mt-1 text-[13px] text-[#999]"
+              style={{ visibility: isYearly ? "visible" : "hidden" }}
+            >
+              {yearlyBillingNote}
+            </p>
+            <p
+              className="mt-2 whitespace-pre-line text-[14px] text-[#777]"
+              style={{ wordBreak: "keep-all" }}
+            >
               {dict.pricingProDesc}
             </p>
           </div>
@@ -194,7 +303,7 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
           </ul>
 
           <Link
-            href={`/${lang}/pricing`}
+            href={proCta}
             className="mt-8 block rounded-full bg-white py-2.5 text-center text-[14px] font-medium text-black transition-opacity hover:opacity-80"
           >
             {dict.pricingProCta}

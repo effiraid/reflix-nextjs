@@ -404,6 +404,41 @@ describe("RightPanelInspector", () => {
     expect(aiSection).toHaveClass("overflow-hidden");
   });
 
+  it("uses a larger padded hit area for the AI analysis toggle", () => {
+    render(
+      <RightPanelInspector
+        clip={{
+          ...clip,
+          aiTags: {
+            actionType: ["베기"],
+            emotion: ["결의"],
+            composition: ["클로즈업"],
+            pacing: "빠름",
+            characterType: ["전사"],
+            effects: ["잔상"],
+            description: {
+              ko: "대검을 크게 휘두르는 공격 모션",
+              en: "A powerful greatsword slash",
+            },
+            model: "gemini-2.5-flash",
+            generatedAt: "2026-03-26T00:00:00.000Z",
+          },
+        }}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const aiToggle = screen.getByRole("button", { name: "AI 분석" });
+    const aiSection = aiToggle.closest("section");
+
+    expect(aiToggle).toHaveClass("min-h-12");
+    expect(aiToggle).toHaveClass("px-4");
+    expect(aiToggle).toHaveClass("py-4");
+    expect(aiSection).not.toHaveClass("p-4");
+  });
+
   it("invokes folder and tag navigation callbacks from the inspector badges", () => {
     const handleSelectFolder = vi.fn();
     const handleSelectTag = vi.fn();

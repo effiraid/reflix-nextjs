@@ -118,7 +118,7 @@ describe("pickHeroAndSubs", () => {
     ];
     const { hero, subs } = pickHeroAndSubs(clips);
 
-    expect(hero.id).toBe("2");
+    expect(hero!.id).toBe("2");
     expect(subs).toHaveLength(3);
     expect(subs[0].id).toBe("3");
     expect(subs[1].id).toBe("4");
@@ -128,7 +128,7 @@ describe("pickHeroAndSubs", () => {
   it("returns hero only when fewer than 2 clips", () => {
     const clips = [makeClip("1", "walk", 3)];
     const { hero, subs } = pickHeroAndSubs(clips);
-    expect(hero.id).toBe("1");
+    expect(hero!.id).toBe("1");
     expect(subs).toHaveLength(0);
   });
 
@@ -139,7 +139,7 @@ describe("pickHeroAndSubs", () => {
       makeClip("c", "walk", 0),
     ];
     const { hero, subs } = pickHeroAndSubs(clips);
-    expect(hero.id).toBe("a");
+    expect(hero!.id).toBe("a");
     expect(subs).toHaveLength(2);
   });
 

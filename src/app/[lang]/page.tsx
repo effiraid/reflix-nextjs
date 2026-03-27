@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDictionary } from "./dictionaries";
-import { getClipIndex, getTagGroups } from "@/lib/data";
+import { getClipIndex, getTagGroups, getTagI18n } from "@/lib/data";
+import { getStructuredAiTags } from "@/lib/aiTags";
 import { LandingNavbar } from "./LandingNavbar";
 import { LandingHero } from "./LandingHero";
 import { LandingFeatures } from "./LandingFeatures";
@@ -9,6 +10,19 @@ import { LandingPricing } from "./LandingPricing";
 import { LandingCTA } from "./LandingCTA";
 import landingClips from "../../../config/landing-clips.json";
 import type { Locale } from "@/lib/types";
+
+function getLandingAiRecommendationCount(clips: Awaited<ReturnType<typeof getClipIndex>>["clips"]) {
+  const uniqueTags = new Set<string>();
+
+  for (const clip of clips) {
+    const tags = clip.aiStructuredTags ?? getStructuredAiTags(clip.aiTags);
+    for (const tag of tags) {
+      uniqueTags.add(tag);
+    }
+  }
+
+  return uniqueTags.size;
+}
 
 export async function generateMetadata({
   params,
@@ -29,25 +43,27 @@ export default async function HomePage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-  const [dict, indexData, tagGroupData] = await Promise.all([
+  const [dict, indexData, tagGroupData, tagI18n] = await Promise.all([
     getDictionary(lang as Locale),
     getClipIndex(),
     getTagGroups(),
+    getTagI18n(),
   ]);
 
   const allClips = indexData.clips;
+  const clipMap = new Map(allClips.map((c) => [c.id, c]));
 
   const heroClips = landingClips.heroClipIds
-    .map((id) => allClips.find((c) => c.id === id))
+    .map((id) => clipMap.get(id))
     .filter((c) => c != null);
 
   const featureClips = landingClips.featureClipIds
-    .map((id) => allClips.find((c) => c.id === id))
+    .map((id) => clipMap.get(id))
     .filter((c) => c != null)
     .slice(0, 3);
 
   const clipCount = indexData.totalCount;
-  const tagGroupCount = tagGroupData.groups.length;
+  const aiRecommendationCount = getLandingAiRecommendationCount(allClips);
   const tagCount = tagGroupData.groups.reduce(
     (sum, g) => sum + g.tags.length,
     0
@@ -75,13 +91,18 @@ export default async function HomePage({
 
       <div style={dividerStyle} />
 
-      <LandingFeatures featureClips={featureClips} dict={dict.landing} />
+      <LandingFeatures
+        lang={lang as Locale}
+        tagI18n={tagI18n}
+        featureClips={featureClips}
+        dict={dict.landing}
+      />
 
       <div style={dividerStyle} />
 
       <LandingStats
         clipCount={clipCount}
-        tagGroupCount={tagGroupCount}
+        aiRecommendationCount={aiRecommendationCount}
         tagCount={tagCount}
         dict={dict.landing}
       />

@@ -70,7 +70,7 @@ export function InspectorSidebarSections({
       {hasAiAnalysis ? (
         <section
           aria-label={aiAnalysisLabel}
-          className="relative overflow-hidden rounded-2xl border border-accent/35 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.16),transparent_42%),linear-gradient(180deg,rgba(96,165,250,0.14),rgba(255,255,255,0.04))] p-4 shadow-[0_8px_24px_rgba(37,99,235,0.14)]"
+          className="relative overflow-hidden rounded-2xl border border-accent/35 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.16),transparent_42%),linear-gradient(180deg,rgba(96,165,250,0.14),rgba(255,255,255,0.04))] shadow-[0_8px_24px_rgba(37,99,235,0.14)]"
         >
           <div
             aria-hidden="true"
@@ -81,7 +81,7 @@ export function InspectorSidebarSections({
             aria-expanded={aiExpanded}
             aria-label={aiAnalysisLabel}
             onClick={() => setAiExpanded((open) => !open)}
-            className="relative flex w-full items-center justify-between gap-3 text-left"
+            className="relative flex min-h-12 w-full items-center justify-between gap-3 px-4 py-4 text-left"
           >
             <div className="flex items-center gap-2.5">
               <span
@@ -103,27 +103,29 @@ export function InspectorSidebarSections({
           </button>
 
           {aiExpanded ? (
-            clip.aiTags === null ? (
-              <p className="mt-3 text-xs italic text-muted">{aiPendingLabel}</p>
-            ) : clip.aiTags ? (
-              <div className="mt-3 space-y-3">
-                <p className="text-xs leading-relaxed text-muted">
-                  {clip.aiTags.description[lang] || clip.aiTags.description.ko}
-                </p>
-                {aiTagTokens.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {aiTagTokens.map((item) => (
-                      <span
-                        key={item}
-                        className="rounded bg-surface px-1.5 py-0.5 text-[10px] text-foreground"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : null
+            <div className="space-y-3 px-4 pb-4">
+              {clip.aiTags === null ? (
+                <p className="text-xs italic text-muted">{aiPendingLabel}</p>
+              ) : clip.aiTags ? (
+                <>
+                  <p className="text-xs leading-relaxed text-muted">
+                    {clip.aiTags.description[lang] || clip.aiTags.description.ko}
+                  </p>
+                  {aiTagTokens.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {aiTagTokens.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded bg-surface px-1.5 py-0.5 text-[10px] text-foreground"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
           ) : null}
         </section>
       ) : null}

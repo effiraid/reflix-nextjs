@@ -38,6 +38,7 @@ export function parseBrowsePageQuery(
   return {
     category: searchParams.get("category"),
     selectedFolders: searchParams.getAll("folder"),
+    excludedFolders: searchParams.getAll("excludeFolder"),
     selectedTags: searchParams.getAll("tag"),
     excludedTags: searchParams.getAll("exclude"),
     starFilter:

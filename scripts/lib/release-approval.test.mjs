@@ -10,10 +10,13 @@ import { computeExportSignature } from "./release-approval-state.mjs";
 import {
   parseReleaseApprovalCliArgs,
   runReleaseApprove,
+  runReleaseGo,
   runReleaseMarkFailed,
   runReleaseMarkPublished,
   runReleaseReview,
   runReleaseScan,
+  runReleaseStatus,
+  smokeCheckExportArtifacts,
 } from "./release-approval.mjs";
 
 const SCRIPT_PATH = path.join(
@@ -1987,4 +1990,216 @@ test("release approval CLI scan branch prints Korean scan summary labels", () =>
     output,
     /제안 보고서: .*\.tmp\/release-approval\/2026-03-24T12:00:00\.000Z\/proposal-report\.md/
   );
+});
+
+// ---------------------------------------------------------------------------
+// parseReleaseApprovalCliArgs — go / status
+// ---------------------------------------------------------------------------
+
+test("parseReleaseApprovalCliArgs accepts go command", () => {
+  const parsed = parseReleaseApprovalCliArgs(["go", "--review", "--r2"]);
+  assert.equal(parsed.command, "go");
+  assert.equal(parsed.review, true);
+  assert.equal(parsed.r2, true);
+});
+
+test("parseReleaseApprovalCliArgs accepts status command", () => {
+  const parsed = parseReleaseApprovalCliArgs(["status"]);
+  assert.equal(parsed.command, "status");
+});
+
+// ---------------------------------------------------------------------------
+// smokeCheckExportArtifacts
+// ---------------------------------------------------------------------------
+
+test("smokeCheck passes when all artifacts exist", () => {
+  const { projectRoot } = createTempProject();
+  const id = "SMOKE1";
+
+  // Create all expected files
+  fs.mkdirSync(path.join(projectRoot, "public", "data", "clips"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "data", "browse"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "videos"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "previews"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "thumbnails"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "src", "data"), { recursive: true });
+
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "clips", `${id}.json`), "{}");
+  fs.writeFileSync(path.join(projectRoot, "public", "videos", `${id}.mp4`), "v");
+  fs.writeFileSync(path.join(projectRoot, "public", "previews", `${id}.mp4`), "p");
+  fs.writeFileSync(path.join(projectRoot, "public", "thumbnails", `${id}.webp`), "t");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "summary.json"), "{}");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "projection.json"), "{}");
+  fs.writeFileSync(
+    path.join(projectRoot, "src", "data", "index.json"),
+    JSON.stringify({ clips: [{ id }] })
+  );
+
+  const result = smokeCheckExportArtifacts({ projectRoot, batchIds: [id] });
+  assert.equal(result.passed, true);
+  assert.deepEqual(result.errors, []);
+});
+
+test("smokeCheck fails when clip JSON is missing", () => {
+  const { projectRoot } = createTempProject();
+  const id = "MISSING1";
+
+  fs.mkdirSync(path.join(projectRoot, "public", "data", "browse"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "videos"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "previews"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "thumbnails"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "src", "data"), { recursive: true });
+
+  fs.writeFileSync(path.join(projectRoot, "public", "videos", `${id}.mp4`), "v");
+  fs.writeFileSync(path.join(projectRoot, "public", "previews", `${id}.mp4`), "p");
+  fs.writeFileSync(path.join(projectRoot, "public", "thumbnails", `${id}.webp`), "t");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "summary.json"), "{}");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "projection.json"), "{}");
+  fs.writeFileSync(
+    path.join(projectRoot, "src", "data", "index.json"),
+    JSON.stringify({ clips: [{ id }] })
+  );
+
+  const result = smokeCheckExportArtifacts({ projectRoot, batchIds: [id] });
+  assert.equal(result.passed, false);
+  assert.ok(result.errors.some((e) => e.includes("clip JSON 누락")));
+});
+
+// ---------------------------------------------------------------------------
+// runReleaseGo — auto mode
+// ---------------------------------------------------------------------------
+
+test("runReleaseGo auto-mode runs full pipeline with mocks", async () => {
+  const { projectRoot, libraryPath } = createTempProject();
+  writePublishedState(projectRoot, {});
+  writeReleaseBatch(projectRoot, { name: "test-batch", ids: ["GO1"] });
+  writeEagleItem(libraryPath, makeItem("GO1", { aiTags: { test: true } }));
+
+  // Create export artifacts so smoke check passes
+  fs.mkdirSync(path.join(projectRoot, "public", "data", "clips"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "data", "browse"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "videos"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "previews"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "public", "thumbnails"), { recursive: true });
+  fs.mkdirSync(path.join(projectRoot, "src", "data"), { recursive: true });
+
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "clips", "GO1.json"), "{}");
+  fs.writeFileSync(path.join(projectRoot, "public", "videos", "GO1.mp4"), "v");
+  fs.writeFileSync(path.join(projectRoot, "public", "previews", "GO1.mp4"), "p");
+  fs.writeFileSync(path.join(projectRoot, "public", "thumbnails", "GO1.webp"), "t");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "summary.json"), "{}");
+  fs.writeFileSync(path.join(projectRoot, "public", "data", "browse", "projection.json"), "{}");
+  fs.writeFileSync(
+    path.join(projectRoot, "src", "data", "index.json"),
+    JSON.stringify({ clips: [{ id: "GO1" }] })
+  );
+
+  const result = await runReleaseGo(
+    { command: "go", projectRoot, libraryPath, timestamp: "2026-03-27T12:00:00.000Z" },
+    {
+      runExport: async () => ({ runId: "test-run", failed: 0 }),
+      runBackfill: async () => ({ successCount: 0, failureCount: 0 }),
+      runMarkPublished: async () => ({ updatedIds: ["GO1"] }),
+    }
+  );
+
+  assert.equal(result.command, "go");
+  assert.equal(result.skipped, false);
+  assert.deepEqual(result.batchIds, ["GO1"]);
+
+  // Verify release-batch.json was written
+  const batch = JSON.parse(
+    fs.readFileSync(path.join(projectRoot, "config", "release-batch.json"), "utf-8")
+  );
+  assert.deepEqual(batch.ids, ["GO1"]);
+});
+
+test("runReleaseGo skips when no candidates", async () => {
+  const { projectRoot, libraryPath } = createTempProject();
+
+  // Published state already has the item — no new candidates
+  const item = makeItem("DONE1");
+  writeEagleItem(libraryPath, item);
+  writeReleaseBatch(projectRoot, { name: "test-batch", ids: ["DONE1"] });
+
+  // Compute signature using the item as readEagleLibrary would return it (with file paths)
+  const { readEagleLibrary: readLib } = await import("./eagle-reader.mjs");
+  const [readItem] = readLib(libraryPath, { ids: ["DONE1"] });
+  writePublishedState(projectRoot, {
+    DONE1: {
+      publishedAt: "2026-03-27T00:00:00.000Z",
+      batchName: "test-batch",
+      eagleMtime: readItem.mtime,
+      exportSignature: computeExportSignature(readItem),
+    },
+  });
+
+  const result = await runReleaseGo(
+    { command: "go", projectRoot, libraryPath, timestamp: "2026-03-27T12:00:00.000Z" },
+    {
+      runExport: async () => ({ runId: "test", failed: 0 }),
+      runBackfill: async () => ({ successCount: 0, failureCount: 0 }),
+      runMarkPublished: async () => ({ updatedIds: [] }),
+    }
+  );
+
+  assert.equal(result.skipped, true);
+  assert.equal(result.reason, "no-candidates");
+});
+
+test("runReleaseGo stops on export failure", async () => {
+  const { projectRoot, libraryPath } = createTempProject();
+  writePublishedState(projectRoot, {});
+  writeReleaseBatch(projectRoot, { name: "test-batch", ids: ["FAIL1"] });
+  writeEagleItem(libraryPath, makeItem("FAIL1", { aiTags: { test: true } }));
+
+  const result = await runReleaseGo(
+    { command: "go", projectRoot, libraryPath, timestamp: "2026-03-27T12:00:00.000Z" },
+    {
+      runExport: async () => ({ runId: "fail-run", failed: 2 }),
+      runBackfill: async () => ({ successCount: 0, failureCount: 0 }),
+      runMarkPublished: async () => ({ updatedIds: [] }),
+    }
+  );
+
+  assert.equal(result.error, "export-failed");
+});
+
+// ---------------------------------------------------------------------------
+// runReleaseStatus
+// ---------------------------------------------------------------------------
+
+test("runReleaseStatus returns batch and library info", async () => {
+  const { projectRoot, libraryPath } = createTempProject();
+  writeReleaseBatch(projectRoot, { name: "batch-test", ids: ["S1", "S2"] });
+  writePublishedState(projectRoot, {
+    S1: {
+      publishedAt: "2026-03-27T00:00:00.000Z",
+      batchName: "batch-test",
+      eagleMtime: 1711234567890,
+      exportSignature: "sha256:abc",
+    },
+  });
+
+  writeEagleItem(libraryPath, makeItem("S1"));
+  writeEagleItem(libraryPath, makeItem("S2"));
+  writeEagleItem(libraryPath, makeItem("S3"));
+
+  const result = await runReleaseStatus({ command: "status", projectRoot, libraryPath });
+
+  assert.equal(result.batch.name, "batch-test");
+  assert.equal(result.batch.size, 2);
+  assert.equal(result.batch.published, 1);
+  assert.equal(result.published.total, 1);
+  assert.equal(result.library.eligible, 3);
+});
+
+test("runReleaseStatus handles no active batch", async () => {
+  const { projectRoot, libraryPath } = createTempProject();
+  // No release-batch.json written
+
+  const result = await runReleaseStatus({ command: "status", projectRoot, libraryPath });
+
+  assert.equal(result.batch, null);
+  assert.equal(result.published.total, 0);
 });

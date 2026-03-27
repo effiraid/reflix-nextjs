@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { MasonryGrid } from "@/components/clip/MasonryGrid";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
-import { filterClips, shuffleClips, type FilterState } from "@/lib/filter";
+import { filterClips, hasFeedBlockingFilters, shuffleClips, type FilterState } from "@/lib/filter";
 import { useAuthStore } from "@/stores/authStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
@@ -17,6 +17,7 @@ import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
 import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
+import { useSplashGate } from "@/components/splash/useSplashGate";
 
 const QuickViewModal = dynamic(
   () =>
@@ -37,7 +38,7 @@ function countActiveFilterAxes(filters: FilterState): number {
   return [
     filters.category !== null,
     filters.contentMode !== null,
-    filters.selectedFolders.length > 0,
+    filters.selectedFolders.length > 0 || filters.excludedFolders.length > 0,
     filters.selectedTags.length > 0 || filters.excludedTags.length > 0,
     filters.starFilter !== null,
   ].filter(Boolean).length;
@@ -49,6 +50,7 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
     category: null,
     contentMode: null,
     selectedFolders: [],
+    excludedFolders: [],
     selectedTags: [],
     excludedTags: [],
     starFilter: null,
@@ -64,8 +66,9 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
     return limitedFilters;
   }
 
-  if (filters.selectedFolders.length > 0) {
+  if (filters.selectedFolders.length > 0 || filters.excludedFolders.length > 0) {
     limitedFilters.selectedFolders = filters.selectedFolders;
+    limitedFilters.excludedFolders = filters.excludedFolders;
     return limitedFilters;
   }
 
@@ -105,6 +108,7 @@ export function BrowseClient({
   const filters = useFilterStore(
     useShallow((s) => ({
       selectedFolders: s.selectedFolders,
+      excludedFolders: s.excludedFolders,
       selectedTags: s.selectedTags,
       excludedTags: s.excludedTags,
       starFilter: s.starFilter,
@@ -146,6 +150,16 @@ export function BrowseClient({
     [filters, isFilterCombinationLimited]
   );
 
+  // Mark first visit complete (splash gate)
+  const { markComplete: markSplashComplete } = useSplashGate("intro");
+  const splashMarked = useRef(false);
+  useEffect(() => {
+    if (!splashMarked.current) {
+      splashMarked.current = true;
+      markSplashComplete();
+    }
+  }, [markSplashComplete]);
+
   // Sync URL → Zustand filters
   useFilterSync();
 
@@ -169,25 +183,17 @@ export function BrowseClient({
     filters.category !== null ||
     filters.contentMode !== null ||
     filters.selectedFolders.length > 0 ||
+    filters.excludedFolders.length > 0 ||
     filters.selectedTags.length > 0 ||
     filters.excludedTags.length > 0 ||
     filters.starFilter !== null ||
     filters.searchQuery.length > 0 ||
     filters.sortBy !== "newest";
 
-  // Feed-specific filter check: exclude contentMode and sortBy
-  const hasFeedBlockingFilters =
-    filters.category !== null ||
-    filters.selectedFolders.length > 0 ||
-    filters.selectedTags.length > 0 ||
-    filters.excludedTags.length > 0 ||
-    filters.starFilter !== null ||
-    filters.searchQuery.length > 0;
-
-  const showFeed = viewMode === "feed" && !hasFeedBlockingFilters;
+  const showFeed = viewMode === "feed" && !hasFeedBlockingFilters(filters);
   const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
   const initialDisplayClips = useMemo(() => {
-    if (!projectionClips || projectionStatus !== "ready" || (columnCount > 3 && !showFeed)) {
+    if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
       return initialClips;
     }
 
@@ -196,7 +202,7 @@ export function BrowseClient({
     );
 
     return initialClips.map((clip) => projectionById.get(clip.id) ?? clip);
-  }, [columnCount, initialClips, projectionClips, projectionStatus, showFeed]);
+  }, [columnCount, initialClips, projectionClips, projectionStatus]);
 
   // Apply filters only after projection preload is ready.
   const browseResults = useMemo(
@@ -257,9 +263,20 @@ export function BrowseClient({
     [filtered]
   );
 
+  const projectionMap = useMemo(
+    () => projectionClips ? new Map(projectionClips.map((c) => [c.id, c])) : null,
+    [projectionClips]
+  );
+
   const selectedIndex = selectedClipId ? (indexMap.get(selectedClipId) ?? -1) : -1;
+  // In feed mode, clip may not be in `filtered` (limited to initial page).
+  // Fall back to projectionMap for O(1) quick-view lookup.
   const selectedClip: BrowseClipRecord | null =
-    selectedIndex >= 0 ? filtered[selectedIndex] : null;
+    selectedIndex >= 0
+      ? filtered[selectedIndex]
+      : selectedClipId && projectionMap
+        ? (projectionMap.get(selectedClipId) as BrowseClipRecord | undefined) ?? null
+        : null;
   const selectedClipLocked = selectedClip
     ? lockedClipIds.has(selectedClip.id)
     : false;
@@ -455,7 +472,6 @@ export function BrowseClient({
     return (
       <>
         <FeedView
-          clips={initialDisplayClips}
           categories={categories}
           lang={lang}
           onOpenQuickView={openQuickViewForClip}

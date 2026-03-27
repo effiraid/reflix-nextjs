@@ -9,6 +9,7 @@ import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import { useAuthStore } from "@/stores/authStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
+import { BrandSplash } from "@/components/splash/BrandSplash";
 
 interface AccountClientProps {
   lang: Locale;
@@ -118,13 +119,7 @@ export function AccountClient({ lang }: AccountClientProps) {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted">
-          {isKo ? "로딩 중..." : "Loading..."}
-        </p>
-      </div>
-    );
+    return <BrandSplash persistent />;
   }
 
   if (!user) {

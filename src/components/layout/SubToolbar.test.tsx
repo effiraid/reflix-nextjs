@@ -7,6 +7,13 @@ import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterStore } from "@/stores/filterStore";
 
+const searchParams = new URLSearchParams();
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/ko/browse",
+  useSearchParams: () => searchParams,
+}));
+
 const dict = {
   clip: koDict.clip,
 } satisfies Pick<Dictionary, "clip">;
@@ -33,6 +40,7 @@ describe("SubToolbar", () => {
     });
     useFilterStore.setState({
       selectedFolders: [],
+      excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
       starFilter: null,
@@ -111,6 +119,7 @@ describe("SubToolbar", () => {
   it("shows the current folder and tag filters in the center summary", () => {
     useFilterStore.setState({
       selectedFolders: ["movement"],
+      excludedFolders: [],
       selectedTags: ["걷기"],
       excludedTags: ["마법"],
     });
@@ -126,9 +135,63 @@ describe("SubToolbar", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("clears a selected folder badge when clicked", () => {
+    useFilterStore.setState({
+      selectedFolders: ["movement"],
+      excludedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+    });
+
+    render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
+    const badgeTrack = screen.getByTestId("toolbar-filter-badges");
+
+    fireEvent.click(within(badgeTrack).getByRole("button", { name: "이동" }));
+
+    expect(useFilterStore.getState().selectedFolders).toEqual([]);
+    expect(useFilterStore.getState().excludedFolders).toEqual([]);
+    expect(screen.queryByTestId("toolbar-filter-badges")).not.toBeInTheDocument();
+  });
+
+  it("clears a selected tag badge when clicked", () => {
+    useFilterStore.setState({
+      selectedFolders: [],
+      excludedFolders: [],
+      selectedTags: ["걷기"],
+      excludedTags: [],
+    });
+
+    render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
+    const badgeTrack = screen.getByTestId("toolbar-filter-badges");
+
+    fireEvent.click(within(badgeTrack).getByRole("button", { name: "걷기" }));
+
+    expect(useFilterStore.getState().selectedTags).toEqual([]);
+    expect(useFilterStore.getState().excludedTags).toEqual([]);
+    expect(screen.queryByTestId("toolbar-filter-badges")).not.toBeInTheDocument();
+  });
+
+  it("clears an excluded tag badge when clicked", () => {
+    useFilterStore.setState({
+      selectedFolders: [],
+      excludedFolders: [],
+      selectedTags: [],
+      excludedTags: ["마법"],
+    });
+
+    render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
+    const badgeTrack = screen.getByTestId("toolbar-filter-badges");
+
+    fireEvent.click(within(badgeTrack).getByRole("button", { name: "-마법" }));
+
+    expect(useFilterStore.getState().excludedTags).toEqual([]);
+    expect(screen.queryByTestId("toolbar-filter-badges")).not.toBeInTheDocument();
+  });
+
   it("shows an overflow badge when the available width is narrow", () => {
     useFilterStore.setState({
       selectedFolders: ["movement"],
+      excludedFolders: [],
       selectedTags: ["걷기", "달리기", "점프"],
       excludedTags: ["마법"],
     });

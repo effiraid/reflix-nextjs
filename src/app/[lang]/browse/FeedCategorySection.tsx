@@ -1,13 +1,13 @@
 "use client";
 
 import { ClipCard } from "@/components/clip/ClipCard";
-import type { BrowseSummaryRecord, BrowseClipRecord, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface FeedCategorySectionProps {
   title: string;
   clipCount: number;
-  hero: BrowseSummaryRecord;
-  subs: BrowseSummaryRecord[];
+  hero: BrowseClipRecord;
+  subs: BrowseClipRecord[];
   lang: Locale;
   onViewAll: () => void;
   onOpenQuickView: (clipId: string) => void;
@@ -48,7 +48,7 @@ export function FeedCategorySection({
          previewOnHover={false} → plays immediately when in viewport, pauses when out. */}
       <div className="mb-3">
         <ClipCard
-          clip={hero as BrowseClipRecord}
+          clip={hero}
           lang={lang}
           enablePreview
           previewOnHover={false}
@@ -63,7 +63,7 @@ export function FeedCategorySection({
           {subs.map((clip) => (
             <ClipCard
               key={clip.id}
-              clip={clip as BrowseClipRecord}
+              clip={clip}
               lang={lang}
               enablePreview
               previewOnHover

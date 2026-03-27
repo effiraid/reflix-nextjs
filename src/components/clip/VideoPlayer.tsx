@@ -75,6 +75,7 @@ export function VideoPlayer({
   const [inPoint, setInPoint] = useState(0);
   const [outPoint, setOutPoint] = useState(duration);
   const [showFrames, setShowFrames] = useState(false);
+  const [frameDuration, setFrameDuration] = useState(1 / 30);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +109,12 @@ export function VideoPlayer({
   const resolvedVideoUrl = useBlobUrl ? (blobUrl ?? "") : directVideoUrl;
   const resolvedThumbnailUrl = getMediaUrl(thumbnailUrl);
   const totalDuration = Math.max(0, duration);
+  const iconButtonClass =
+    "flex items-center rounded-md p-1 transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60";
+  const textButtonClass =
+    "rounded-md px-1.5 py-1 text-xs font-medium transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-60";
+  const frameDurationRef = useRef(1 / 30); // fallback: 30fps
+  const lastFrameTimeRef = useRef(-1);
 
   // Render-time state adjustments (avoids cascading-render effects)
   const [prevVideoUrl, setPrevVideoUrl] = useState(directVideoUrl);
@@ -118,6 +125,7 @@ export function VideoPlayer({
     setHasPlaybackError(false);
     setIsPlaying(false);
     setCurrentTime(0);
+    setFrameDuration(1 / 30);
   }
 
   if (prevDuration !== duration) {
@@ -377,14 +385,12 @@ export function VideoPlayer({
     [togglePlayback]
   );
 
-  // Frame-accurate wheel scrubbing
-  const frameDurationRef = useRef(1 / 30); // fallback: 30fps
-  const lastFrameTimeRef = useRef(-1);
-
   // Detect actual frame duration from video metadata
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !video.requestVideoFrameCallback) return;
+
+    frameDurationRef.current = 1 / 30;
 
     let callbackId: number;
     const detect = (_now: DOMHighResTimeStamp, meta: VideoFrameCallbackMetadata) => {
@@ -392,6 +398,7 @@ export function VideoPlayer({
         const dt = meta.mediaTime - lastFrameTimeRef.current;
         if (dt > 0 && dt < 0.2) {
           frameDurationRef.current = dt;
+          setFrameDuration(dt);
           return; // detected, stop
         }
       }
@@ -534,9 +541,17 @@ export function VideoPlayer({
   }, [autoPlayMuted, hasPlaybackError, directVideoUrl]);
 
   return (
-    <div ref={containerRef} className="overflow-hidden rounded-2xl border border-border">
+    <div
+      ref={containerRef}
+      data-testid="video-player"
+      className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
+    >
       {/* Video area */}
-      <div className="relative bg-black" onContextMenu={(e) => e.preventDefault()}>
+      <div
+        data-testid="video-player-surface"
+        className="relative bg-black"
+        onContextMenu={(e) => e.preventDefault()}
+      >
         <div
           className={`absolute inset-0 z-10 touch-none ${hasPlaybackError ? "cursor-default" : "cursor-pointer"}`}
           onPointerDown={handleVideoPointerDown}
@@ -566,11 +581,14 @@ export function VideoPlayer({
       </div>
 
       {/* Control bar */}
-      <div className="flex items-center gap-2 border-t border-border bg-surface px-3 py-2">
+      <div
+        data-testid="video-player-controls"
+        className="flex items-center gap-2 border-t border-border bg-surface px-3 py-2"
+      >
         <button
           type="button"
           tabIndex={-1}
-          className="flex items-center p-1 text-foreground hover:text-foreground/80 disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${iconButtonClass} text-foreground hover:text-foreground/80`}
           onClick={() => {
             void togglePlayback();
           }}
@@ -583,7 +601,7 @@ export function VideoPlayer({
         <button
           type="button"
           tabIndex={-1}
-          className="flex items-center p-1 text-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${iconButtonClass} text-muted hover:text-foreground`}
           onClick={toggleMute}
           aria-label={isMuted ? "Unmute" : "Mute"}
           disabled={hasPlaybackError}
@@ -594,12 +612,12 @@ export function VideoPlayer({
         <button
           type="button"
           tabIndex={-1}
-          className="text-xs tabular-nums text-muted hover:text-foreground"
+          className="rounded-md px-1.5 py-1 text-xs tabular-nums text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           onClick={() => setShowFrames((prev) => !prev)}
           aria-label="Toggle time/frame display"
         >
           {showFrames
-            ? `${formatFrameCount(currentTime, frameDurationRef.current)}f / ${formatFrameCount(totalDuration, frameDurationRef.current)}f`
+            ? `${formatFrameCount(currentTime, frameDuration)}f / ${formatFrameCount(totalDuration, frameDuration)}f`
             : `${formatPlaybackTime(currentTime)} / ${formatPlaybackTime(totalDuration)}`}
         </button>
 
@@ -619,7 +637,7 @@ export function VideoPlayer({
         <button
           type="button"
           tabIndex={-1}
-          className="flex items-center p-1 text-xs font-medium text-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+          className={`${textButtonClass} text-muted hover:text-foreground`}
           onClick={cyclePlaybackRate}
           aria-label="Playback speed"
           disabled={hasPlaybackError}
@@ -630,7 +648,7 @@ export function VideoPlayer({
         <button
           type="button"
           tabIndex={-1}
-          className={`flex items-center p-1 ${isLooping ? "text-accent" : "text-muted"} hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60`}
+          className={`${iconButtonClass} ${isLooping ? "text-accent hover:text-accent" : "text-muted hover:text-foreground"}`}
           onClick={() => setIsLooping((prev) => !prev)}
           aria-label={isLooping ? "Disable loop" : "Enable loop"}
           disabled={hasPlaybackError}
@@ -642,7 +660,7 @@ export function VideoPlayer({
           <button
             type="button"
             tabIndex={-1}
-            className="flex items-center p-1 text-muted hover:text-foreground"
+            className={`${iconButtonClass} text-muted hover:text-foreground`}
             onClick={onExpandToggle}
             aria-label={isExpanded ? "Collapse player" : "Expand player"}
           >
@@ -653,7 +671,7 @@ export function VideoPlayer({
         <button
           type="button"
           tabIndex={-1}
-          className="flex items-center p-1 text-muted hover:text-foreground"
+          className={`${iconButtonClass} text-muted hover:text-foreground`}
           onClick={() => { void toggleFullscreen(); }}
           aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
         >

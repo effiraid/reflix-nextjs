@@ -11,6 +11,7 @@ import {
   restoreActiveAuthTab,
 } from "@/lib/authTabSession";
 import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
+import { BrandSplash } from "@/components/splash/BrandSplash";
 
 function parseHashParams(hash: string): Record<string, string> {
   const params: Record<string, string> = {};
@@ -53,6 +54,8 @@ export default function AuthCallbackPage() {
     };
   }, [lang]);
 
+  const splashStart = useRef(Date.now());
+
   useEffect(() => {
     if (handled.current) return;
 
@@ -65,7 +68,9 @@ export default function AuthCallbackPage() {
     function onSuccess() {
       if (handled.current) return;
       handled.current = true;
-      router.replace(nextPath);
+      const elapsed = Date.now() - splashStart.current;
+      const remaining = Math.max(0, 1300 - elapsed); // min 1s splash + 300ms fade-in
+      setTimeout(() => router.replace(nextPath), remaining);
     }
 
     async function handleAuth() {
@@ -142,11 +147,5 @@ export default function AuthCallbackPage() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <p className="text-sm text-muted">
-        {isKo ? "로그인 처리 중..." : "Signing in..."}
-      </p>
-    </div>
-  );
+  return <BrandSplash persistent />;
 }

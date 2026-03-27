@@ -7,7 +7,7 @@ const clips: ClipIndex[] = [
     id: "clip-1",
     name: "Arcane Breath",
     tags: ["마법"],
-    folders: [],
+    folders: ["effect"],
     star: 0,
     category: "action",
     width: 100,
@@ -21,7 +21,7 @@ const clips: ClipIndex[] = [
     id: "clip-2",
     name: "Death Strike",
     tags: ["마법", "죽음"],
-    folders: [],
+    folders: ["direction-video"],
     star: 3,
     category: "action",
     width: 100,
@@ -35,7 +35,7 @@ const clips: ClipIndex[] = [
     id: "clip-3",
     name: "Hit Reaction",
     tags: ["피격"],
-    folders: [],
+    folders: ["combat"],
     star: 5,
     category: "action",
     width: 100,
@@ -49,7 +49,7 @@ const clips: ClipIndex[] = [
     id: "clip-4",
     name: "Heavy Walk",
     tags: ["걷기"],
-    folders: [],
+    folders: ["movement"],
     star: 4,
     category: "acting",
     width: 100,
@@ -78,6 +78,7 @@ const clips: ClipIndex[] = [
 const baseFilters = {
   category: null,
   selectedFolders: [],
+  excludedFolders: [],
   selectedTags: [],
   excludedTags: [],
   starFilter: null,
@@ -85,6 +86,27 @@ const baseFilters = {
   sortBy: "newest" as const,
   contentMode: null,
 };
+
+const categories = {
+  "direction-video": {
+    slug: "direction-video",
+    i18n: { ko: "연출 기법", en: "Direction (Video)" },
+    children: {
+      effect: {
+        slug: "effect",
+        i18n: { ko: "효과", en: "Effects" },
+      },
+    },
+  },
+  combat: {
+    slug: "combat",
+    i18n: { ko: "교전", en: "Combat" },
+  },
+  movement: {
+    slug: "movement",
+    i18n: { ko: "이동", en: "Movement" },
+  },
+} as const;
 
 describe("filterClips", () => {
   it("matches translated tag labels when tag i18n data is provided", () => {
@@ -119,6 +141,19 @@ describe("filterClips", () => {
   it("returns all clips when excludedTags is empty", () => {
     const filtered = filterClips(clips, baseFilters);
     expect(filtered).toHaveLength(4);
+  });
+
+  it("excludes clips inside excluded folders, including descendants", () => {
+    const filtered = filterClips(
+      clips,
+      {
+        ...baseFilters,
+        excludedFolders: ["direction-video"],
+      },
+      categories
+    );
+
+    expect(filtered.map((clip) => clip.id)).toEqual(["clip-3", "clip-4"]);
   });
 
   it("excludes clips with a single excluded tag", () => {

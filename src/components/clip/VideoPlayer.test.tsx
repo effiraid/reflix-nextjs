@@ -551,4 +551,18 @@ describe("VideoPlayer", () => {
     expect(wrapper).toHaveAttribute("aria-hidden", "true");
     expect(wrapper.className).toContain("pointer-events-none");
   });
+
+  it("renders theme-aware chrome while keeping the video area black", () => {
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+      />
+    );
+
+    expect(screen.getByTestId("video-player")).toHaveClass("bg-background");
+    expect(screen.getByTestId("video-player-surface")).toHaveClass("bg-black");
+    expect(screen.getByTestId("video-player-controls")).toHaveClass("bg-surface");
+  });
 });

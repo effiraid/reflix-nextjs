@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
@@ -11,77 +10,127 @@ interface LandingHeroProps {
   clips: BrowseClipRecord[];
   dict: {
     heroTitle: string;
+    heroTitleMobile?: string;
+    heroTitleMobileCompact?: string;
     heroSub: string;
+    heroSubMobile?: string;
     heroCta: string;
     heroCtaSub: string;
     heroPills: string;
-    [key: string]: string;
+    [key: string]: string | undefined;
   };
 }
 
-function MockBrowseUI() {
+const getServerMobileSnapshot = () => false;
+
+function subscribeToBreakpoint(query: string, onStoreChange: () => void) {
+  const mql = window.matchMedia(query);
+  const handler = () => onStoreChange();
+  mql.addEventListener("change", handler);
+  return () => mql.removeEventListener("change", handler);
+}
+
+function getBreakpointSnapshot(query: string) {
+  return window.matchMedia(query).matches;
+}
+
+// Stable references to prevent useSyncExternalStore re-subscription every render
+const subscribeMobile = (cb: () => void) => subscribeToBreakpoint("(max-width: 768px)", cb);
+const getMobileSnapshot = () => getBreakpointSnapshot("(max-width: 768px)");
+const subscribeCompact = (cb: () => void) => subscribeToBreakpoint("(max-width: 360px)", cb);
+const getCompactSnapshot = () => getBreakpointSnapshot("(max-width: 360px)");
+
+function MockBrowseUI({ clips }: { clips: BrowseClipRecord[] }) {
+  const gridClips = clips.slice(0, 8);
+  const previewClip = clips[0];
+
   return (
     <div
-      className="mx-auto mt-12 hidden max-w-[900px] overflow-hidden rounded-xl md:block"
+      className="mx-auto mt-8 hidden max-w-[960px] overflow-hidden rounded-xl md:block"
       style={{
         background: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(255,255,255,0.06)",
         backdropFilter: "blur(12px)",
       }}
     >
-      <div className="flex" style={{ height: 320 }}>
-        {/* Left panel */}
+      <div className="flex" style={{ height: 340 }}>
+        {/* Left panel — folders */}
         <div
-          className="flex w-[180px] shrink-0 flex-col gap-2 p-3"
+          className="flex w-[180px] shrink-0 flex-col gap-1.5 p-3"
           style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}
         >
           {["이동", "교전", "피격", "대화", "연출"].map((label) => (
             <div
               key={label}
-              className="rounded px-2 py-1 text-[12px] text-[#777]"
-              style={{ background: "rgba(255,255,255,0.03)" }}
+              className="rounded-md px-3 py-1.5 text-[12px] text-[#666]"
+              style={{
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.04)",
+              }}
             >
               {label}
             </div>
           ))}
         </div>
 
-        {/* Center: grid */}
-        <div className="flex-1 p-3">
+        {/* Center — clip grid with real thumbnails */}
+        <div className="flex-1 overflow-hidden p-3">
           <div className="grid grid-cols-4 gap-2">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {gridClips.map((clip, i) => (
               <div
-                key={i}
-                className="rounded"
+                key={`${clip.id}-mock-${i}`}
+                className="overflow-hidden rounded-md"
                 style={{
                   aspectRatio: "16/9",
-                  background: `rgba(255,255,255,${0.03 + i * 0.005})`,
+                  background: "rgba(255,255,255,0.03)",
                 }}
-              />
+              >
+                <img
+                  data-testid="landing-hero-mock-grid-preview"
+                  src={getMediaUrl(clip.thumbnailUrl)}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                  aria-hidden="true"
+                />
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Right panel */}
+        {/* Right panel — inspector */}
         <div
-          className="w-[200px] shrink-0 p-3"
+          className="flex w-[220px] shrink-0 flex-col p-3"
           style={{ borderLeft: "1px solid rgba(255,255,255,0.06)" }}
         >
-          <div
-            className="mb-2 h-24 rounded"
-            style={{ background: "rgba(255,255,255,0.04)" }}
-          />
-          <div className="space-y-1.5">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-2.5 rounded"
-                style={{
-                  background: "rgba(255,255,255,0.06)",
-                  width: `${70 - i * 15}%`,
-                }}
+          {/* Preview thumbnail */}
+          <div className="overflow-hidden rounded-md" style={{ aspectRatio: "16/9" }}>
+            {previewClip && (
+              <img
+                data-testid="landing-hero-mock-inspector-preview"
+                src={getMediaUrl(previewClip.thumbnailUrl)}
+                alt=""
+                loading="lazy"
+                className="h-full w-full object-cover"
+                aria-hidden="true"
               />
-            ))}
+            )}
+          </div>
+
+          {/* Metadata skeleton */}
+          <div className="mt-3 space-y-2">
+            <div
+              className="h-3 rounded"
+              style={{ background: "rgba(255,255,255,0.1)", width: "80%" }}
+            />
+            <div
+              className="h-2.5 rounded"
+              style={{ background: "rgba(255,255,255,0.06)", width: "60%" }}
+            />
+            <div
+              className="h-2.5 rounded"
+              style={{ background: "rgba(255,255,255,0.04)", width: "45%" }}
+            />
           </div>
         </div>
       </div>
@@ -90,23 +139,22 @@ function MockBrowseUI() {
 }
 
 export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 768px)");
-    setIsMobile(mql.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mql.addEventListener("change", handler);
-    return () => mql.removeEventListener("change", handler);
-  }, []);
+  const isMobile = useSyncExternalStore(subscribeMobile, getMobileSnapshot, getServerMobileSnapshot);
+  const isCompactMobile = useSyncExternalStore(subscribeCompact, getCompactSnapshot, getServerMobileSnapshot);
 
   const gridCols = isMobile ? 3 : 5;
   const gridRows = isMobile ? 2 : 3;
   const visibleClips = clips.slice(0, gridCols * gridRows);
   const pills = dict.heroPills.split(",");
+  const heroTitleText = isCompactMobile
+    ? dict.heroTitleMobileCompact ?? dict.heroTitleMobile ?? dict.heroTitle
+    : isMobile
+      ? dict.heroTitleMobile ?? dict.heroTitle
+      : dict.heroTitle;
+  const heroSubText = isMobile ? dict.heroSubMobile ?? dict.heroSub : dict.heroSub;
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pt-14">
+    <section className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 pb-10 pt-28 md:px-8 md:pt-24">
       {/* Background clip grid */}
       <div
         className="absolute inset-0 grid gap-1"
@@ -118,13 +166,15 @@ export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
       >
         {visibleClips.map((clip, i) => (
           <div key={`${clip.id}-${i}`} className="relative overflow-hidden">
-            <Image
-              src={getMediaUrl(clip.thumbnailUrl)}
-              alt=""
-              fill
-              sizes={`${Math.floor(100 / gridCols)}vw`}
-              className="object-cover"
+            <video
+              src={getMediaUrl(clip.previewUrl)}
+              poster={getMediaUrl(clip.thumbnailUrl)}
+              muted
+              autoPlay
+              loop
+              playsInline
               aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
         ))}
@@ -153,30 +203,25 @@ export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <h1
-          className="font-bold leading-tight tracking-tight text-white"
+          className="whitespace-pre-line font-bold leading-tight tracking-tight text-white"
           style={{
-            fontSize: isMobile ? 36 : 52,
-            letterSpacing: "-1.5px",
+            fontSize: isMobile ? "clamp(20px, 6.5vw, 26px)" : 52,
+            letterSpacing: isMobile ? "-0.6px" : "-1.5px",
+            textWrap: isMobile ? "wrap" : "balance",
+            wordBreak: "keep-all",
           }}
         >
-          {dict.heroTitle.split("\n").map((line, i) => (
-            <span key={i}>
-              {i > 0 && <br />}
-              {line}
-            </span>
-          ))}
+          {heroTitleText}
         </h1>
 
-        <p className="mx-auto mt-5 max-w-lg text-[16px] leading-relaxed text-[#777]">
-          {dict.heroSub.split("\n").map((line, i) => (
-            <span key={i}>
-              {i > 0 && <br />}
-              {line}
-            </span>
-          ))}
+        <p
+          className="mx-auto mt-4 max-w-xl whitespace-pre-line text-[16px] leading-relaxed text-[#777] md:mt-5 md:max-w-2xl"
+          style={{ wordBreak: "keep-all" }}
+        >
+          {heroSubText}
         </p>
 
-        <div className="mt-8 flex flex-col items-center gap-3">
+        <div className="mt-6 flex flex-col items-center gap-2.5 md:mt-7">
           <Link
             href={`/${lang}/browse`}
             className="inline-block rounded-full bg-white px-8 py-3 text-[16px] font-semibold text-black transition-opacity hover:opacity-80"
@@ -187,7 +232,7 @@ export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
         </div>
 
         {/* Category pills */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
+        <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2.5 md:mt-7">
           {pills.map((pill) => (
             <span
               key={pill}
@@ -205,7 +250,7 @@ export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
 
       {/* Product screenshot */}
       <div className="relative z-10 w-full">
-        <MockBrowseUI />
+        <MockBrowseUI clips={clips} />
       </div>
     </section>
   );

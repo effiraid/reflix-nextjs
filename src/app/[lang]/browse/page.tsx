@@ -19,6 +19,7 @@ import { SubToolbar } from "@/components/layout/SubToolbar";
 import { RightPanelContent } from "@/components/layout/RightPanelContent";
 import type { Locale } from "@/lib/types";
 import { listBrowseResults, parseBrowsePageQuery } from "@/lib/browse-service";
+import { BrandSplash } from "@/components/splash/BrandSplash";
 
 function toURLSearchParams(
   rawSearchParams: Record<string, string | string[] | undefined>
@@ -62,7 +63,7 @@ export default function BrowsePage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
-    <Suspense fallback={<div className="p-4">Loading...</div>}>
+    <Suspense fallback={<BrandSplash persistent />}>
       {Promise.all([params, searchParams]).then(
         ([{ lang }, rawSearchParams]) => (
           <BrowsePageContent
@@ -147,6 +148,7 @@ export function BrowsePageShell({
     <ClipDataProvider
       clips={initialBrowseResults.items}
       initialTotalCount={initialBrowseResults.totalCount}
+      totalClipCount={browseSummary.length}
     >
       <div className="h-screen flex flex-col">
         <Suspense>
@@ -183,7 +185,7 @@ export function BrowsePageShell({
               </Suspense>
             </div>
             <main className="flex-1 overflow-y-auto" data-masonry-scroll>
-              <Suspense fallback={<div className="p-4">{dict.common.loading}</div>}>
+              <Suspense fallback={<div className="flex flex-1 items-center justify-center p-4"><span className="text-sm font-bold tracking-tight"><span className="text-brand">Ref</span><span className="text-foreground">lix</span></span></div>}>
                 <BrowseClient
                   categories={categories}
                   tagI18n={tagI18n}

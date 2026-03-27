@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LeftPanelContent } from "./LeftPanelContent";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -20,7 +20,8 @@ vi.mock("@/hooks/useFilterSync", () => ({
 vi.mock("./ClipDataProvider", () => ({
   useClipData: () => clips,
   useBrowseData: () => ({
-    initialTotalCount: clips.length,
+    initialTotalCount: 1,
+    totalClipCount: 24,
   }),
 }));
 
@@ -70,11 +71,21 @@ const dict = {
 } satisfies Pick<Dictionary, "browse" | "clip">;
 
 describe("LeftPanelContent", () => {
+  const scrollIntoViewMock = vi.fn();
+
   beforeEach(() => {
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
+    scrollIntoViewMock.mockClear();
     useFilterStore.setState({
       category: null,
+      contentMode: null,
       selectedFolders: [],
+      excludedFolders: [],
       selectedTags: [],
+      excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
       starFilter: null,
@@ -109,6 +120,37 @@ describe("LeftPanelContent", () => {
     expect(screen.getByText("이동")).toBeInTheDocument();
   });
 
+  it("keeps movement visible when the direction mode is selected", () => {
+    const mixedCategories: CategoryTree = {
+      ...categories,
+      dialogue: {
+        slug: "dialogue",
+        i18n: { ko: "대화", en: "Dialogue" },
+      },
+      combat: {
+        slug: "combat",
+        i18n: { ko: "전투", en: "Combat" },
+      },
+    };
+
+    useFilterStore.setState((state) => ({
+      ...state,
+      contentMode: "direction",
+    }));
+
+    render(
+      <LeftPanelContent
+        categories={mixedCategories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByText("이동")).toBeInTheDocument();
+    expect(screen.getByText("대화")).toBeInTheDocument();
+    expect(screen.queryByText("전투")).not.toBeInTheDocument();
+  });
+
   it("opens the tag filter panel when the all tags shortcut is clicked", () => {
     render(
       <LeftPanelContent
@@ -123,6 +165,19 @@ describe("LeftPanelContent", () => {
 
     expect(useUIStore.getState().filterBarOpen).toBe(true);
     expect(useUIStore.getState().activeFilterTab).toBe("tags");
+  });
+
+  it("shows the full library count in the all shortcut even when the current results are filtered", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    const allShortcut = screen.getAllByText("전체")[0].closest("button");
+    expect(allShortcut).toHaveTextContent("24");
   });
 
   it("does not render the tag filter section", () => {
@@ -283,5 +338,26 @@ describe("LeftPanelContent", () => {
     expect(
       screen.getByRole("button", { name: dict.browse.expandAllFolders })
     ).toBeInTheDocument();
+  });
+
+  it("expands ancestors and scrolls the selected folder into view when selection changes externally", async () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.queryByText("천천히 걷기")).not.toBeInTheDocument();
+
+    useFilterStore.setState({
+      selectedFolders: ["slowWalk"],
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("천천히 걷기")).toBeInTheDocument();
+      expect(scrollIntoViewMock).toHaveBeenCalled();
+    });
   });
 });

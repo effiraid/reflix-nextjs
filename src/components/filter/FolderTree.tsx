@@ -194,17 +194,19 @@ function FolderNode({
   }) => void;
   onFolderExpandToggle: (folderId: string) => void;
 }) {
-  const { selectedFolders } = useFilterStore();
+  const { selectedFolders, excludedFolders } = useFilterStore();
   const hasChildren = node.children && Object.keys(node.children).length > 0;
   const expanded = expandedFolderIds.includes(id);
   const allIds = collectDescendantIds(id, categories);
   const isSelected = allIds.some((fid) => selectedFolders.includes(fid));
+  const isExcluded = allIds.some((fid) => excludedFolders.includes(fid));
   const count = allIds.reduce((sum, fid) => sum + (folderCounts[fid] || 0), 0);
   const Icon = FOLDER_ICONS[node.slug];
 
   return (
     <div>
       <div
+        data-folder-id={id}
         onClick={(event) =>
           onFolderClick({
             folderId: id,
@@ -213,7 +215,11 @@ function FolderNode({
             altKey: event.altKey,
           })}
         className={`flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer text-[13px] transition-colors hover:bg-surface-hover ${
-          isSelected ? "bg-accent/10 text-accent" : ""
+          isSelected
+            ? "bg-accent/10 text-accent"
+            : isExcluded
+              ? "bg-red-500/10 text-red-600 dark:text-red-400"
+              : ""
         }`}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
       >
@@ -235,10 +241,16 @@ function FolderNode({
         {Icon && (
           <Icon
             size={14}
-            className={`shrink-0 ${isSelected ? "text-accent" : "text-muted"}`}
+            className={`shrink-0 ${
+              isSelected
+                ? "text-accent"
+                : isExcluded
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-muted"
+            }`}
           />
         )}
-        <span className="flex-1 truncate">
+        <span className={`flex-1 truncate ${isExcluded ? "line-through" : ""}`}>
           {node.i18n[lang]}
         </span>
         {count > 0 && (

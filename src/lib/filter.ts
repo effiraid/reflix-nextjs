@@ -5,6 +5,7 @@ import { searchClips, type SearchableClipRecord } from "./clipSearch";
 
 export interface FilterState {
   selectedFolders: string[];
+  excludedFolders: string[];
   selectedTags: string[];
   excludedTags: string[];
   starFilter: number | null;
@@ -12,6 +13,19 @@ export interface FilterState {
   sortBy: SortBy;
   category: string | null;
   contentMode: ContentMode | null;
+}
+
+/** True when any filter is active that makes feed mode inappropriate (excludes contentMode/sortBy). */
+export function hasFeedBlockingFilters(state: FilterState): boolean {
+  return (
+    state.category !== null ||
+    state.selectedFolders.length > 0 ||
+    state.excludedFolders.length > 0 ||
+    state.selectedTags.length > 0 ||
+    state.excludedTags.length > 0 ||
+    state.starFilter !== null ||
+    state.searchQuery.length > 0
+  );
 }
 
 const CONTENT_MODE_KEYWORD: Record<ContentMode, string> = {
@@ -49,6 +63,15 @@ export function filterClips<T extends FilterableClipRecord>(
       : new Set(filters.selectedFolders);
     result = result.filter((c) =>
       (c.folders ?? []).some((f) => expandedIds.has(f))
+    );
+  }
+
+  if (filters.excludedFolders.length > 0) {
+    const expandedIds = categories
+      ? new Set(filters.excludedFolders.flatMap((id) => collectDescendantIds(id, categories)))
+      : new Set(filters.excludedFolders);
+    result = result.filter((c) =>
+      !(c.folders ?? []).some((f) => expandedIds.has(f))
     );
   }
 

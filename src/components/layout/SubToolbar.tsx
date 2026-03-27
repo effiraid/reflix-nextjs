@@ -1,10 +1,20 @@
 "use client";
 
-import { forwardRef, useLayoutEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Ref,
+} from "react";
+import { usePathname } from "next/navigation";
 import { useShallow } from "zustand/react/shallow";
 
+import { updateFilterURL } from "@/hooks/useFilterSync";
 import { MIN_THUMBNAIL_SIZE, MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { getCategoryLabel } from "@/lib/categories";
+import { hasFeedBlockingFilters } from "@/lib/filter";
 import { getTagDisplayLabel } from "@/lib/tagDisplay";
 import {
   BADGE_GAP_PX,
@@ -57,31 +67,38 @@ export function SubToolbar({
       tier: state.tier,
     }))
   );
-  const { selectedFolders, selectedTags, excludedTags } = useFilterStore(
+  const { selectedFolders, excludedFolders, selectedTags, excludedTags } = useFilterStore(
     useShallow((state) => ({
       selectedFolders: state.selectedFolders,
+      excludedFolders: state.excludedFolders,
       selectedTags: state.selectedTags,
       excludedTags: state.excludedTags,
     }))
   );
+  const pathname = usePathname();
 
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
 
   const isProUser = Boolean(user) && tier === "pro";
-  const filterBadges = buildFilterBadges({
-    categories,
-    excludedTags,
-    lang,
-    selectedFolders,
-    selectedTags,
-    tagI18n,
-  });
+  const filterBadges = useMemo(
+    () =>
+      buildFilterBadges({
+        categories,
+        excludedFolders,
+        excludedTags,
+        lang,
+        selectedFolders,
+        selectedTags,
+        tagI18n,
+      }),
+    [categories, excludedFolders, excludedTags, lang, selectedFolders, selectedTags, tagI18n]
+  );
 
   const badgeTrackRef = useRef<HTMLDivElement | null>(null);
-  const overflowMeasureRef = useRef<HTMLSpanElement | null>(null);
-  const badgeMeasureRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const overflowMeasureRef = useRef<HTMLElement | null>(null);
+  const badgeMeasureRefs = useRef<(HTMLElement | null)[]>([]);
   const [visibleBadgeCount, setVisibleBadgeCount] = useState(filterBadges.length);
   const hiddenBadgeCount = Math.max(filterBadges.length - visibleBadgeCount, 0);
   const visibleBadges = filterBadges.slice(0, visibleBadgeCount);
@@ -102,7 +119,9 @@ export function SubToolbar({
       const trackWidth = badgeTrackRef.current?.offsetWidth ?? 0;
 
       if (trackWidth <= 0) {
-        setVisibleBadgeCount(filterBadges.length);
+        setVisibleBadgeCount((currentCount) =>
+          currentCount === filterBadges.length ? currentCount : filterBadges.length
+        );
         return;
       }
 
@@ -142,13 +161,41 @@ export function SubToolbar({
     };
   }, [filterBadges, lang]);
 
+  function handleFilterBadgeClick(badge: FilterBadgeData) {
+    const state = useFilterStore.getState();
+
+    switch (badge.kind) {
+      case "selected-folder":
+        updateFilterURL(pathname, {
+          selectedFolders: state.selectedFolders.filter((id) => id !== badge.value),
+        });
+        return;
+      case "excluded-folder":
+        updateFilterURL(pathname, {
+          excludedFolders: state.excludedFolders.filter((id) => id !== badge.value),
+        });
+        return;
+      case "selected-tag":
+        updateFilterURL(pathname, {
+          selectedTags: state.selectedTags.filter((tag) => tag !== badge.value),
+        });
+        return;
+      case "excluded-tag":
+        updateFilterURL(pathname, {
+          excludedTags: state.excludedTags.filter((tag) => tag !== badge.value),
+        });
+        return;
+    }
+  }
+
   function handleFilterToggle() {
     const nextOpen = !filterBarOpen;
     setFilterBarOpen(nextOpen);
     if (!nextOpen) setActiveFilterTab(null);
   }
 
-  if (viewMode === "feed") return null;
+  const feedBlocking = useFilterStore((s) => hasFeedBlockingFilters(s));
+  if (viewMode === "feed" && !feedBlocking) return null;
 
   return (
     <div className="shrink-0 border-b border-border">
@@ -191,7 +238,12 @@ export function SubToolbar({
               >
                 <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                   {visibleBadges.map((badge) => (
-                    <FilterBadge key={badge} label={badge} />
+                    <FilterBadge
+                      key={badge.key}
+                      label={badge.label}
+                      interactive
+                      onClick={() => handleFilterBadgeClick(badge)}
+                    />
                   ))}
                   {hiddenBadgeCount > 0 ? (
                     <FilterBadge
@@ -207,8 +259,9 @@ export function SubToolbar({
                 <div className="flex w-max items-center gap-1.5 whitespace-nowrap">
                   {filterBadges.map((badge, index) => (
                     <FilterBadge
-                      key={`measure-${badge}-${index}`}
-                      label={badge}
+                      key={`measure-${badge.key}-${index}`}
+                      label={badge.label}
+                      interactive
                       ref={(node) => {
                         badgeMeasureRefs.current[index] = node;
                       }}
@@ -286,8 +339,16 @@ export function SubToolbar({
   );
 }
 
+type FilterBadgeData = {
+  key: string;
+  kind: "selected-folder" | "excluded-folder" | "selected-tag" | "excluded-tag";
+  label: string;
+  value: string;
+};
+
 function buildFilterBadges({
   categories,
+  excludedFolders,
   excludedTags,
   lang,
   selectedFolders,
@@ -295,51 +356,91 @@ function buildFilterBadges({
   tagI18n,
 }: {
   categories: CategoryTree;
+  excludedFolders: string[];
   excludedTags: string[];
   lang: Locale;
   selectedFolders: string[];
   selectedTags: string[];
   tagI18n: Record<string, string>;
-}): string[] {
-  const badges: string[] = [];
+}): FilterBadgeData[] {
+  const badges: FilterBadgeData[] = [];
 
   if (selectedFolders.length > 0) {
     badges.push(
-      ...selectedFolders.map((folderId) =>
-        getCategoryLabel(folderId, categories, lang)
-      )
+      ...selectedFolders.map((folderId) => ({
+        key: `selected-folder:${folderId}`,
+        kind: "selected-folder" as const,
+        label: getCategoryLabel(folderId, categories, lang),
+        value: folderId,
+      }))
     );
   }
 
   if (selectedTags.length > 0) {
     badges.push(
-      ...selectedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n))
+      ...selectedTags.map((tag) => ({
+        key: `selected-tag:${tag}`,
+        kind: "selected-tag" as const,
+        label: getTagDisplayLabel(tag, lang, tagI18n),
+        value: tag,
+      }))
+    );
+  }
+
+  if (excludedFolders.length > 0) {
+    badges.push(
+      ...excludedFolders.map((folderId) => ({
+        key: `excluded-folder:${folderId}`,
+        kind: "excluded-folder" as const,
+        label: `-${getCategoryLabel(folderId, categories, lang)}`,
+        value: folderId,
+      }))
     );
   }
 
   if (excludedTags.length > 0) {
     badges.push(
-      ...excludedTags.map(
-        (tag) => `-${getTagDisplayLabel(tag, lang, tagI18n)}`
-      )
+      ...excludedTags.map((tag) => ({
+        key: `excluded-tag:${tag}`,
+        kind: "excluded-tag" as const,
+        label: `-${getTagDisplayLabel(tag, lang, tagI18n)}`,
+        value: tag,
+      }))
     );
   }
 
   return badges;
 }
 
-const FilterBadge = forwardRef<HTMLSpanElement, { label: string }>(
-  function FilterBadge({ label }, ref) {
+const FilterBadge = forwardRef<
+  HTMLElement,
+  { label: string; interactive?: boolean; onClick?: () => void }
+>(function FilterBadge({ label, interactive = false, onClick }, ref) {
+  const className =
+    "inline-flex shrink-0 items-center rounded-full border border-border/70 bg-surface/80 px-2.5 py-1 text-[11px] leading-none text-muted";
+
+  if (interactive) {
     return (
-      <span
-        ref={ref}
-        className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-surface/80 px-2.5 py-1 text-[11px] leading-none text-muted"
+      <button
+        type="button"
+        ref={ref as Ref<HTMLButtonElement>}
+        onClick={onClick}
+        className={`${className} cursor-pointer appearance-none transition-colors hover:bg-surface-hover`}
       >
         {label}
-      </span>
+      </button>
     );
   }
-);
+
+  return (
+    <span
+      ref={ref as Ref<HTMLSpanElement>}
+      className={className}
+    >
+      {label}
+    </span>
+  );
+});
 
 /* --- Icons (14×14) --- */
 

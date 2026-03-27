@@ -29,6 +29,8 @@
     "eagle:thumbs:remaining": "node scripts/eagle-thumbnail-pilot.mjs --remaining",
     "eagle:phase2:review": "node scripts/eagle-phase2.mjs review",
     "eagle:phase2:apply": "node scripts/eagle-phase2.mjs apply",
+    "release:go": "node scripts/release-approval.mjs go",
+    "release:status": "node scripts/release-approval.mjs status",
     "release:mark-published": "node scripts/release-approval.mjs mark-published",
     "release:mark-failed": "node scripts/release-approval.mjs mark-failed"
   },

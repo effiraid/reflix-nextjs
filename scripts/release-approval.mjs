@@ -3,14 +3,43 @@
 import {
   parseReleaseApprovalCliArgs,
   runReleaseApprove,
+  runReleaseGo,
   runReleaseMarkFailed,
   runReleaseMarkPublished,
   runReleaseReview,
   runReleaseScan,
+  runReleaseStatus,
 } from "./lib/release-approval.mjs";
 
 async function main() {
   const parsed = parseReleaseApprovalCliArgs();
+
+  if (parsed.command === "go") {
+    await runReleaseGo(parsed);
+    return;
+  }
+
+  if (parsed.command === "status") {
+    const result = await runReleaseStatus(parsed);
+
+    if (result.batch) {
+      console.log(`\n📦 Active Batch: ${result.batch.name} (${result.batch.size}개)`);
+      console.log(`   Published: ${result.batch.published}/${result.batch.size}`);
+    } else {
+      console.log("\n📦 Active Batch: 없음");
+    }
+
+    console.log(`\n📊 Published Total: ${result.published.total}개`);
+    if (result.published.lastUpdated) {
+      console.log(`   Last updated: ${result.published.lastUpdated}`);
+    }
+
+    console.log(`\n🔍 Eagle Library:`);
+    console.log(`   Total eligible: ${result.library.eligible}`);
+    console.log(`   Missing aiTags: ${result.library.missingAiTags}`);
+    console.log(`   Available for next batch: ${result.library.availableForNextBatch}`);
+    return;
+  }
 
   if (parsed.command === "scan") {
     const result = await runReleaseScan(parsed);

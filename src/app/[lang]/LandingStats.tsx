@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 interface LandingStatsProps {
   clipCount: number;
-  tagGroupCount: number;
+  aiRecommendationCount: number;
   tagCount: number;
   dict: {
     statsClips: string;
-    statsTagGroups: string;
+    statsAiRecommendedTags: string;
     statsTags: string;
     [key: string]: string;
   };
@@ -18,6 +18,7 @@ function useCountUp(target: number, duration = 1000) {
   const [value, setValue] = useState(0);
   const [started, setStarted] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
 
   const start = useCallback(() => {
     if (started) return;
@@ -31,10 +32,10 @@ function useCountUp(target: number, duration = 1000) {
       const eased = 1 - Math.pow(1 - progress, 3);
       setValue(Math.round(eased * target));
       if (progress < 1) {
-        requestAnimationFrame(tick);
+        rafRef.current = requestAnimationFrame(tick);
       }
     }
-    requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(tick);
   }, [target, duration, started]);
 
   useEffect(() => {
@@ -50,7 +51,10 @@ function useCountUp(target: number, duration = 1000) {
       { threshold: 0.3 }
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(rafRef.current);
+    };
   }, [start]);
 
   return { ref, value };
@@ -82,7 +86,7 @@ function StatItem({
 
 export function LandingStats({
   clipCount,
-  tagGroupCount,
+  aiRecommendationCount,
   tagCount,
   dict,
 }: LandingStatsProps) {
@@ -90,7 +94,10 @@ export function LandingStats({
     <section className="py-16 md:py-20">
       <div className="mx-auto grid max-w-3xl grid-cols-3 gap-8">
         <StatItem target={clipCount} label={dict.statsClips} />
-        <StatItem target={tagGroupCount} label={dict.statsTagGroups} />
+        <StatItem
+          target={aiRecommendationCount}
+          label={dict.statsAiRecommendedTags}
+        />
         <StatItem target={tagCount} label={dict.statsTags} />
       </div>
     </section>

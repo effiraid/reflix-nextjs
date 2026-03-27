@@ -9,6 +9,7 @@
   --muted: #636363;
   --accent: #3b82f6;
   --accent-hover: #2563eb;
+  --brand: #6366f1;
 }
 
 .dark {
@@ -20,6 +21,7 @@
   --muted: #a3a3a3;
   --accent: #60a5fa;
   --accent-hover: #3b82f6;
+  --brand: #818cf8;
 }
 
 @theme inline {
@@ -31,6 +33,7 @@
   --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-brand: var(--brand);
   --font-sans: var(--font-pretendard);
   --font-mono: var(--font-geist-mono);
 }
@@ -61,4 +64,26 @@ body {
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 3px;
+}
+
+/* Splash screen animations */
+@keyframes splash-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes splash-dot-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
 }

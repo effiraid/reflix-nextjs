@@ -3,6 +3,7 @@ import type { ContentMode, SortBy } from "@/lib/types";
 
 interface FilterStore {
   selectedFolders: string[];
+  excludedFolders: string[];
   selectedTags: string[];
   excludedTags: string[];
   starFilter: number | null;
@@ -24,6 +25,7 @@ interface FilterStore {
 
 export const useFilterStore = create<FilterStore>((set) => ({
   selectedFolders: [],
+  excludedFolders: [],
   selectedTags: [],
   excludedTags: [],
   starFilter: null,
@@ -42,6 +44,7 @@ export const useFilterStore = create<FilterStore>((set) => ({
   clearFilters: () =>
     set({
       selectedFolders: [],
+      excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
       starFilter: null,
