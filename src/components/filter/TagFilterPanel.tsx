@@ -299,7 +299,7 @@ export function TagFilterPanel({
         </div>
 
         {/* 우측: 태그 목록 */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="grid flex-1 grid-cols-1 content-start overflow-y-auto xl:grid-cols-2 2xl:grid-cols-3">
           {currentTags.map((tag) => {
             const isIncluded = selectedTags.includes(tag);
             const isExcluded = excludedTags.includes(tag);
@@ -356,7 +356,7 @@ export function TagFilterPanel({
           })}
 
           {currentTags.length === 0 && (
-            <div className="flex items-center justify-center h-full text-sm text-muted">
+            <div className="col-span-full flex min-h-full items-center justify-center text-sm text-muted">
               {dict.browse.noResults}
             </div>
           )}

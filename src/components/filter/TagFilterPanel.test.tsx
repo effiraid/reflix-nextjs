@@ -81,6 +81,30 @@ describe("TagFilterPanel", () => {
     expect(screen.getByText("슬픔")).toBeInTheDocument();
   });
 
+  it("uses a responsive multi-column layout for the tag list on wide screens", () => {
+    render(
+      <TagFilterPanel
+        tagGroups={{
+          groups: [],
+          parentGroups: [],
+        }}
+        lang="ko"
+        tagI18n={{}}
+        dict={{
+          browse: koDict.browse,
+          clip: koDict.clip,
+          common: koDict.common,
+        }}
+        updateURL={vi.fn()}
+      />
+    );
+
+    const tagButton = screen.getByRole("button", { name: /슬픔/ });
+    const tagList = tagButton.parentElement;
+
+    expect(tagList).toHaveClass("grid", "grid-cols-1", "xl:grid-cols-2", "2xl:grid-cols-3");
+  });
+
   it("shows a loading state while browse projection is still preparing", () => {
     projectionStatus = "loading";
 
