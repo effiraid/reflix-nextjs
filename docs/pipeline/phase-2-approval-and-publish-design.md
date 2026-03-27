@@ -22,6 +22,7 @@
 - 운영 흐름은 `release:scan -> release:review -> Eagle review -> release:approve -> export:batch:dry -> export:batch -> release:mark-published / release:mark-failed`다.
 - `release:approve`는 게시를 수행하지 않고, 승인된 제안을 active batch로 승격만 한다.
 - 기본 `release:scan`은 active batch 범위만 스캔하고, 전체 eligible 라이브러리 후보를 보고 싶을 때만 명시적인 `--all` 또는 `release:scan:all`을 사용한다.
+- `export:batch`는 stage 기반 resumable export다. 내부적으로 `discover -> process-media -> build-artifacts -> compute-related -> finalize`를 거치며, 필요할 때만 `upload`와 `prune`을 추가 실행한다.
 
 ## 문제 정의
 
@@ -42,7 +43,7 @@
 
 ### 1. 승인 상태와 게시 상태는 다르다
 
-`승인됨`은 사람이 “올려도 된다”고 판단한 상태다. `게시됨`은 실제 export / upload / deploy / 검증까지 성공한 상태다. 이 둘은 같은 뜻이 아니며, 같은 태그나 같은 파일로 합치면 안 된다.
+`승인됨`은 사람이 “올려도 된다”고 판단한 상태다. `게시됨`은 실제 export / upload / deploy / 검증까지 성공한 상태다. export는 이제 명시적 run state와 checkpoint를 가지므로, 중간 실패 후 재개와 최종 성공 판정이 더 분리된다. 이 둘은 같은 뜻이 아니며, 같은 태그나 같은 파일로 합치면 안 된다.
 
 ### 2. Eagle은 사람이 상태를 확인하는 공간이다
 
@@ -248,8 +249,9 @@ Eagle은 사람이 실제 아이템을 보고 검토하는 공간이다.
 - `scan`은 후보 계산과 proposal artifact 생성을 한다.
 - `review`는 review-requested 태그와 metadata-based suggestion artifact를 만든다.
 - `approve`는 approved proposal만 active batch로 승격한다.
-- `export:batch:dry`는 export 전에 active batch를 검증한다.
-- `export:batch`는 active batch 기준 export / prune를 수행한다.
+- `export:batch:dry`는 export 전에 active batch를 검증하고, 새 run 생성 또는 기존 run 재개 여부를 보여준다.
+- `export:batch`는 active batch 기준 stage-based export를 수행한다.
+- `export:prune` 또는 `--prune`은 실패가 없는 경우에만 stale local artifact 정리를 수행한다.
 - `mark-published`는 게시 성공 결과를 Eagle 태그와 `config/published-state.json`에 반영한다.
 - `mark-failed`는 실패 결과를 Eagle 태그에 반영하되, 기존 `config/published-state.json`은 유지한다.
 

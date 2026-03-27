@@ -6,9 +6,21 @@
  * @param {number} topN - Number of related clips to return per clip
  * @returns {Map<string, string[]>} Map of clipId → related clip IDs
  */
-export function computeRelatedClips(clips, topN = 5) {
-  const tagIndex = new Map();    // tag → Set<clipId>
-  const folderIndex = new Map(); // folderId → Set<clipId>
+export function buildRelatedInput(clip) {
+  return {
+    tags: Array.isArray(clip?.tags)
+      ? [...clip.tags].map((tag) => String(tag ?? "")).filter(Boolean).sort()
+      : [],
+    folders: Array.isArray(clip?.folders)
+      ? [...clip.folders].map((folder) => String(folder ?? "")).filter(Boolean).sort()
+      : [],
+    category: String(clip?.category ?? "uncategorized"),
+  };
+}
+
+function buildIndexes(clips) {
+  const tagIndex = new Map();
+  const folderIndex = new Map();
 
   for (const clip of clips) {
     for (const tag of clip.tags) {
@@ -21,40 +33,67 @@ export function computeRelatedClips(clips, topN = 5) {
     }
   }
 
+  return {
+    tagIndex,
+    folderIndex,
+  };
+}
+
+function scoreClipNeighbors(clip, indexes, topN) {
+  const { tagIndex, folderIndex } = indexes;
+  const tagScores = new Map();
+  for (const tag of clip.tags) {
+    const peers = tagIndex.get(tag);
+    if (!peers) continue;
+    for (const peerId of peers) {
+      if (peerId === clip.id) continue;
+      tagScores.set(peerId, (tagScores.get(peerId) || 0) + 1);
+    }
+  }
+
+  const folderPeers = new Set();
+  for (const folder of clip.folders) {
+    const peers = folderIndex.get(folder);
+    if (!peers) continue;
+    for (const peerId of peers) {
+      if (peerId !== clip.id) folderPeers.add(peerId);
+    }
+  }
+
+  const allCandidates = new Set([...tagScores.keys(), ...folderPeers]);
+  const scored = [];
+  for (const id of allCandidates) {
+    const score = (tagScores.get(id) || 0) + (folderPeers.has(id) ? 2 : 0);
+    scored.push({ id, score });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, topN).map((entry) => entry.id);
+}
+
+export function computeRelatedClips(clips, topN = 5) {
+  const indexes = buildIndexes(clips);
+
   const result = new Map();
 
   for (const clip of clips) {
-    // Count tag overlap per candidate via inverted index
-    const tagScores = new Map();
-    for (const tag of clip.tags) {
-      const peers = tagIndex.get(tag);
-      if (!peers) continue;
-      for (const peerId of peers) {
-        if (peerId === clip.id) continue;
-        tagScores.set(peerId, (tagScores.get(peerId) || 0) + 1);
-      }
+    result.set(clip.id, scoreClipNeighbors(clip, indexes, topN));
+  }
+
+  return result;
+}
+
+export function computeRelatedClipsForSubset(clips, targetIds, topN = 5) {
+  const targetIdSet = new Set(targetIds);
+  const indexes = buildIndexes(clips);
+  const result = new Map();
+
+  for (const clip of clips) {
+    if (!targetIdSet.has(clip.id)) {
+      continue;
     }
 
-    // Collect candidates sharing any folder
-    const folderPeers = new Set();
-    for (const folder of clip.folders) {
-      const peers = folderIndex.get(folder);
-      if (!peers) continue;
-      for (const peerId of peers) {
-        if (peerId !== clip.id) folderPeers.add(peerId);
-      }
-    }
-
-    // Merge scores: tag overlap + folder bonus (+2 if sharing any folder)
-    const allCandidates = new Set([...tagScores.keys(), ...folderPeers]);
-    const scored = [];
-    for (const id of allCandidates) {
-      const score = (tagScores.get(id) || 0) + (folderPeers.has(id) ? 2 : 0);
-      scored.push({ id, score });
-    }
-
-    scored.sort((a, b) => b.score - a.score);
-    result.set(clip.id, scored.slice(0, topN).map((s) => s.id));
+    result.set(clip.id, scoreClipNeighbors(clip, indexes, topN));
   }
 
   return result;

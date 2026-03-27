@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeRelatedClips } from "./similarity.mjs";
+import { buildRelatedInput, computeRelatedClips, computeRelatedClipsForSubset } from "./similarity.mjs";
 
 function makeClip(id, tags = [], folders = []) {
   return { id, tags, folders };
@@ -100,5 +100,35 @@ describe("computeRelatedClips", () => {
     for (const clip of clips) {
       expect(optimized.get(clip.id)).toEqual(naive.get(clip.id));
     }
+  });
+
+  it("computes the same rankings as the full map for a target subset", () => {
+    const clips = [
+      makeClip("a", ["t1", "t2"], ["f1"]),
+      makeClip("b", ["t1"], ["f1"]),
+      makeClip("c", ["t2"], ["f2"]),
+      makeClip("d", ["t3"], ["f3"]),
+    ];
+
+    const full = computeRelatedClips(clips);
+    const subset = computeRelatedClipsForSubset(clips, ["a", "c"]);
+
+    expect(subset.get("a")).toEqual(full.get("a"));
+    expect(subset.get("c")).toEqual(full.get("c"));
+    expect(subset.has("b")).toBe(false);
+  });
+
+  it("normalizes related inputs into sorted tags folders and category", () => {
+    expect(
+      buildRelatedInput({
+        tags: ["guard", "blade"],
+        folders: ["F2", "F1"],
+        category: "combat",
+      })
+    ).toEqual({
+      tags: ["blade", "guard"],
+      folders: ["F1", "F2"],
+      category: "combat",
+    });
   });
 });

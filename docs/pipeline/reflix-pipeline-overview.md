@@ -43,6 +43,19 @@ Reflix 파이프라인은 크게 두 단계로 나뉜다.
 → reflix.dev 반영
 ```
 
+현재 export 단계는 단일 순차 루프가 아니라 아래 stage 구조로 실행된다.
+
+```text
+discover
+→ process-media
+→ build-artifacts
+→ compute-related
+→ upload (옵션)
+→ finalize
+```
+
+중간에 실패해도 검증된 stage 결과만 재사용하도록 `.tmp/export-runs/<run-id>/`에 run state를 남긴다. 운영자가 보는 진행 메시지와 실패 요약은 한글로 출력한다.
+
 ## 핵심 개념
 
 ### 원본 mp4

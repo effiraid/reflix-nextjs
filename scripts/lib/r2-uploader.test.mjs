@@ -115,20 +115,31 @@ test("uploadBatch dry-run does not require real R2 credentials", async () => {
   assert.equal(summary.failed, 0);
 });
 
-test("uploadBatch records failed uploads and continues with later entries", async () => {
+test("uploadBatch retries a failed upload and continues with later entries", async () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-r2-upload-"));
   const firstFile = path.join(tmpDir, "clip-1.mp4");
   const secondFile = path.join(tmpDir, "clip-2.webp");
   fs.writeFileSync(firstFile, "video");
   fs.writeFileSync(secondFile, "thumb");
 
-  let sendCalls = 0;
+  let uploadCalls = 0;
   const client = {
-    async send() {
-      sendCalls += 1;
-      if (sendCalls === 1) {
-        throw new Error("network");
+    async send(command) {
+      if (command.constructor?.name === "HeadObjectCommand") {
+        const error = new Error("missing");
+        error.name = "NotFound";
+        throw error;
       }
+
+      if (command.constructor?.name === "PutObjectCommand") {
+        uploadCalls += 1;
+        if (uploadCalls === 1) {
+          throw new Error("network");
+        }
+        return {};
+      }
+
+      throw new Error(`Unexpected command: ${command.constructor?.name}`);
     },
   };
 
@@ -149,8 +160,8 @@ test("uploadBatch records failed uploads and continues with later entries", asyn
     }
   );
 
-  assert.equal(summary.uploaded, 1);
-  assert.equal(summary.failed, 1);
-  assert.equal(summary.entries[0].status, "failed");
+  assert.equal(summary.uploaded, 2);
+  assert.equal(summary.failed, 0);
+  assert.equal(summary.entries[0].status, "uploaded");
   assert.equal(summary.entries[1].status, "uploaded");
 });

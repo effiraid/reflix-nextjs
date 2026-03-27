@@ -115,6 +115,16 @@ export function buildFullClip(meta, lqipBase64) {
   };
 }
 
+export function mergeClipIndexEntries(existingEntries, nextEntries) {
+  const mergedEntries = new Map((existingEntries || []).map((entry) => [entry.id, entry]));
+
+  for (const entry of nextEntries || []) {
+    mergedEntries.set(entry.id, entry);
+  }
+
+  return Array.from(mergedEntries.values());
+}
+
 /**
  * Write all output files.
  */
@@ -137,10 +147,9 @@ export function writeOutputFiles(clips, clipIndexEntries, outputDir) {
     existingEntries = existingIndex.clips || [];
   }
 
-  const mergedEntries = new Map(existingEntries.map((entry) => [entry.id, entry]));
-  for (const entry of clipIndexEntries) {
-    mergedEntries.set(entry.id, entry);
-  }
+  const mergedEntries = new Map(
+    mergeClipIndexEntries(existingEntries, clipIndexEntries).map((entry) => [entry.id, entry])
+  );
 
   const indexData = {
     clips: Array.from(mergedEntries.values()),

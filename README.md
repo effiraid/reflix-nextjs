@@ -37,15 +37,16 @@ Reflix media is generated from the active release batch first, then optionally u
 
 ```bash
 # Generate the active release batch from config/release-batch.json
-# and remove stale local artifacts outside the batch
 npm run export:batch
 
 # Preview the active batch without writing files
 npm run export:batch:dry
 
-# Generate the active batch, prune stale local artifacts,
-# then upload the same assets to R2
+# Generate the active batch, then upload the same assets to R2
 npm run export:batch:r2
+
+# Explicit prune pass for stale local artifacts outside the merged index
+npm run export:prune
 
 # Explicit full-library export (dangerous; requires opt-in)
 npm run export:full
@@ -62,6 +63,18 @@ node scripts/export.mjs --batch config/some-other-batch.json
 
 # Preview planned R2 uploads without real credentials
 node scripts/export.mjs --dry-run --r2
+
+# Force a fresh export run instead of resuming an incomplete matching run
+node scripts/export.mjs --fresh-run
+
+# Resume a specific run directly
+node scripts/export.mjs --resume-run <run-id>
+
+# Tune concurrency per stage
+node scripts/export.mjs --media-concurrency 4 --upload-concurrency 6
+
+# Force a full related-clips rebuild
+node scripts/export.mjs --force-related-full-rebuild
 ```
 
 Generated media contract:
@@ -71,6 +84,13 @@ Generated media contract:
 - `public/thumbnails/{id}.webp`
 
 The exported JSON continues to reference these assets as relative paths.
+
+Export runs now write resumable state under `.tmp/export-runs/<run-id>/`.
+
+- Running the same export command again resumes the newest incomplete matching run by default.
+- Use `--fresh-run` when you intentionally want to ignore resumable state and start over.
+- Use `--resume-run <run-id>` when you want to resume a specific run directly.
+- Operator-facing progress output is printed in Korean and reports each stage separately.
 
 ## Tag Translation Workflow
 
@@ -97,7 +117,7 @@ The release commands and Eagle tags form the operator flow for Phase 2:
 3. Review the items in Eagle, editing names and content tags manually, then tag the chosen items with `reflix:approved`; tag items to exclude with `reflix:hold`.
 4. Run `npm run release:approve` to promote the approved proposal into `config/release-batch.json`.
 5. Run `npm run export:batch:dry` to verify the active batch before export.
-6. Run `npm run export:batch` to materialize the active batch.
+6. Run `npm run export:batch` to materialize the active batch. This now runs `discover -> process-media -> build-artifacts -> compute-related -> finalize` with resumable checkpoints.
 7. If export and verification succeed, run `npm run release:mark-published`.
 8. If export or verification fails, run `npm run release:mark-failed`.
 
@@ -109,6 +129,7 @@ Transitional note:
 - `npm run release:scan` is canary-safe and scans only the current active batch. Use `npm run release:scan:all` only when you intentionally want a full eligible-library proposal.
 - `reflix:review-requested` means Reflix wants a human to inspect the Eagle item before approval; it does not mean the item is already approved.
 - After approval, run `npm run export:batch:dry`, then `npm run export:batch`, then verify browse/detail and the browse search flow (`/browse?q=...`) locally.
+- If the export is interrupted, rerunning the same command resumes verified stages from `.tmp/export-runs/<run-id>/`.
 - Only then consider `npm run export:batch:r2` or production deployment.
 
 ## Deployment Notes
