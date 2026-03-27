@@ -13,7 +13,7 @@ interface LandingCTAProps {
 
 export function LandingCTA({ lang, dict }: LandingCTAProps) {
   return (
-    <section className="px-6 py-24 text-center">
+    <section className="px-6 py-20 pb-32 text-center">
       <h2
         className="text-[32px] font-bold text-white"
         style={{ letterSpacing: "-1px" }}

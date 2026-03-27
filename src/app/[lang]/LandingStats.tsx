@@ -87,7 +87,7 @@ export function LandingStats({
   dict,
 }: LandingStatsProps) {
   return (
-    <section className="py-24">
+    <section className="py-16 md:py-20">
       <div className="mx-auto grid max-w-3xl grid-cols-3 gap-8">
         <StatItem target={clipCount} label={dict.statsClips} />
         <StatItem target={tagGroupCount} label={dict.statsTagGroups} />
