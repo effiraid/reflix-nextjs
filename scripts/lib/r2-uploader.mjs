@@ -86,7 +86,7 @@ export async function uploadFile(
   };
 }
 
-async function objectExists(client, bucketName, key) {
+export async function checkR2ObjectExists(client, bucketName, key) {
   const { HeadObjectCommand } = require("@aws-sdk/client-s3");
   try {
     await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: key }));
@@ -137,7 +137,7 @@ export async function uploadBatch(
 
     if (skipExisting) {
       try {
-        if (await objectExists(resolvedClient, bucketName, key)) {
+        if (await checkR2ObjectExists(resolvedClient, bucketName, key)) {
           summary.skipped += 1;
           summary.entries.push({
             key,
