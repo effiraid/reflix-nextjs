@@ -41,7 +41,7 @@ export function LeftPanelContent({
   const { initialTotalCount } = useBrowseData();
   const { updateURL } = useFilterSync();
   const contentMode = useFilterStore((s) => s.contentMode);
-  const { setFilterBarOpen, setActiveFilterTab } = useUIStore();
+  const { setFilterBarOpen, setActiveFilterTab, setViewMode } = useUIStore();
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
@@ -92,7 +92,10 @@ export function LeftPanelContent({
       {/* Quick filters */}
       <div className="space-y-0.5">
         <button
-          onClick={() => updateURL({ category: null, selectedTags: [], selectedFolders: [], starFilter: null, sortBy: "newest" })}
+          onClick={() => {
+            updateURL({ category: null, selectedTags: [], selectedFolders: [], starFilter: null, sortBy: "newest" });
+            setViewMode("feed");
+          }}
           className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover"
         >
           <span className="flex items-center gap-2">
@@ -202,6 +205,9 @@ export function LeftPanelContent({
                     ? []
                     : [folderId];
 
+                if (next.length > 0) {
+                  setViewMode("masonry");
+                }
                 updateURL({ selectedFolders: next });
               }}
               onFolderExpandToggle={(folderId) => {
