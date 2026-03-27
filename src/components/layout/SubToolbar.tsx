@@ -39,7 +39,6 @@ export function SubToolbar({
     setActiveFilterTab,
     reshuffleClips,
     viewMode,
-    setViewMode,
   } = useUIStore(
     useShallow((state) => ({
       filterBarOpen: state.filterBarOpen,
@@ -50,7 +49,6 @@ export function SubToolbar({
       setActiveFilterTab: state.setActiveFilterTab,
       reshuffleClips: state.reshuffleClips,
       viewMode: state.viewMode,
-      setViewMode: state.setViewMode,
     }))
   );
   const { user, tier } = useAuthStore(
@@ -227,33 +225,8 @@ export function SubToolbar({
           ) : null}
         </div>
 
-        {/* Right: View toggle + Thumbnail size slider */}
+        {/* Right: Thumbnail size slider */}
         <div className="flex items-center gap-1.5 justify-self-end">
-          {/* View mode toggle */}
-          <div className="flex items-center rounded bg-surface/60 border border-border overflow-hidden mr-2">
-            <button
-              type="button"
-              onClick={() => setViewMode("feed")}
-              className={`px-2 py-1 text-[11px] ${
-                viewMode === "feed"
-                  ? "bg-accent text-white"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {lang === "ko" ? "피드" : "Feed"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("masonry")}
-              className={`px-2 py-1 text-[11px] ${
-                viewMode !== "feed"
-                  ? "bg-accent text-white"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {lang === "ko" ? "그리드" : "Grid"}
-            </button>
-          </div>
           <button
             type="button"
             aria-label="-"
