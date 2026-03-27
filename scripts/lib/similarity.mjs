@@ -6,6 +6,18 @@
  * @param {number} topN - Number of related clips to return per clip
  * @returns {Map<string, string[]>} Map of clipId → related clip IDs
  */
+export function buildRelatedInput(clip) {
+  return {
+    tags: Array.isArray(clip?.tags)
+      ? [...clip.tags].map((tag) => String(tag ?? "")).filter(Boolean).sort()
+      : [],
+    folders: Array.isArray(clip?.folders)
+      ? [...clip.folders].map((folder) => String(folder ?? "")).filter(Boolean).sort()
+      : [],
+    category: String(clip?.category ?? "uncategorized"),
+  };
+}
+
 export function computeRelatedClips(clips, topN = 5) {
   const tagIndex = new Map();    // tag → Set<clipId>
   const folderIndex = new Map(); // folderId → Set<clipId>
