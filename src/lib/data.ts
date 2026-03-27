@@ -1,9 +1,12 @@
 import type {
+  BrowseProjectionRecord,
+  BrowseSummaryRecord,
   ClipIndexData,
   CategoryTree,
   TagGroupData,
   Clip,
 } from "./types";
+import { buildBrowseArtifactsFromClipIndex } from "./browse-data";
 
 export function getDeploymentOrigin(): string | null {
   const raw =
@@ -34,9 +37,43 @@ async function getClipFromPublicAsset(id: string): Promise<Clip | null> {
   }
 }
 
+async function readPublicJson<T>(...segments: string[]): Promise<T> {
+  const fs = await import("fs");
+  const path = await import("path");
+  const filePath = path.join(process.cwd(), "public", ...segments);
+  const raw = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(raw) as T;
+}
+
 export async function getClipIndex(): Promise<ClipIndexData> {
   const data = await import("@/data/index.json");
   return data.default as ClipIndexData;
+}
+
+export async function loadBrowseSummary(): Promise<BrowseSummaryRecord[]> {
+  try {
+    return await readPublicJson<BrowseSummaryRecord[]>(
+      "data",
+      "browse",
+      "summary.json"
+    );
+  } catch {
+    const clipIndex = await getClipIndex();
+    return buildBrowseArtifactsFromClipIndex(clipIndex.clips).summary;
+  }
+}
+
+export async function loadBrowseProjection(): Promise<BrowseProjectionRecord[]> {
+  try {
+    return await readPublicJson<BrowseProjectionRecord[]>(
+      "data",
+      "browse",
+      "projection.json"
+    );
+  } catch {
+    const clipIndex = await getClipIndex();
+    return buildBrowseArtifactsFromClipIndex(clipIndex.clips).projection;
+  }
 }
 
 export async function getCategories(): Promise<CategoryTree> {
@@ -62,17 +99,7 @@ export async function getTagI18n(): Promise<Record<string, string>> {
 export async function getClip(id: string): Promise<Clip | null> {
   if (!/^[A-Za-z0-9_-]+$/.test(id)) return null;
   try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const filePath = path.join(
-      process.cwd(),
-      "public",
-      "data",
-      "clips",
-      `${id}.json`
-    );
-    const raw = fs.readFileSync(filePath, "utf-8");
-    return JSON.parse(raw) as Clip;
+    return await readPublicJson<Clip>("data", "clips", `${id}.json`);
   } catch (e) {
     console.warn("[data] Local clip file not found, falling back to public asset:", id, e);
     return getClipFromPublicAsset(id);

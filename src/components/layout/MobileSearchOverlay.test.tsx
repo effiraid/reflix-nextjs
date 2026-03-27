@@ -46,11 +46,13 @@ describe("MobileSearchOverlay", () => {
       <MobileSearchOverlay
         open
         clips={clips}
+        searchReady
         lang="ko"
         tagI18n={{}}
         placeholder="클립 검색"
         closeLabel="닫기"
         noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
         onClose={vi.fn()}
         onSelectClip={handleSelectClip}
       />
@@ -75,11 +77,13 @@ describe("MobileSearchOverlay", () => {
       <MobileSearchOverlay
         open
         clips={clips}
+        searchReady
         lang="ko"
         tagI18n={{}}
         placeholder="클립 검색"
         closeLabel="닫기"
         noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
         onClose={handleClose}
         onSelectClip={vi.fn()}
       />
@@ -95,11 +99,13 @@ describe("MobileSearchOverlay", () => {
       <MobileSearchOverlay
         open
         clips={clips}
+        searchReady
         lang="en"
         tagI18n={{ 걷기: "Walk" }}
         placeholder="Search clips"
         closeLabel="Close"
         noResultsLabel="No results"
+        loadingLabel="Preparing search..."
         onClose={vi.fn()}
         onSelectClip={vi.fn()}
       />
@@ -114,5 +120,33 @@ describe("MobileSearchOverlay", () => {
 
     expect(await screen.findByText("Walk")).toBeInTheDocument();
     expect(screen.queryByText("걷기")).not.toBeInTheDocument();
+  });
+
+  it("shows a loading state until projection-backed search is ready", async () => {
+    render(
+      <MobileSearchOverlay
+        open
+        clips={[]}
+        searchReady={false}
+        lang="ko"
+        tagI18n={{}}
+        placeholder="클립 검색"
+        closeLabel="닫기"
+        noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
+        onClose={vi.fn()}
+        onSelectClip={vi.fn()}
+      />
+    );
+
+    const input = screen.getByRole("searchbox", { name: "클립 검색" });
+
+    fireEvent.change(input, {
+      target: { value: "슬픈" },
+    });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+    expect(await screen.findByText("검색 준비 중...")).toBeInTheDocument();
+    expect(screen.queryByText("결과 없음")).not.toBeInTheDocument();
   });
 });

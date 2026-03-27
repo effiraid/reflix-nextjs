@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { HtmlLang } from "@/components/HtmlLang";
 import { LOCALES } from "@/lib/constants";
@@ -28,20 +29,25 @@ export async function generateMetadata({
   };
 }
 
-export default async function LocaleLayout({
+export default function LocaleLayout({
   children,
   params,
 }: {
   children: React.ReactNode;
   params: Promise<{ lang: string }>;
 }) {
-  const { lang } = await params;
-  if (!hasLocale(lang)) notFound();
-
   return (
-    <>
-      <HtmlLang lang={lang} />
-      {children}
-    </>
+    <Suspense fallback={children}>
+      {params.then(({ lang }) => {
+        if (!hasLocale(lang)) notFound();
+
+        return (
+          <>
+            <HtmlLang lang={lang} />
+            {children}
+          </>
+        );
+      })}
+    </Suspense>
   );
 }

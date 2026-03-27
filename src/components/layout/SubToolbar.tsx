@@ -1,16 +1,27 @@
 "use client";
 
 import { MIN_THUMBNAIL_SIZE, MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
+import { getCategoryLabel } from "@/lib/categories";
+import { getTagDisplayLabel } from "@/lib/tagDisplay";
+import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { Locale } from "@/lib/types";
+import type { CategoryTree, Locale } from "@/lib/types";
+import { useShallow } from "zustand/react/shallow";
 
 interface SubToolbarProps {
+  categories: CategoryTree;
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
+  tagI18n?: Record<string, string>;
 }
 
-export function SubToolbar({ lang, dict }: SubToolbarProps) {
+export function SubToolbar({
+  categories,
+  lang,
+  dict,
+  tagI18n = {},
+}: SubToolbarProps) {
   const {
     filterBarOpen,
     setFilterBarOpen,
@@ -19,10 +30,35 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
     activeFilterTab,
     setActiveFilterTab,
     reshuffleClips,
-  } = useUIStore();
+  } = useUIStore(
+    useShallow((state) => ({
+      filterBarOpen: state.filterBarOpen,
+      setFilterBarOpen: state.setFilterBarOpen,
+      thumbnailSize: state.thumbnailSize,
+      setThumbnailSize: state.setThumbnailSize,
+      activeFilterTab: state.activeFilterTab,
+      setActiveFilterTab: state.setActiveFilterTab,
+      reshuffleClips: state.reshuffleClips,
+    }))
+  );
+  const { selectedFolders, selectedTags, excludedTags } = useFilterStore(
+    useShallow((state) => ({
+      selectedFolders: state.selectedFolders,
+      selectedTags: state.selectedTags,
+      excludedTags: state.excludedTags,
+    }))
+  );
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
+  const filterSummary = buildFilterSummary({
+    categories,
+    excludedTags,
+    lang,
+    selectedFolders,
+    selectedTags,
+    tagI18n,
+  });
 
   function handleFilterToggle() {
     const nextOpen = !filterBarOpen;
@@ -33,9 +69,9 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
   return (
     <div className="shrink-0 border-b border-border">
       {/* Top toolbar row */}
-      <div className="h-10 flex items-center px-3 gap-2">
+      <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3">
         {/* Left: Filter + Shuffle */}
-        <div className="flex items-center gap-1 flex-1">
+        <div className="flex items-center gap-1 justify-self-start">
           <button
             type="button"
             aria-label={filterLabel}
@@ -58,8 +94,20 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
           </button>
         </div>
 
-        {/* Center: Thumbnail size slider */}
-        <div className="flex items-center gap-1.5">
+        <div className="min-w-0 justify-self-center px-2 text-center text-xs text-muted">
+          {filterSummary ? (
+            <span
+              aria-live="polite"
+              className="block max-w-56 truncate md:max-w-80"
+              title={filterSummary}
+            >
+              {filterSummary}
+            </span>
+          ) : null}
+        </div>
+
+        {/* Right: Thumbnail size slider */}
+        <div className="flex items-center gap-1.5 justify-self-end">
           <button
             type="button"
             aria-label="-"
@@ -89,9 +137,6 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
             <PlusIcon />
           </button>
         </div>
-
-        {/* Right spacer for centering */}
-        <div className="flex-1" />
       </div>
 
       {/* Filter tabs row (toggled) */}
@@ -121,6 +166,78 @@ export function SubToolbar({ lang, dict }: SubToolbarProps) {
       )}
     </div>
   );
+}
+
+function buildFilterSummary({
+  categories,
+  excludedTags,
+  lang,
+  selectedFolders,
+  selectedTags,
+  tagI18n,
+}: {
+  categories: CategoryTree;
+  excludedTags: string[];
+  lang: Locale;
+  selectedFolders: string[];
+  selectedTags: string[];
+  tagI18n: Record<string, string>;
+}): string | null {
+  const parts: string[] = [];
+
+  if (selectedFolders.length > 0) {
+    parts.push(
+      summarizeFilterValues(
+        lang === "ko" ? "폴더" : "Folder",
+        selectedFolders.map((folderId) => getCategoryLabel(folderId, categories, lang)),
+        lang
+      )
+    );
+  }
+
+  if (selectedTags.length > 0) {
+    parts.push(
+      summarizeFilterValues(
+        lang === "ko" ? "태그" : "Tag",
+        selectedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n)),
+        lang
+      )
+    );
+  }
+
+  if (excludedTags.length > 0) {
+    parts.push(
+      summarizeFilterValues(
+        lang === "ko" ? "제외" : "Exclude",
+        excludedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n)),
+        lang
+      )
+    );
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+function summarizeFilterValues(
+  label: string,
+  values: string[],
+  lang: Locale
+): string {
+  const [firstValue, ...restValues] = values;
+
+  if (!firstValue) {
+    return label;
+  }
+
+  if (restValues.length === 0) {
+    return `${label}: ${firstValue}`;
+  }
+
+  if (lang === "ko") {
+    return `${label}: ${firstValue} 외 ${restValues.length}개`;
+  }
+
+  return `${label}: ${firstValue} +${restValues.length}`;
 }
 
 /* --- Icons (14×14) --- */

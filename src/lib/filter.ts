@@ -1,7 +1,7 @@
-import type { CategoryTree, ClipIndex, Locale, SortBy } from "./types";
+import type { CategoryTree, Locale, SortBy } from "./types";
 import { collectDescendantIds } from "./categories";
 import { getAllClipTags } from "./aiTags";
-import { searchClips } from "./clipSearch";
+import { searchClips, type SearchableClipRecord } from "./clipSearch";
 
 export interface FilterState {
   selectedFolders: string[];
@@ -13,13 +13,19 @@ export interface FilterState {
   category: string | null;
 }
 
-export function filterClips(
-  clips: ClipIndex[],
+interface FilterableClipRecord extends SearchableClipRecord {
+  category: string;
+  folders?: string[];
+  star: number;
+}
+
+export function filterClips<T extends FilterableClipRecord>(
+  clips: T[],
   filters: FilterState,
   categories?: CategoryTree,
   tagI18n: Record<string, string> = {},
   lang: Locale = "ko"
-): ClipIndex[] {
+): T[] {
   let result = clips;
 
   if (filters.category) {
@@ -31,7 +37,7 @@ export function filterClips(
       ? new Set(filters.selectedFolders.flatMap((id) => collectDescendantIds(id, categories)))
       : new Set(filters.selectedFolders);
     result = result.filter((c) =>
-      c.folders.some((f) => expandedIds.has(f))
+      (c.folders ?? []).some((f) => expandedIds.has(f))
     );
   }
 
@@ -75,7 +81,10 @@ export function shuffleClips<T>(items: T[], rng: () => number = Math.random): T[
   return shuffled;
 }
 
-function sortClips(clips: ClipIndex[], sortBy: SortBy): ClipIndex[] {
+function sortClips<T extends Pick<FilterableClipRecord, "name" | "star">>(
+  clips: T[],
+  sortBy: SortBy
+): T[] {
   const sorted = [...clips];
   switch (sortBy) {
     case "newest":

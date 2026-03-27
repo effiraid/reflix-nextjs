@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
-import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { useBrowseData, useClipData } from "@/app/[lang]/browse/ClipDataProvider";
 import { AI_PARENT_GROUP_ID, buildAiTagGroups, getAllClipTags } from "@/lib/aiTags";
 import { createMatcher } from "@/lib/search";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -25,6 +25,7 @@ export function TagFilterPanel({
   updateURL,
 }: TagFilterPanelProps) {
   const clips = useClipData();
+  const { projectionStatus } = useBrowseData();
   const aiTagData = useMemo(() => buildAiTagGroups(clips), [clips]);
   const mergedTagGroups = useMemo(
     () => [...tagGroups.groups, ...aiTagData.groups],
@@ -185,6 +186,17 @@ export function TagFilterPanel({
     }
     return map;
   }, [mergedTagGroups]);
+
+  if (projectionStatus !== "ready") {
+    return (
+      <div
+        ref={panelRef}
+        className="absolute top-full left-0 right-0 h-80 border border-border rounded-b-lg bg-background shadow-lg flex items-center justify-center"
+      >
+        <div className="text-sm text-muted">{dict.common.loading}</div>
+      </div>
+    );
+  }
 
   return (
     <div

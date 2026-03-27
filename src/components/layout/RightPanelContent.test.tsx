@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { RightPanelContent } from "./RightPanelContent";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
+import { clearClipDetailCache } from "@/lib/clip-detail-client";
 import type { CategoryTree } from "@/lib/types";
 
 const useClipStoreMock = vi.fn();
@@ -77,6 +78,7 @@ const dict = {
 
 describe("RightPanelContent", () => {
   beforeEach(() => {
+    clearClipDetailCache();
     useClipStoreMock.mockReset();
     updateURLMock.mockReset();
     vi.restoreAllMocks();

@@ -1,9 +1,18 @@
 import { getClipSearchTargets, getStructuredAiTags } from "./aiTags";
 import { createMatcher, isChoseongOnly, isLatinOnly } from "./search";
 import { getTagDisplayLabels } from "./tagDisplay";
-import type { ClipIndex, Locale } from "./types";
+import type { AIGeneratedTags, Locale } from "./types";
 
 export type SearchMode = "none" | "instant" | "semantic";
+
+export interface SearchableClipRecord {
+  id: string;
+  name: string;
+  tags?: string[];
+  aiTags?: AIGeneratedTags | null;
+  aiStructuredTags?: string[];
+  searchTokens?: string[];
+}
 
 interface SearchClipOptions {
   lang: Locale;
@@ -24,10 +33,10 @@ export function getSearchMode(lang: Locale, query: string): SearchMode {
   return "semantic";
 }
 
-export function searchClips(
-  clips: ClipIndex[],
+export function searchClips<T extends SearchableClipRecord>(
+  clips: T[],
   { lang, query, tagI18n }: SearchClipOptions
-): ClipIndex[] {
+): T[] {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) {
     return clips;
@@ -41,7 +50,7 @@ export function searchClips(
       const score = scoreClipMatch(clip, trimmedQuery, match, tagI18n, mode);
       return score === null ? null : { clip, score };
     })
-    .filter((entry): entry is { clip: ClipIndex; score: number } => Boolean(entry))
+    .filter((entry): entry is { clip: T; score: number } => Boolean(entry))
     .sort((a, b) => {
       if (b.score !== a.score) {
         return b.score - a.score;
@@ -53,7 +62,7 @@ export function searchClips(
 }
 
 function scoreClipMatch(
-  clip: ClipIndex,
+  clip: SearchableClipRecord,
   query: string,
   match: (target: string) => boolean,
   tagI18n: Record<string, string>,
@@ -62,14 +71,13 @@ function scoreClipMatch(
   const manualTags = clip.tags ?? [];
   const translatedTags = getTagDisplayLabels(manualTags, "en", tagI18n)
     .filter((value, index) => value !== manualTags[index]);
-  const aiStructuredTags = clip.aiTags
-    ? getStructuredAiTags(clip.aiTags)
-    : [];
+  const aiStructuredTags = clip.aiStructuredTags ?? getStructuredAiTags(clip.aiTags);
   const translatedAiStructuredTags = getTagDisplayLabels(aiStructuredTags, "en", tagI18n)
     .filter((value, index) => value !== aiStructuredTags[index]);
   const descriptions = clip.aiTags
     ? [clip.aiTags.description.ko, clip.aiTags.description.en]
     : [];
+  const searchTokens = clip.searchTokens ?? [];
 
   const candidates = [
     { value: clip.name, weight: 120 },
@@ -77,6 +85,7 @@ function scoreClipMatch(
     ...translatedTags.map((value) => ({ value, weight: 80 })),
     ...aiStructuredTags.map((value) => ({ value, weight: 70 })),
     ...translatedAiStructuredTags.map((value) => ({ value, weight: 70 })),
+    ...searchTokens.map((value) => ({ value, weight: mode === "semantic" ? 60 : 45 })),
     ...descriptions.map((value) => ({ value, weight: mode === "semantic" ? 60 : 45 })),
   ];
 
@@ -105,7 +114,7 @@ function scoreClipMatch(
 }
 
 export function getSearchTargetsForOverlay(
-  clip: ClipIndex,
+  clip: SearchableClipRecord,
   tagI18n: Record<string, string>
 ): string[] {
   return getClipSearchTargets(clip, tagI18n);

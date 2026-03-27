@@ -34,12 +34,18 @@ const clips = [
   },
 ];
 
+let projectionStatus: "loading" | "ready" | "error" = "ready";
+
 vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
   useClipData: () => clips,
+  useBrowseData: () => ({
+    projectionStatus,
+  }),
 }));
 
 describe("TagFilterPanel", () => {
   beforeEach(() => {
+    projectionStatus = "ready";
     useFilterStore.setState({
       selectedFolders: [],
       selectedTags: [],
@@ -82,5 +88,39 @@ describe("TagFilterPanel", () => {
     expect(screen.getByText("AI 생성")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /감정/ })).toBeInTheDocument();
     expect(screen.getByText("슬픔")).toBeInTheDocument();
+  });
+
+  it("shows a loading state while browse projection is still preparing", () => {
+    projectionStatus = "loading";
+
+    render(
+      <TagFilterPanel
+        tagGroups={{
+          groups: [],
+          parentGroups: [],
+        }}
+        lang="ko"
+        tagI18n={{}}
+        dict={{
+          browse: {
+            tagSearchPlaceholder: "태그 검색",
+            allTags: "모든 태그",
+            noResults: "결과 없음",
+          },
+          clip: {
+            tags: "태그",
+          },
+          common: {
+            select: "선택",
+            exclude: "제외",
+            close: "닫기",
+            loading: "로딩 중...",
+          },
+        }}
+        updateURL={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("로딩 중...")).toBeInTheDocument();
   });
 });

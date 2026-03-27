@@ -1,5 +1,8 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getClip } from "./data";
+import { getClip, loadBrowseProjection, loadBrowseSummary } from "./data";
 
 const remoteClip = {
   id: "REMOTE_CLIP_123",
@@ -30,7 +33,10 @@ const remoteClip = {
 };
 
 describe("getClip", () => {
+  const originalCwd = process.cwd();
+
   afterEach(() => {
+    process.chdir(originalCwd);
     delete process.env.VERCEL_URL;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -55,5 +61,64 @@ describe("getClip", () => {
         cache: "force-cache",
       })
     );
+  });
+
+  it("loads browse summary and projection from public browse artifacts", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-browse-data-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
+      recursive: true,
+    });
+
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "browse", "summary.json"),
+      JSON.stringify([
+        {
+          id: "A",
+          name: "Arcane",
+          thumbnailUrl: "/thumbnails/A.webp",
+          previewUrl: "/previews/A.mp4",
+          lqipBase64: "",
+          width: 640,
+          height: 360,
+          duration: 1,
+          star: 3,
+          category: "direction-video",
+        },
+      ])
+    );
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "browse", "projection.json"),
+      JSON.stringify([
+        {
+          id: "A",
+          name: "Arcane",
+          thumbnailUrl: "/thumbnails/A.webp",
+          previewUrl: "/previews/A.mp4",
+          lqipBase64: "",
+          width: 640,
+          height: 360,
+          duration: 1,
+          star: 3,
+          category: "direction-video",
+          tags: ["magic"],
+          aiStructuredTags: ["attack"],
+          folders: ["folder-1"],
+          searchTokens: ["arcane", "attack"],
+        },
+      ])
+    );
+
+    process.chdir(tempDir);
+
+    await expect(loadBrowseSummary()).resolves.toEqual([
+      expect.objectContaining({ id: "A", name: "Arcane" }),
+    ]);
+    await expect(loadBrowseProjection()).resolves.toEqual([
+      expect.objectContaining({
+        id: "A",
+        tags: ["magic"],
+        aiStructuredTags: ["attack"],
+      }),
+    ]);
   });
 });

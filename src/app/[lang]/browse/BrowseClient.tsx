@@ -9,11 +9,11 @@ import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useFilterStore } from "@/stores/filterStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useUIStore } from "@/stores/uiStore";
-import { useClipData } from "./ClipDataProvider";
+import { useBrowseData } from "./ClipDataProvider";
 import { filterClips, shuffleClips } from "@/lib/filter";
 import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
-import type { CategoryTree, Locale } from "@/lib/types";
+import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 
 const QuickViewModal = dynamic(
@@ -42,7 +42,12 @@ export function BrowseClient({
   lang,
   dict,
 }: BrowseClientProps) {
-  const clips = useClipData();
+  const {
+    initialClips,
+    projectionClips,
+    projectionStatus,
+    initialTotalCount,
+  } = useBrowseData();
   const { selectedClipId, setSelectedClipId } = useClipStore();
   const filters = useFilterStore(
     useShallow((s) => ({
@@ -85,28 +90,63 @@ export function BrowseClient({
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Apply filters (useMemo only — no duplicate in store per eng review #5)
+  const hasActiveBrowseFilters =
+    filters.category !== null ||
+    filters.selectedFolders.length > 0 ||
+    filters.selectedTags.length > 0 ||
+    filters.excludedTags.length > 0 ||
+    filters.starFilter !== null ||
+    filters.searchQuery.length > 0 ||
+    filters.sortBy !== "newest";
+  const initialDisplayClips = useMemo(() => {
+    if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
+      return initialClips;
+    }
+
+    const projectionById = new Map(
+      projectionClips.map((clip) => [clip.id, clip] as const)
+    );
+
+    return initialClips.map((clip) => projectionById.get(clip.id) ?? clip);
+  }, [columnCount, initialClips, projectionClips, projectionStatus]);
+
+  // Apply filters only after projection preload is ready.
   const filtered = useMemo(
     () => {
-      const visibleClips = filterClips(
-        clips,
-        filters,
-        categories,
-        tagI18n,
-        lang
-      );
+      if (!projectionClips || projectionStatus !== "ready" || !hasActiveBrowseFilters) {
+        return shuffleSeed === 0
+          ? initialDisplayClips
+          : shuffleClips(initialDisplayClips);
+      }
+
+      const visibleClips = filterClips(projectionClips, filters, categories, tagI18n, lang);
       return shuffleSeed === 0 ? visibleClips : shuffleClips(visibleClips);
     },
-    [clips, filters, categories, tagI18n, shuffleSeed, lang]
+    [
+      initialDisplayClips,
+      projectionClips,
+      projectionStatus,
+      hasActiveBrowseFilters,
+      filters,
+      categories,
+      tagI18n,
+      shuffleSeed,
+      lang,
+    ]
   );
   const indexMap = useMemo(
     () => new Map(filtered.map((c, i) => [c.id, i])),
     [filtered]
   );
   const selectedIndex = selectedClipId ? (indexMap.get(selectedClipId) ?? -1) : -1;
-  const selectedClip = selectedIndex >= 0 ? filtered[selectedIndex] : null;
+  const selectedClip: BrowseClipRecord | null =
+    selectedIndex >= 0 ? filtered[selectedIndex] : null;
+  const visibleResultCount =
+    projectionClips && projectionStatus === "ready" && hasActiveBrowseFilters
+      ? filtered.length
+      : initialTotalCount;
   const resultCountLabel =
-    lang === "ko" ? `${filtered.length}개 클립` : `${filtered.length} clips`;
+    lang === "ko" ? `${visibleResultCount}개 클립` : `${visibleResultCount} clips`;
   const emptyStateLabel = filters.searchQuery
     ? lang === "ko"
       ? `'${filters.searchQuery}'에 대한 결과가 없습니다`
@@ -294,6 +334,7 @@ export function BrowseClient({
       {quickViewOpen && selectedClip ? (
         <QuickViewModal
           clip={selectedClip}
+          categories={categories}
           lang={lang}
           tagI18n={tagI18n}
           dict={dict}

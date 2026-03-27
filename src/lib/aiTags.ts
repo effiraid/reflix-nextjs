@@ -1,6 +1,6 @@
 import type {
   AIGeneratedTags,
-  ClipIndex,
+  BrowseClipRecord,
   ParentTagGroup,
   TagGroup,
 } from "./types";
@@ -67,8 +67,12 @@ export function getStructuredAiTags(aiTags?: AIGeneratedTags | null): string[] {
 export function getAllClipTags(clip: {
   tags?: string[];
   aiTags?: AIGeneratedTags | null;
+  aiStructuredTags?: string[];
 }): string[] {
-  return Array.from(new Set([...(clip.tags ?? []), ...getStructuredAiTags(clip.aiTags)]));
+  const structuredAiTags =
+    clip.aiStructuredTags ?? getStructuredAiTags(clip.aiTags);
+
+  return Array.from(new Set([...(clip.tags ?? []), ...structuredAiTags]));
 }
 
 export function getClipSearchTargets(
@@ -76,18 +80,21 @@ export function getClipSearchTargets(
     name: string;
     tags?: string[];
     aiTags?: AIGeneratedTags | null;
+    aiStructuredTags?: string[];
+    searchTokens?: string[];
   },
   tagI18n: Record<string, string>
 ): string[] {
   const manualTags = clip.tags ?? [];
   const translatedTags = getTagDisplayLabels(manualTags, "en", tagI18n)
     .filter((value, index) => value !== manualTags[index]);
-  const aiTags = getStructuredAiTags(clip.aiTags);
+  const aiTags = clip.aiStructuredTags ?? getStructuredAiTags(clip.aiTags);
   const translatedAiTags = getTagDisplayLabels(aiTags, "en", tagI18n)
     .filter((value, index) => value !== aiTags[index]);
   const descriptions = clip.aiTags
     ? [clip.aiTags.description.ko, clip.aiTags.description.en]
     : [];
+  const searchTokens = clip.searchTokens ?? [];
 
   return [
     clip.name,
@@ -95,18 +102,49 @@ export function getClipSearchTargets(
     ...translatedTags,
     ...aiTags,
     ...translatedAiTags,
+    ...searchTokens,
     ...descriptions.filter(Boolean),
   ];
 }
 
-export function buildAiTagGroups(clips: ClipIndex[]): {
+export function buildAiTagGroups(
+  clips: Array<Pick<BrowseClipRecord, "aiTags" | "aiStructuredTags">>
+): {
   groups: TagGroup[];
   parentGroup: ParentTagGroup;
   hasAiField: boolean;
 } {
-  const hasAiField = clips.some((clip) =>
-    Object.prototype.hasOwnProperty.call(clip, "aiTags")
+  const hasStructuredProjection = clips.some(
+    (clip) => (clip.aiStructuredTags?.length ?? 0) > 0
   );
+  const hasAiField =
+    hasStructuredProjection ||
+    clips.some((clip) => Object.prototype.hasOwnProperty.call(clip, "aiTags"));
+
+  if (hasStructuredProjection && !clips.some((clip) => clip.aiTags)) {
+    const tags = Array.from(
+      new Set(clips.flatMap((clip) => clip.aiStructuredTags ?? []).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b, "ko"));
+
+    return {
+      groups: tags.length
+        ? [
+            {
+              id: "ai-structured",
+              name: { ko: "AI 태그", en: "AI Tags" },
+              parent: AI_PARENT_GROUP_ID,
+              tags,
+            },
+          ]
+        : [],
+      parentGroup: {
+        id: AI_PARENT_GROUP_ID,
+        name: { ko: "AI 생성", en: "AI Generated" },
+        children: tags.length ? ["ai-structured"] : [],
+      },
+      hasAiField,
+    };
+  }
 
   const groups = AI_GROUP_DEFINITIONS.map((definition) => {
     const tags = Array.from(

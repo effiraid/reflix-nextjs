@@ -171,4 +171,10 @@ describe("ClipCard", () => {
     expect(screen.getByAltText(clip.name)).toHaveAttribute("loading", "eager");
   });
 
+  it("renders card imagery without Next fill mode so masonry cards do not warn on zero-height parents", () => {
+    render(<ClipCard clip={clip} />);
+
+    expect(screen.getByAltText(clip.name)).not.toHaveAttribute("data-nimg", "fill");
+  });
+
 });

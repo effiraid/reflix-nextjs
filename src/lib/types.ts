@@ -42,20 +42,35 @@ export interface Clip {
   relatedClips: string[];
 }
 
-export interface ClipIndex {
+export interface BrowseSummaryRecord {
   id: string;
   name: string;
-  tags: string[];
-  aiTags?: AIGeneratedTags | null;
-  folders: string[];
-  star: number;
-  category: string;
+  thumbnailUrl: string;
+  previewUrl: string;
+  lqipBase64: string;
   width: number;
   height: number;
   duration: number;
-  previewUrl: string;
-  thumbnailUrl: string;
-  lqipBase64: string;
+  star: number;
+  category: string;
+}
+
+export interface BrowseClipRecord extends BrowseSummaryRecord {
+  tags?: string[];
+  aiTags?: AIGeneratedTags | null;
+  aiStructuredTags?: string[];
+  folders?: string[];
+  searchTokens?: string[];
+}
+
+export interface ClipIndex extends BrowseClipRecord {
+  tags: string[];
+  folders: string[];
+}
+
+export interface BrowseProjectionRecord extends BrowseClipRecord {
+  aiStructuredTags: string[];
+  searchTokens: string[];
 }
 
 export interface ClipIndexData {

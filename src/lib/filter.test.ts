@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { filterClips } from "./filter";
-import type { ClipIndex } from "./types";
+import type { BrowseProjectionRecord, ClipIndex } from "./types";
 
 const clips: ClipIndex[] = [
   {
@@ -146,5 +146,33 @@ describe("filterClips", () => {
     });
     expect(filtered).toHaveLength(1);
     expect(filtered[0].id).toBe("clip-1");
+  });
+
+  it("treats browse projection aiStructuredTags as filterable tags", () => {
+    const projection: BrowseProjectionRecord[] = [
+      {
+        id: "projection-1",
+        name: "Arcane Burst",
+        tags: ["마법"],
+        aiStructuredTags: ["폭발", "분노"],
+        folders: ["f-1"],
+        searchTokens: ["arcane", "burst", "폭발"],
+        star: 4,
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/preview.mp4",
+        thumbnailUrl: "/thumb.webp",
+        lqipBase64: "",
+      },
+    ];
+
+    const filtered = filterClips(projection, {
+      ...baseFilters,
+      selectedTags: ["폭발"],
+    });
+
+    expect(filtered.map((clip) => clip.id)).toEqual(["projection-1"]);
   });
 });

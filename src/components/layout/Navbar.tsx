@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
-import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { useBrowseData } from "@/app/[lang]/browse/ClipDataProvider";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
@@ -21,7 +21,7 @@ interface NavbarProps {
 
 export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const { theme, setTheme } = useTheme();
-  const clips = useClipData();
+  const { projectionClips, projectionStatus } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -174,12 +174,14 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
       <MobileSearchOverlay
         key={mobileSearchOpen ? "mobile-search-open" : "mobile-search-closed"}
         open={mobileSearchOpen}
-        clips={clips}
+        clips={projectionClips ?? []}
+        searchReady={projectionStatus === "ready"}
         lang={lang}
         tagI18n={tagI18n}
         placeholder={dict.nav.searchPlaceholder}
         closeLabel={dict.common?.close ?? (lang === "ko" ? "닫기" : "Close")}
         noResultsLabel={dict.browse?.noResults ?? (lang === "ko" ? "검색 결과가 없습니다" : "No results found")}
+        loadingLabel={dict.common?.loading ?? (lang === "ko" ? "검색 준비 중..." : "Preparing search...")}
         onClose={() => setMobileSearchOpen(false)}
         onSelectClip={(clipId, query) => {
           setSelectedClipId(clipId);

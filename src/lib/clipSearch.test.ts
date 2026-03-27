@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getSearchMode, searchClips } from "./clipSearch";
-import type { ClipIndex } from "./types";
+import type { BrowseProjectionRecord, ClipIndex } from "./types";
 
 const clips: ClipIndex[] = [
   {
@@ -83,5 +83,36 @@ describe("searchClips", () => {
     });
 
     expect(results.map((clip) => clip.id)).toContain("ai-hit");
+  });
+
+  it("matches browse projection records via aiStructuredTags and searchTokens", () => {
+    const projection: BrowseProjectionRecord[] = [
+      {
+        id: "projection-hit",
+        name: "Arcane Burst",
+        tags: ["마법"],
+        aiStructuredTags: ["폭발", "분노"],
+        folders: ["folder-1"],
+        searchTokens: ["arcane", "burst", "분노", "폭발", "비전", "충돌"],
+        star: 4,
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/preview.mp4",
+        thumbnailUrl: "/thumb.webp",
+        lqipBase64: "",
+      },
+    ];
+
+    const results = searchClips(projection, {
+      lang: "ko",
+      query: "충돌",
+      tagI18n: {
+        폭발: "Explosion",
+      },
+    });
+
+    expect(results.map((clip) => clip.id)).toEqual(["projection-hit"]);
   });
 });

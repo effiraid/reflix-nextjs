@@ -4,7 +4,7 @@ import { BrowseClient } from "./BrowseClient";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
-import type { ClipIndex } from "@/lib/types";
+import type { BrowseClipRecord, BrowseProjectionRecord, BrowseSummaryRecord, ClipIndex } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 
 vi.mock("@/hooks/useFilterSync", () => ({
@@ -13,8 +13,16 @@ vi.mock("@/hooks/useFilterSync", () => ({
   }),
 }));
 
+let browseDataState: {
+  initialClips: BrowseSummaryRecord[];
+  projectionClips: BrowseProjectionRecord[] | null;
+  projectionStatus: "loading" | "ready" | "error";
+  initialTotalCount: number;
+};
+
 vi.mock("./ClipDataProvider", () => ({
-  useClipData: () => clips,
+  useBrowseData: () => browseDataState,
+  useClipData: () => browseDataState.projectionClips ?? browseDataState.initialClips,
 }));
 
 vi.mock("@/components/clip/MasonryGrid", () => ({
@@ -27,6 +35,11 @@ vi.mock("@/components/clip/MasonryGrid", () => ({
   }) => (
     <div>
       <div data-testid="clip-order">{clips.map((clip) => clip.id).join(",")}</div>
+      <div data-testid="clip-tags">
+        {clips
+          .map((clip) => `${clip.id}:${(clip.tags ?? []).join("|")}`)
+          .join(",")}
+      </div>
       {clips.map((clip) => (
         <button
           key={clip.id}
@@ -125,6 +138,33 @@ const clips: ClipIndex[] = [
   },
 ];
 
+const initialSummaryClips: BrowseSummaryRecord[] = clips.slice(0, 1).map((clip) => ({
+  id: clip.id,
+  name: clip.name,
+  thumbnailUrl: clip.thumbnailUrl,
+  previewUrl: clip.previewUrl,
+  lqipBase64: clip.lqipBase64,
+  width: clip.width,
+  height: clip.height,
+  duration: clip.duration,
+  star: clip.star,
+  category: clip.category,
+}));
+
+function makeFullBrowseState(overrides?: Partial<typeof browseDataState>) {
+  return {
+    initialClips: clips,
+    projectionClips: clips.map((clip) => ({
+      ...clip,
+      aiStructuredTags: [] as string[],
+      searchTokens: [clip.name.toLowerCase()],
+    })),
+    projectionStatus: "ready" as const,
+    initialTotalCount: clips.length,
+    ...overrides,
+  };
+}
+
 const dict = {
   browse: {
     noResults: "결과 없음",
@@ -139,6 +179,16 @@ const dict = {
 
 describe("BrowseClient", () => {
   beforeEach(() => {
+    browseDataState = {
+      initialClips: initialSummaryClips,
+      projectionClips: clips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: clips.length,
+    };
     useFilterStore.setState({
       category: null,
       selectedFolders: [],
@@ -157,6 +207,7 @@ describe("BrowseClient", () => {
   });
 
   it("reshuffles the filtered clips when the shuffle seed changes", () => {
+    browseDataState = makeFullBrowseState();
     const randomSpy = vi
       .spyOn(Math, "random")
       .mockReturnValueOnce(0)
@@ -182,6 +233,7 @@ describe("BrowseClient", () => {
   });
 
   it("opens quick view on Space and closes it on Escape", async () => {
+    browseDataState = makeFullBrowseState();
     useClipStore.setState({
       selectedClipId: "clip-a",
     });
@@ -212,6 +264,7 @@ describe("BrowseClient", () => {
   });
 
   it("opens quick view for the requested clip id from the grid", async () => {
+    browseDataState = makeFullBrowseState();
     render(
       <BrowseClient
         categories={{}}
@@ -247,6 +300,55 @@ describe("BrowseClient", () => {
       />
     );
 
+    expect(screen.getByText("1개 클립")).toHaveAttribute("aria-live", "polite");
+  });
+
+  it("keeps the initial summary page when projection is ready but no filters are active", () => {
+    browseDataState = {
+      initialClips: initialSummaryClips,
+      projectionClips: clips.map((clip, index) => ({
+        ...clip,
+        tags: index === 0 ? ["magic"] : [],
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: clips.length,
+    };
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-a");
+    expect(screen.getByTestId("clip-tags")).toHaveTextContent("clip-a:");
+    expect(screen.getByTestId("clip-tags")).toHaveTextContent("magic");
+  });
+
+  it("switches to projection-backed search once projection preload is ready", () => {
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "Beta",
+      sortBy: "newest",
+      starFilter: null,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-b");
     expect(screen.getByText("1개 클립")).toHaveAttribute("aria-live", "polite");
   });
 

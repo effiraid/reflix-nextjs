@@ -10,7 +10,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { getStructuredAiTags } from "@/lib/aiTags";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { CategoryTree, Clip, ClipIndex, Locale } from "@/lib/types";
+import type { BrowseClipRecord, CategoryTree, Clip, Locale } from "@/lib/types";
 
 interface RightPanelInspectorProps {
   clip: Clip;
@@ -18,7 +18,7 @@ interface RightPanelInspectorProps {
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
   tagI18n?: Record<string, string>;
-  relatedClips?: ClipIndex[];
+  relatedClips?: BrowseClipRecord[];
   onSelectFolder?: (folderId: string) => void;
   onSelectRelatedClip?: (clipId: string) => void;
   onSelectTag?: (tag: string) => void;
@@ -98,9 +98,12 @@ export function RightPanelInspector({
           <Image
             src={thumbnailUrl}
             alt={title}
-            fill
+            width={clip.width}
+            height={clip.height}
+            loading="eager"
+            fetchPriority="high"
             sizes="320px"
-            className="object-cover"
+            className="h-full w-full object-cover"
           />
         )}
       </div>
@@ -245,9 +248,10 @@ export function RightPanelInspector({
                   <Image
                     src={getMediaUrl(relatedClip.thumbnailUrl)}
                     alt={relatedClip.name}
-                    fill
+                    width={relatedClip.width}
+                    height={relatedClip.height}
                     sizes="64px"
-                    className="object-cover"
+                    className="h-full w-full object-cover"
                   />
                 </button>
               </div>

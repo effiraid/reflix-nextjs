@@ -542,4 +542,40 @@ describe("RightPanelInspector", () => {
 
     expect(handleSelectRelatedClip).toHaveBeenCalledWith("clip-2");
   });
+
+  it("renders inspector thumbnails without Next fill mode to avoid dev warnings on mount", () => {
+    render(
+      <RightPanelInspector
+        clip={{
+          ...clip,
+          aiTags: null,
+        }}
+        categories={categories}
+        lang="ko"
+        dict={dict}
+        relatedClips={[
+          {
+            id: "clip-2",
+            name: "Counter Slash",
+            tags: ["검"],
+            folders: [],
+            star: 3,
+            category: "action",
+            width: 120,
+            height: 120,
+            duration: 1,
+            previewUrl: "/previews/clip-2.mp4",
+            thumbnailUrl: "/thumbs/clip-2.webp",
+            lqipBase64: "",
+          },
+        ]}
+      />
+    );
+
+    fireEvent.error(document.querySelector("video")!);
+
+    expect(screen.getByAltText("블레이드 스톰")).not.toHaveAttribute("data-nimg", "fill");
+    expect(screen.getByAltText("블레이드 스톰")).toHaveAttribute("loading", "eager");
+    expect(screen.getByAltText("Counter Slash")).not.toHaveAttribute("data-nimg", "fill");
+  });
 });

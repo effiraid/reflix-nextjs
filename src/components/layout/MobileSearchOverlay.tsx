@@ -7,16 +7,18 @@ import { SearchBar } from "@/components/common/SearchBar";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { searchClips } from "@/lib/clipSearch";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
-import type { ClipIndex, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface MobileSearchOverlayProps {
   open: boolean;
-  clips: ClipIndex[];
+  clips: BrowseClipRecord[];
+  searchReady: boolean;
   lang: Locale;
   tagI18n: Record<string, string>;
   placeholder: string;
   closeLabel: string;
   noResultsLabel: string;
+  loadingLabel: string;
   onClose: () => void;
   onSelectClip: (clipId: string, query: string) => void;
 }
@@ -24,11 +26,13 @@ interface MobileSearchOverlayProps {
 export function MobileSearchOverlay({
   open,
   clips,
+  searchReady,
   lang,
   tagI18n,
   placeholder,
   closeLabel,
   noResultsLabel,
+  loadingLabel,
   onClose,
   onSelectClip,
 }: MobileSearchOverlayProps) {
@@ -92,7 +96,9 @@ export function MobileSearchOverlay({
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {query ? (
-          results.length > 0 ? (
+          !searchReady ? (
+            <p className="py-8 text-center text-sm text-muted">{loadingLabel}</p>
+          ) : results.length > 0 ? (
             <div className="space-y-2">
               {results.map((clip) => (
                 <button
@@ -116,7 +122,7 @@ export function MobileSearchOverlay({
                       {clip.name}
                     </p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted">
-                      {getTagDisplayLabels(clip.tags, lang, tagI18n).join(" · ")}
+                      {getTagDisplayLabels(clip.tags ?? [], lang, tagI18n).join(" · ")}
                     </p>
                   </div>
                 </button>

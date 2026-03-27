@@ -62,6 +62,12 @@ vi.mock("@/components/common/SearchBar", () => ({
 
 vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
   useClipData: () => [],
+  useBrowseData: () => ({
+    projectionClips: [],
+    projectionStatus: "ready",
+    initialClips: [],
+    initialTotalCount: 0,
+  }),
 }));
 
 vi.mock("@/stores/clipStore", () => ({

@@ -5,10 +5,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { ClipCard } from "./ClipCard";
 import { useUIStore } from "@/stores/uiStore";
 import { getColumnCountFromThumbnailSize, THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
-import type { ClipIndex, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface MasonryGridProps {
-  clips: ClipIndex[];
+  clips: BrowseClipRecord[];
   lang?: Locale;
   tagI18n?: Record<string, string>;
   onOpenQuickView?: (clipId: string) => void;
@@ -67,7 +67,7 @@ export function MasonryGrid({
 
   // Distribute clips into columns by shortest-column-first
   const columns = useMemo(() => {
-    const cols: ClipIndex[][] = Array.from({ length: columnCount }, () => []);
+    const cols: BrowseClipRecord[][] = Array.from({ length: columnCount }, () => []);
     const heights = new Array(columnCount).fill(0);
 
     for (const clip of clips) {
@@ -107,7 +107,7 @@ function MasonryColumn({
   tagI18n,
   onOpenQuickView,
 }: {
-  clips: ClipIndex[];
+  clips: BrowseClipRecord[];
   scrollElement: HTMLElement | null;
   enablePreview: boolean;
   previewOnHover: boolean;

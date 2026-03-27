@@ -7,10 +7,10 @@ import { getMediaUrl } from "@/lib/mediaUrl";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
-import type { ClipIndex, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface ClipCardProps {
-  clip: ClipIndex;
+  clip: BrowseClipRecord;
   lang?: Locale;
   tagI18n?: Record<string, string>;
   enablePreview?: boolean; // false → stop at static thumbnail, skip video preview
@@ -39,7 +39,7 @@ export function ClipCard({
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
   const previewFailed = failedPreviewUrl === previewUrl;
-  const displayTags = getTagDisplayLabels(clip.tags, lang, tagI18n);
+  const displayTags = getTagDisplayLabels(clip.tags ?? [], lang, tagI18n);
 
   const handleClick = useCallback(() => {
     if (isSelected) {
@@ -94,10 +94,11 @@ export function ClipCard({
         <Image
           src={clip.lqipBase64}
           alt=""
-          fill
+          width={clip.width}
+          height={clip.height}
           unoptimized
           sizes="33vw"
-          className="object-cover blur-lg scale-110"
+          className="h-full w-full object-cover blur-lg scale-110"
           aria-hidden="true"
         />
       )}
@@ -107,10 +108,11 @@ export function ClipCard({
         <Image
           src={thumbnailUrl}
           alt={clip.name}
-          fill
+          width={clip.width}
+          height={clip.height}
           loading={prioritizeThumbnail ? "eager" : undefined}
           sizes="33vw"
-          className="object-contain"
+          className="h-full w-full object-contain"
         />
       )}
 

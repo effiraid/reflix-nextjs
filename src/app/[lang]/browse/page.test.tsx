@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import BrowsePage from "./page";
+import { BrowsePageShell } from "./page";
 
 const dict = {
   nav: {
@@ -14,13 +14,6 @@ const dict = {
 
 vi.mock("../dictionaries", () => ({
   getDictionary: vi.fn(async () => dict),
-}));
-
-vi.mock("@/lib/data", () => ({
-  getClipIndex: vi.fn(async () => ({ clips: [] })),
-  getCategories: vi.fn(async () => ({})),
-  getTagGroups: vi.fn(async () => ({})),
-  getTagI18n: vi.fn(async () => ({})),
 }));
 
 vi.mock("@/components/layout/Navbar", () => ({
@@ -71,7 +64,18 @@ vi.mock("@/components/layout/RightPanelContent", () => ({
 
 describe("BrowsePage", () => {
   it("shows a Suspense fallback for the right panel when it blocks on navigation data", async () => {
-    render(await BrowsePage({ params: Promise.resolve({ lang: "ko" }) }));
+    render(
+      <BrowsePageShell
+        lang="ko"
+        dict={dict as never}
+        categories={{}}
+        tagGroups={{}}
+        tagI18n={{}}
+        browseSummary={[]}
+        browseProjection={[]}
+        rawSearchParams={{}}
+      />
+    );
 
     expect(screen.getByTestId("right-panel")).toBeInTheDocument();
     expect(screen.getByText("로딩 중...")).toBeInTheDocument();

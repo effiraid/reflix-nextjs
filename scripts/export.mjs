@@ -28,6 +28,7 @@ import { generateLQIP, generatePreview, processThumbnail, processVideo, getVideo
 import { loadCategoryMap, buildClipIndex, buildFullClip, writeOutputFiles } from "./lib/index-builder.mjs";
 import { uploadBatch } from "./lib/r2-uploader.mjs";
 import { computeRelatedClips } from "./lib/similarity.mjs";
+import { buildBrowseArtifacts, writeBrowseArtifacts } from "./lib/browse-artifacts.mjs";
 
 const DIRECT_RUN_PATH = fileURLToPath(import.meta.url);
 const SCRIPT_DIR = path.dirname(DIRECT_RUN_PATH);
@@ -364,6 +365,9 @@ export async function runExport(
 
   const indexPath = path.join(projectRoot, "src", "data", "index.json");
   const mergedIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
+
+  console.log("\n📦 Writing browse artifacts...");
+  writeBrowseArtifacts(buildBrowseArtifacts(mergedIndex.clips), projectRoot);
 
   console.log("\n🔗 Computing related clips for all clips...");
   recomputePublishedRelatedClips(mergedIndex.clips, projectRoot);

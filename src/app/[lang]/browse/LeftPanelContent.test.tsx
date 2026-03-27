@@ -17,6 +17,9 @@ vi.mock("@/hooks/useFilterSync", () => ({
 
 vi.mock("./ClipDataProvider", () => ({
   useClipData: () => clips,
+  useBrowseData: () => ({
+    initialTotalCount: clips.length,
+  }),
 }));
 
 const categories: CategoryTree = {
