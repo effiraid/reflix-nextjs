@@ -148,6 +148,8 @@ export function SubToolbar({
     if (!nextOpen) setActiveFilterTab(null);
   }
 
+  if (viewMode === "feed") return null;
+
   return (
     <div className="shrink-0 border-b border-border">
       {/* Top toolbar row */}
@@ -171,10 +173,7 @@ export function SubToolbar({
               type="button"
               aria-label={shuffleLabel}
               onClick={reshuffleClips}
-              disabled={viewMode === "feed"}
-              className={`p-1.5 rounded hover:bg-surface-hover text-muted ${
-                viewMode === "feed" ? "opacity-40 cursor-not-allowed" : ""
-              }`}
+              className="p-1.5 rounded hover:bg-surface-hover text-muted"
             >
               <RefreshIcon />
             </button>
