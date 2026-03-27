@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import type { BrowseClipRecord } from "@/lib/types";
 
@@ -23,14 +22,25 @@ export function LandingClipCard({
   disableVideo = false,
   className = "",
 }: LandingClipCardProps) {
-  const { ref, stage, isInView } = useIntersectionLoader();
+  const ref = useRef<HTMLDivElement>(null);
+  const [showVideo, setShowVideo] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
 
   const thumbnailUrl = getMediaUrl(clip.thumbnailUrl);
   const previewUrl = getMediaUrl(clip.previewUrl);
 
-  const showVideo =
-    !disableVideo && autoPlay && stage === "webp" && isInView && !videoFailed;
+  useEffect(() => {
+    if (disableVideo || !autoPlay) return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowVideo(entry.isIntersecting),
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [autoPlay, disableVideo]);
 
   return (
     <div
@@ -38,31 +48,17 @@ export function LandingClipCard({
       className={`relative overflow-hidden rounded-lg bg-black/50 ${className}`}
       style={aspectRatio ? { aspectRatio } : undefined}
     >
-      {stage === "lqip" && clip.lqipBase64 && (
-        <Image
-          src={clip.lqipBase64}
-          alt=""
-          width={clip.width}
-          height={clip.height}
-          unoptimized
-          sizes="33vw"
-          className="h-full w-full object-cover blur-lg scale-110"
-          aria-hidden="true"
-        />
-      )}
+      {/* Always render thumbnail — SSR-safe, no hydration mismatch */}
+      <Image
+        src={thumbnailUrl}
+        alt={clip.name}
+        width={clip.width}
+        height={clip.height}
+        sizes="33vw"
+        className="h-full w-full object-cover"
+      />
 
-      {stage !== "lqip" && (
-        <Image
-          src={thumbnailUrl}
-          alt={clip.name}
-          width={clip.width}
-          height={clip.height}
-          sizes="33vw"
-          className="h-full w-full object-cover"
-        />
-      )}
-
-      {showVideo && (
+      {showVideo && !videoFailed && (
         <video
           src={previewUrl}
           muted
