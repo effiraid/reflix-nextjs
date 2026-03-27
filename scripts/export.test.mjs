@@ -31,6 +31,14 @@ test("parseFlags recognizes r2 and existing export options", () => {
     "A1,B2",
     "--limit",
     "3",
+    "--media-concurrency",
+    "5",
+    "--upload-concurrency",
+    "7",
+    "--fresh-run",
+    "--resume-run",
+    "run-1",
+    "--force-related-full-rebuild",
   ]);
 
   assert.deepEqual(flags, {
@@ -43,6 +51,11 @@ test("parseFlags recognizes r2 and existing export options", () => {
     batchPath: "config/canary.json",
     ids: ["A1", "B2"],
     limit: 3,
+    mediaConcurrency: 5,
+    uploadConcurrency: 7,
+    freshRun: true,
+    resumeRun: "run-1",
+    forceRelatedFullRebuild: true,
   });
 });
 

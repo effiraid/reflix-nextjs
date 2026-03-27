@@ -29,6 +29,7 @@ import { loadCategoryMap, buildClipIndex, buildFullClip, writeOutputFiles } from
 import { uploadBatch } from "./lib/r2-uploader.mjs";
 import { computeRelatedClips } from "./lib/similarity.mjs";
 import { buildBrowseArtifacts, writeBrowseArtifacts } from "./lib/browse-artifacts.mjs";
+import { runExportPipeline } from "./lib/export-pipeline.mjs";
 
 const DIRECT_RUN_PATH = fileURLToPath(import.meta.url);
 const SCRIPT_DIR = path.dirname(DIRECT_RUN_PATH);
@@ -40,7 +41,18 @@ export function parseFlags(args) {
   const idsIdx = args.indexOf("--ids");
   const batchIdx = args.indexOf("--batch");
   const limitIdx = args.indexOf("--limit");
+  const mediaConcurrencyIdx = args.indexOf("--media-concurrency");
+  const uploadConcurrencyIdx = args.indexOf("--upload-concurrency");
+  const resumeRunIdx = args.indexOf("--resume-run");
   const parsedLimit = limitIdx !== -1 && args[limitIdx + 1] ? Number.parseInt(args[limitIdx + 1], 10) : null;
+  const parsedMediaConcurrency =
+    mediaConcurrencyIdx !== -1 && args[mediaConcurrencyIdx + 1]
+      ? Number.parseInt(args[mediaConcurrencyIdx + 1], 10)
+      : null;
+  const parsedUploadConcurrency =
+    uploadConcurrencyIdx !== -1 && args[uploadConcurrencyIdx + 1]
+      ? Number.parseInt(args[uploadConcurrencyIdx + 1], 10)
+      : null;
 
   return {
     full: args.includes("--full"),
@@ -58,6 +70,12 @@ export function parseFlags(args) {
             .filter(Boolean)
         : null,
     limit: Number.isNaN(parsedLimit) ? null : parsedLimit,
+    mediaConcurrency: Number.isNaN(parsedMediaConcurrency) || parsedMediaConcurrency === null ? 4 : parsedMediaConcurrency,
+    uploadConcurrency:
+      Number.isNaN(parsedUploadConcurrency) || parsedUploadConcurrency === null ? 6 : parsedUploadConcurrency,
+    freshRun: args.includes("--fresh-run"),
+    resumeRun: resumeRunIdx !== -1 && args[resumeRunIdx + 1] ? args[resumeRunIdx + 1] : null,
+    forceRelatedFullRebuild: args.includes("--force-related-full-rebuild"),
   };
 }
 
@@ -266,158 +284,11 @@ export async function runExport(
     eagleLibraryPath = resolveEagleLibraryPath({ env }),
   } = {}
 ) {
-  console.log(`\n📂 Eagle Library: ${eagleLibraryPath}`);
-  console.log(`📁 Project Root: ${projectRoot}`);
-  if (flags.local) {
-    console.log("ℹ️  --local is retained for compatibility; local media generation is now the default.");
-  }
-
-  const requestedClipIds = resolveRequestedClipIds(flags, {
+  return runExportPipeline(flags, {
+    env,
     projectRoot,
+    eagleLibraryPath,
   });
-  console.log(`🧾 Batch source: ${requestedClipIds.label}`);
-
-  const categoriesPath = path.join(projectRoot, "src", "data", "categories.json");
-  if (fs.existsSync(categoriesPath)) {
-    loadCategoryMap(categoriesPath);
-    console.log("✅ Category map loaded");
-  } else {
-    console.warn("⚠️  No categories.json found — all clips will be 'uncategorized'");
-  }
-
-  console.log("\n🔍 Reading Eagle library...");
-  const items = readItems(flags, eagleLibraryPath, requestedClipIds.ids);
-  console.log(`   Found ${items.length} items`);
-
-  if (flags.dryRun) {
-    logDryRunItems(items);
-    const uploadSummary = flags.r2 ? await logDryRunUploads(items, projectRoot) : null;
-    const indexPath = path.join(projectRoot, "src", "data", "index.json");
-    const pruneSummary = flags.prune
-      ? await prunePublishedArtifacts({
-          keepIds: buildMergedKeepIds(
-            fs.existsSync(indexPath)
-              ? JSON.parse(fs.readFileSync(indexPath, "utf-8"))
-              : { clips: [] },
-            items
-          ),
-          projectRoot,
-          dryRun: true,
-        })
-      : null;
-    if (pruneSummary) {
-      console.log(`\n🧹 Planned stale local removals: ${pruneSummary.planned}`);
-    }
-    console.log(`\nTotal: ${items.length} items would be processed`);
-    return {
-      dryRun: true,
-      items: items.length,
-      uploadSummary,
-      pruneSummary,
-    };
-  }
-
-  const mediaRoot = path.join(projectRoot, "public");
-  ensureMediaDirectories(mediaRoot);
-
-  const clips = [];
-  const clipIndexEntries = [];
-  const clipIds = [];
-  const generationSummary = {
-    generated: 0,
-    skipped: 0,
-    failed: 0,
-    videos: 0,
-    previews: 0,
-    thumbnails: 0,
-  };
-  let processed = 0;
-
-  for (const item of items) {
-    try {
-      console.log(`\n[${processed + generationSummary.failed + 1}/${items.length}] ${item.id} — ${item.name}`);
-
-      // Override Eagle's thumbnail resolution with actual video resolution
-      const resolution = await getVideoResolution(item._mediaPath);
-      item.width = resolution.width;
-      item.height = resolution.height;
-
-      console.log("  → Generating LQIP...");
-      const lqipBase64 = await generateLQIP(item._mediaPath);
-
-      await materializeClipAssets(item, mediaRoot, generationSummary);
-
-      const clipIndex = buildClipIndex(item, lqipBase64);
-      const fullClip = buildFullClip(item, lqipBase64);
-
-      clipIndexEntries.push(clipIndex);
-      clips.push(fullClip);
-      clipIds.push(item.id);
-      processed += 1;
-    } catch (error) {
-      console.error(`  ❌ FAILED: ${error.message}`);
-      generationSummary.failed += 1;
-    }
-  }
-
-  console.log("\n💾 Writing output files...");
-  writeOutputFiles(clips, clipIndexEntries, projectRoot);
-
-  const indexPath = path.join(projectRoot, "src", "data", "index.json");
-  const mergedIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
-
-  console.log("\n📦 Writing browse artifacts...");
-  writeBrowseArtifacts(buildBrowseArtifacts(mergedIndex.clips), projectRoot);
-
-  console.log("\n🔗 Computing related clips for all clips...");
-  recomputePublishedRelatedClips(mergedIndex.clips, projectRoot);
-
-  let pruneSummary = null;
-  const mergedClipIds = mergedIndex.clips.map((clip) => clip.id);
-  if (flags.prune) {
-    if (generationSummary.failed > 0) {
-      console.warn("\n⚠️  Skipping prune because some items failed during export.");
-    } else {
-      pruneSummary = await prunePublishedArtifacts({
-        keepIds: mergedClipIds,
-        projectRoot,
-      });
-    }
-  }
-
-  let uploadSummary = null;
-  if (flags.r2) {
-    console.log("\n☁️ Uploading generated media to R2...");
-    uploadSummary = await uploadBatch(buildMediaUploadEntries(clipIds, projectRoot), {
-      env,
-    });
-  }
-
-  console.log("\n✅ Export complete!");
-  console.log(`   Processed items: ${processed}`);
-  console.log(`   Item failures: ${generationSummary.failed}`);
-  console.log(
-    `   Generated files: ${generationSummary.generated} (${generationSummary.videos} videos, ${generationSummary.previews} previews, ${generationSummary.thumbnails} thumbnails)`
-  );
-  console.log(`   Local skipped: ${generationSummary.skipped}`);
-  if (pruneSummary) {
-    console.log(`   Stale local files removed: ${pruneSummary.removed}`);
-  }
-  if (uploadSummary) {
-    console.log(`   Uploaded: ${uploadSummary.uploaded}`);
-    console.log(`   Upload failed: ${uploadSummary.failed}`);
-    console.log(`   Upload skipped: ${uploadSummary.skipped}`);
-  }
-  console.log(`   Index entries: ${mergedClipIds.length}`);
-  console.log(`   Clip JSONs: ${clips.length}`);
-
-  return {
-    processed,
-    failed: generationSummary.failed,
-    generationSummary,
-    pruneSummary,
-    uploadSummary,
-  };
 }
 
 async function main() {
