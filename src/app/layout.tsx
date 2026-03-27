@@ -2,6 +2,7 @@ import localFont from "next/font/local";
 import { Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { shouldEnableSpeedInsights } from "@/lib/speedInsights";
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
           {shouldEnableSpeedInsights() ? <SpeedInsights /> : null}
         </ThemeProvider>
       </body>

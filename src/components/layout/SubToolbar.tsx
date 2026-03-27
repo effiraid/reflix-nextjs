@@ -1,8 +1,14 @@
 "use client";
 
+import { forwardRef, useLayoutEffect, useRef, useState } from "react";
 import { MIN_THUMBNAIL_SIZE, MAX_THUMBNAIL_SIZE } from "@/lib/thumbnailSize";
 import { getCategoryLabel } from "@/lib/categories";
 import { getTagDisplayLabel } from "@/lib/tagDisplay";
+import {
+  BADGE_GAP_PX,
+  getOverflowBadgeLabel,
+  getVisibleBadgeCount,
+} from "@/lib/toolbarFilterBadges";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -51,7 +57,7 @@ export function SubToolbar({
   const filterTabs = [{ id: "tags", label: dict.clip.tags, icon: TagIcon }] as const;
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
-  const filterSummary = buildFilterSummary({
+  const filterBadges = buildFilterBadges({
     categories,
     excludedTags,
     lang,
@@ -59,6 +65,68 @@ export function SubToolbar({
     selectedTags,
     tagI18n,
   });
+  const badgeTrackRef = useRef<HTMLDivElement | null>(null);
+  const overflowMeasureRef = useRef<HTMLSpanElement | null>(null);
+  const badgeMeasureRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [visibleBadgeCount, setVisibleBadgeCount] = useState(filterBadges.length);
+  const hiddenBadgeCount = Math.max(filterBadges.length - visibleBadgeCount, 0);
+  const visibleBadges = filterBadges.slice(0, visibleBadgeCount);
+
+  useLayoutEffect(() => {
+    function measureOverflowBadgeWidth(nextHiddenBadgeCount: number) {
+      const overflowMeasureEl = overflowMeasureRef.current;
+
+      if (!overflowMeasureEl) {
+        return 0;
+      }
+
+      overflowMeasureEl.textContent = getOverflowBadgeLabel(nextHiddenBadgeCount, lang);
+      return overflowMeasureEl.offsetWidth;
+    }
+
+    function recalculateVisibleBadgeCount() {
+      const trackWidth = badgeTrackRef.current?.offsetWidth ?? 0;
+
+      if (trackWidth <= 0) {
+        setVisibleBadgeCount(filterBadges.length);
+        return;
+      }
+
+      const badgeWidths = filterBadges.map(
+        (_, index) => badgeMeasureRefs.current[index]?.offsetWidth ?? 0
+      );
+      const nextVisibleBadgeCount = getVisibleBadgeCount({
+        badgeWidths,
+        containerWidth: trackWidth,
+        gapPx: BADGE_GAP_PX,
+        getOverflowBadgeWidth: measureOverflowBadgeWidth,
+      });
+
+      setVisibleBadgeCount((currentCount) =>
+        currentCount === nextVisibleBadgeCount
+          ? currentCount
+          : nextVisibleBadgeCount
+      );
+    }
+
+    recalculateVisibleBadgeCount();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      recalculateVisibleBadgeCount();
+    });
+
+    if (badgeTrackRef.current) {
+      resizeObserver.observe(badgeTrackRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [filterBadges, lang]);
 
   function handleFilterToggle() {
     const nextOpen = !filterBarOpen;
@@ -69,7 +137,7 @@ export function SubToolbar({
   return (
     <div className="shrink-0 border-b border-border">
       {/* Top toolbar row */}
-      <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3">
+      <div className="grid h-10 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3">
         {/* Left: Filter + Shuffle */}
         <div className="flex items-center gap-1 justify-self-start">
           <button
@@ -94,15 +162,47 @@ export function SubToolbar({
           </button>
         </div>
 
-        <div className="min-w-0 justify-self-center px-2 text-center text-xs text-muted">
-          {filterSummary ? (
-            <span
-              aria-live="polite"
-              className="block max-w-56 truncate md:max-w-80"
-              title={filterSummary}
-            >
-              {filterSummary}
-            </span>
+        <div className="min-w-0 px-2">
+          {filterBadges.length > 0 ? (
+            <div className="relative">
+              <div
+                ref={badgeTrackRef}
+                aria-label={lang === "ko" ? "현재 필터" : "Current filters"}
+                data-testid="toolbar-filter-badges"
+                className="overflow-hidden"
+              >
+                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                  {visibleBadges.map((badge) => (
+                    <FilterBadge key={badge} label={badge} />
+                  ))}
+                  {hiddenBadgeCount > 0 ? (
+                    <FilterBadge
+                      label={getOverflowBadgeLabel(hiddenBadgeCount, lang)}
+                    />
+                  ) : null}
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-0 top-0 -z-10 opacity-0"
+              >
+                <div className="flex w-max items-center gap-1.5 whitespace-nowrap">
+                  {filterBadges.map((badge, index) => (
+                    <FilterBadge
+                      key={`measure-${badge}-${index}`}
+                      label={badge}
+                      ref={(node) => {
+                        badgeMeasureRefs.current[index] = node;
+                      }}
+                    />
+                  ))}
+                  <FilterBadge
+                    label={getOverflowBadgeLabel(filterBadges.length, lang)}
+                    ref={overflowMeasureRef}
+                  />
+                </div>
+              </div>
+            </div>
           ) : null}
         </div>
 
@@ -168,7 +268,7 @@ export function SubToolbar({
   );
 }
 
-function buildFilterSummary({
+function buildFilterBadges({
   categories,
   excludedTags,
   lang,
@@ -182,63 +282,46 @@ function buildFilterSummary({
   selectedFolders: string[];
   selectedTags: string[];
   tagI18n: Record<string, string>;
-}): string | null {
-  const parts: string[] = [];
+}): string[] {
+  const badges: string[] = [];
 
   if (selectedFolders.length > 0) {
-    parts.push(
-      summarizeFilterValues(
-        lang === "ko" ? "폴더" : "Folder",
-        selectedFolders.map((folderId) => getCategoryLabel(folderId, categories, lang)),
-        lang
+    badges.push(
+      ...selectedFolders.map((folderId) =>
+        getCategoryLabel(folderId, categories, lang)
       )
     );
   }
 
   if (selectedTags.length > 0) {
-    parts.push(
-      summarizeFilterValues(
-        lang === "ko" ? "태그" : "Tag",
-        selectedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n)),
-        lang
-      )
+    badges.push(
+      ...selectedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n))
     );
   }
 
   if (excludedTags.length > 0) {
-    parts.push(
-      summarizeFilterValues(
-        lang === "ko" ? "제외" : "Exclude",
-        excludedTags.map((tag) => getTagDisplayLabel(tag, lang, tagI18n)),
-        lang
+    badges.push(
+      ...excludedTags.map(
+        (tag) => `-${getTagDisplayLabel(tag, lang, tagI18n)}`
       )
     );
   }
 
-  return parts.length > 0 ? parts.join(" · ") : null;
+  return badges;
 }
 
-function summarizeFilterValues(
-  label: string,
-  values: string[],
-  lang: Locale
-): string {
-  const [firstValue, ...restValues] = values;
-
-  if (!firstValue) {
-    return label;
+const FilterBadge = forwardRef<HTMLSpanElement, { label: string }>(
+  function FilterBadge({ label }, ref) {
+    return (
+      <span
+        ref={ref}
+        className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-surface/80 px-2.5 py-1 text-[11px] leading-none text-muted"
+      >
+        {label}
+      </span>
+    );
   }
-
-  if (restValues.length === 0) {
-    return `${label}: ${firstValue}`;
-  }
-
-  if (lang === "ko") {
-    return `${label}: ${firstValue} 외 ${restValues.length}개`;
-  }
-
-  return `${label}: ${firstValue} +${restValues.length}`;
-}
+);
 
 /* --- Icons (14×14) --- */
 

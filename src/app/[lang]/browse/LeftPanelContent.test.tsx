@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LeftPanelContent } from "./LeftPanelContent";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
+import type { Dictionary } from "@/app/[lang]/dictionaries";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { CategoryTree } from "@/lib/types";
@@ -63,19 +65,9 @@ const clips = [
 ];
 
 const dict = {
-  browse: {
-    all: "전체",
-    recentlyUsed: "최근 사용",
-    random: "무작위",
-    allTags: "모든 태그",
-    community: "커뮤니티",
-    expandAllFolders: "폴더 전체 펼치기",
-    collapseAllFolders: "폴더 전체 접기",
-  },
-  clip: {
-    folders: "폴더",
-  },
-};
+  browse: koDict.browse,
+  clip: koDict.clip,
+} satisfies Pick<Dictionary, "browse" | "clip">;
 
 describe("LeftPanelContent", () => {
   beforeEach(() => {

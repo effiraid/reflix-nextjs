@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   getMediaSessionConfig,
+  getPayloadTier,
   isProtectedMediaPath,
   signMediaSessionToken,
   verifyMediaSessionToken,
@@ -35,6 +36,38 @@ describe("media session tokens", () => {
       host: "reflix.dev",
       exp: now + 60_000,
     });
+  });
+
+  it("round-trips a v2 token with tier and userId", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-25T09:00:00Z"));
+
+    const now = Date.now();
+    const token = await signMediaSessionToken(
+      { v: 2, host: "reflix.dev", exp: now + 60_000, userId: "user-123", tier: "pro" },
+      "test-secret"
+    );
+
+    const payload = await verifyMediaSessionToken(token, "test-secret", now);
+    expect(payload).toEqual({
+      v: 2,
+      host: "reflix.dev",
+      exp: now + 60_000,
+      userId: "user-123",
+      tier: "pro",
+    });
+    expect(getPayloadTier(payload!)).toBe("pro");
+  });
+
+  it("v1 token defaults to free tier via getPayloadTier", async () => {
+    const now = Date.now();
+    const token = await signMediaSessionToken(
+      { v: 1, host: "reflix.dev", exp: now + 60_000 },
+      "test-secret"
+    );
+
+    const payload = await verifyMediaSessionToken(token, "test-secret", now);
+    expect(getPayloadTier(payload!)).toBe("free");
   });
 
   it("rejects expired and tampered tokens", async () => {

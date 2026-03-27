@@ -9,12 +9,11 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useClipDetail } from "@/hooks/useClipDetail";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 
 interface QuickViewModalProps {
   clip: BrowseClipRecord;
-  categories: CategoryTree;
   lang: Locale;
   tagI18n?: Record<string, string>;
   dict: Pick<Dictionary, "clip">;
@@ -23,7 +22,6 @@ interface QuickViewModalProps {
 
 export function QuickViewModal({
   clip,
-  categories,
   lang,
   tagI18n = {},
   dict,
@@ -91,7 +89,7 @@ export function QuickViewModal({
         aria-modal="true"
         aria-label={clip.name}
         tabIndex={-1}
-        className="w-full max-w-5xl rounded-3xl border border-border bg-background shadow-2xl"
+        className="max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-y-auto rounded-3xl border border-border bg-background shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="grid gap-6 p-6 lg:items-start lg:grid-cols-[minmax(0,2fr)_320px]">
@@ -106,7 +104,6 @@ export function QuickViewModal({
 
           <ClipDetailsPanel
             clip={detailClip ?? clip}
-            categories={categories}
             lang={lang}
             tagI18n={tagI18n}
             dict={dict}

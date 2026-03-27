@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
-import { MoonStarIcon, SearchIcon, SunMediumIcon } from "lucide-react";
+import { MoonStarIcon, SearchIcon, SunMediumIcon, UserIcon, LogOutIcon, CrownIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +10,8 @@ import { useBrowseData } from "@/app/[lang]/browse/ClipDataProvider";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
+import { useAuthStore } from "@/stores/authStore";
+import { createClient } from "@/lib/supabase/client";
 import { MobileSearchOverlay } from "./MobileSearchOverlay";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 
@@ -23,6 +25,7 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const { theme, setTheme } = useTheme();
   const { projectionClips, projectionStatus } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
+  const { user, tier, isLoading: authLoading } = useAuthStore();
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -38,6 +41,7 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const isDarkTheme = mounted && theme === "dark";
   const allPanelsOpen = leftPanelOpen && rightPanelOpen;
   const otherLang = lang === "ko" ? "en" : "ko";
@@ -168,6 +172,27 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
           >
             {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
           </button>
+
+          {/* Auth: login button or user menu */}
+          {mounted && !authLoading ? (
+            user ? (
+              <UserMenu
+                lang={lang}
+                tier={tier}
+                userMenuOpen={userMenuOpen}
+                setUserMenuOpen={setUserMenuOpen}
+              />
+            ) : (
+              <Link
+                href={`/${lang}/login`}
+                className="ml-1 px-2.5 py-1 text-xs font-medium rounded hover:bg-surface-hover"
+              >
+                {lang === "ko" ? "로그인" : "Sign in"}
+              </Link>
+            )
+          ) : (
+            <div className="ml-1 h-6 w-12 animate-pulse rounded bg-surface" />
+          )}
         </div>
       </header>
 
@@ -190,6 +215,100 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
         }}
       />
     </>
+  );
+}
+
+function UserMenu({
+  lang,
+  tier,
+  userMenuOpen,
+  setUserMenuOpen,
+}: {
+  lang: Locale;
+  tier: "free" | "pro";
+  userMenuOpen: boolean;
+  setUserMenuOpen: (open: boolean) => void;
+}) {
+  const isKo = lang === "ko";
+  const isPro = tier === "pro";
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    if (!supabase) {
+      setUserMenuOpen(false);
+      window.location.href = `/${lang}`;
+      return;
+    }
+    await supabase.auth.signOut();
+    setUserMenuOpen(false);
+    window.location.href = `/${lang}`;
+  }
+
+  return (
+    <div className="relative ml-1">
+      <button
+        type="button"
+        onClick={() => setUserMenuOpen(!userMenuOpen)}
+        className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium hover:bg-surface-hover"
+        aria-expanded={userMenuOpen}
+        aria-haspopup="true"
+      >
+        <UserIcon className="size-3.5" strokeWidth={1.75} />
+        {isPro ? (
+          <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
+            PRO
+          </span>
+        ) : null}
+      </button>
+
+      {userMenuOpen ? (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setUserMenuOpen(false)}
+          />
+          <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-md border border-border bg-surface py-1 shadow-lg">
+            <Link
+              href={`/${lang}/account`}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-hover"
+              onClick={() => setUserMenuOpen(false)}
+            >
+              <UserIcon className="size-3.5" strokeWidth={1.75} />
+              {isKo ? "계정" : "Account"}
+            </Link>
+            {!isPro ? (
+              <Link
+                href={`/${lang}/pricing`}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-accent hover:bg-surface-hover"
+                onClick={() => setUserMenuOpen(false)}
+              >
+                <CrownIcon className="size-3.5" strokeWidth={1.75} />
+                {isKo ? "Pro 업그레이드" : "Upgrade to Pro"}
+              </Link>
+            ) : (
+              <Link
+                href={`/${lang}/account`}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-hover"
+                onClick={() => setUserMenuOpen(false)}
+              >
+                <CrownIcon className="size-3.5" strokeWidth={1.75} />
+                {isKo ? "구독 관리" : "Manage subscription"}
+              </Link>
+            )}
+            <div className="my-1 border-t border-border" />
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface-hover"
+            >
+              <LogOutIcon className="size-3.5" strokeWidth={1.75} />
+              {isKo ? "로그아웃" : "Sign out"}
+            </button>
+          </div>
+        </>
+      ) : null}
+    </div>
   );
 }
 

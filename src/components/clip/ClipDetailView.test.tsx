@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { ClipDetailView } from "./ClipDetailView";
 import type { CategoryTree, Clip } from "@/lib/types";
 
+vi.mock("@/components/auth/AccessGate", () => ({
+  AccessGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock("@/components/clip/ShareButton", () => ({
   ShareButton: ({ label }: { label: string }) => <button type="button">{label}</button>,
 }));
@@ -49,6 +53,20 @@ const baseClip: Clip = {
   lqipBase64: "",
   category: "action",
   relatedClips: ["clip-2", "clip-3"],
+  aiTags: {
+    actionType: ["dash"],
+    emotion: ["urgent"],
+    composition: ["close-up"],
+    pacing: "fast",
+    characterType: ["hero"],
+    effects: ["smear"],
+    description: {
+      ko: "AI 설명",
+      en: "AI summary",
+    },
+    model: "gpt",
+    generatedAt: "2026-03-27T00:00:00.000Z",
+  },
 };
 
 const categories: CategoryTree = {
@@ -92,14 +110,18 @@ const dict = {
 };
 
 describe("ClipDetailView", () => {
-  it("renders title, annotation, tags, and clip stats", () => {
+  it("renders inspector-style sidebar cards on the detail page", () => {
     render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} categories={categories} />);
 
-    expect(screen.getByRole("heading", { name: "클립 하나" })).toBeInTheDocument();
-    expect(screen.getByText("An energetic scene.")).toBeInTheDocument();
+    expect(screen.getByText("액션")).toBeInTheDocument();
     expect(screen.getByText("tag-a")).toBeInTheDocument();
-    expect(screen.getByText("1280×720")).toBeInTheDocument();
-    expect(screen.getByText("512 KB")).toBeInTheDocument();
+    expect(screen.getByText("AI Analysis")).toBeInTheDocument();
+    expect(screen.getByText("Memo")).toBeInTheDocument();
+    expect(screen.getByText("An energetic scene.")).toBeInTheDocument();
+    expect(screen.getByText("Source URL")).toBeInTheDocument();
+    expect(screen.getByText("https://example.com")).toBeInTheDocument();
+    expect(screen.getByText("File Type")).toBeInTheDocument();
+    expect(screen.getByText("Video")).toBeInTheDocument();
   });
 
   it("passes the hosted media paths to VideoPlayer", () => {
@@ -115,33 +137,14 @@ describe("ClipDetailView", () => {
     );
   });
 
-  it("renders folder labels from categories", () => {
+  it("matches the inspector by hiding AI details until expanded", () => {
     render(<ClipDetailView clip={baseClip} lang="ko" dict={dict} categories={categories} />);
 
-    expect(screen.getByText("액션")).toBeInTheDocument();
-  });
-
-  it("centers palette swatches inside the palette card", () => {
-    render(
-      <ClipDetailView
-        clip={{
-          ...baseClip,
-          palettes: [
-            { color: [14, 13, 12], ratio: 66 },
-            { color: [74, 81, 66], ratio: 9 },
-          ],
-        }}
-        lang="ko"
-        dict={dict}
-        categories={categories}
-      />
+    expect(screen.getByRole("button", { name: "AI Analysis" })).toHaveAttribute(
+      "aria-expanded",
+      "false"
     );
-
-    const paletteSection = screen.getByRole("heading", { name: "Color Palette" }).parentElement;
-    const swatchRow = paletteSection?.querySelector(".flex.flex-wrap");
-
-    expect(swatchRow).not.toBeNull();
-    expect(swatchRow).toHaveClass("justify-center");
+    expect(screen.queryByText("AI 설명")).not.toBeInTheDocument();
   });
 
   it("renders translated english tag labels", () => {

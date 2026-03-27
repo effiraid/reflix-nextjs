@@ -1,10 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 import { LOCALES, DEFAULT_LOCALE } from "@/lib/constants";
 import {
   getMediaSessionConfig,
   MEDIA_SESSION_COOKIE_NAME,
   signMediaSessionToken,
 } from "@/lib/mediaSession";
+
+async function getSessionTier(request: NextRequest): Promise<{
+  userId?: string;
+  tier: "free" | "pro";
+}> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return { tier: "free" };
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: () => {},
+      },
+    });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return { tier: "free" };
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tier")
+      .eq("id", user.id)
+      .single();
+
+    return {
+      userId: user.id,
+      tier: profile?.tier === "pro" ? "pro" : "free",
+    };
+  } catch {
+    return { tier: "free" };
+  }
+}
 
 async function withMediaSession(
   request: NextRequest,
@@ -15,12 +56,16 @@ async function withMediaSession(
     return response;
   }
 
+  const { userId, tier } = await getSessionTier(request);
+
   const now = Date.now();
   const token = await signMediaSessionToken(
     {
-      v: 1,
+      v: 2,
       host: request.nextUrl.hostname,
       exp: now + config.ttlSeconds * 1000,
+      userId,
+      tier,
     },
     config.secret
   );

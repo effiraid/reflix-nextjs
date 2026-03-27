@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useFilterStore } from "@/stores/filterStore";
-import type { SortBy } from "@/lib/types";
+import type { ContentMode, SortBy } from "@/lib/types";
 
 /**
  * Unidirectional URL → Zustand sync.
@@ -30,6 +30,11 @@ export function useFilterSync() {
         : null;
     const folders = searchParams.getAll("folder");
     const searchQuery = searchParams.get("q");
+    const rawMode = searchParams.get("mode");
+    const contentMode: ContentMode | null =
+      rawMode && ["direction", "game"].includes(rawMode)
+        ? (rawMode as ContentMode)
+        : null;
 
     useFilterStore.setState({
       category: category || null,
@@ -39,6 +44,7 @@ export function useFilterSync() {
       sortBy: sort || "newest",
       selectedFolders: folders,
       searchQuery: searchQuery || "",
+      contentMode,
     });
   }, [searchParams]);
 
@@ -46,6 +52,7 @@ export function useFilterSync() {
   return {
     updateURL: (updates: Partial<{
       category: string | null;
+      contentMode: ContentMode | null;
       selectedTags: string[];
       excludedTags: string[];
       selectedFolders: string[];
@@ -57,6 +64,7 @@ export function useFilterSync() {
       const params = new URLSearchParams();
 
       if (state.category) params.set("category", state.category);
+      if (state.contentMode) params.set("mode", state.contentMode);
       state.selectedTags.forEach((t) => params.append("tag", t));
       state.excludedTags.forEach((t) => params.append("exclude", t));
       state.selectedFolders.forEach((f) => params.append("folder", f));

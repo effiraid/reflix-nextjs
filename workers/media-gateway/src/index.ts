@@ -1,5 +1,6 @@
 import {
   isProtectedMediaPath,
+  getPayloadTier,
   MEDIA_SESSION_COOKIE_NAME,
   verifyMediaSessionToken,
 } from "../../../src/lib/mediaSession";
@@ -237,6 +238,19 @@ const worker = {
 
     if (!session) {
       return new Response("Forbidden", { status: 403 });
+    }
+
+    // Tier-based access control:
+    // /videos/* requires pro tier
+    // /previews/* allows all tiers
+    const tier = getPayloadTier(session);
+    if (url.pathname.startsWith("/videos/") && tier !== "pro") {
+      const cors = corsHeaders(request);
+      cors.set("Content-Type", "application/json");
+      return new Response(
+        JSON.stringify({ error: "pro_required", message: "Pro subscription required for full videos" }),
+        { status: 403, headers: cors }
+      );
     }
 
     const response = await serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), true);

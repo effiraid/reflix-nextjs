@@ -1,15 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BrowsePageShell } from "./page";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
 
 const dict = {
-  nav: {
-    browse: "Browse",
-    searchPlaceholder: "Search clips",
-  },
-  common: {
-    loading: "로딩 중...",
-  },
+  ...koDict,
 } as const;
 
 vi.mock("../dictionaries", () => ({
@@ -69,7 +64,7 @@ describe("BrowsePage", () => {
         lang="ko"
         dict={dict as never}
         categories={{}}
-        tagGroups={{}}
+        tagGroups={{ groups: [], parentGroups: [] }}
         tagI18n={{}}
         browseSummary={[]}
         browseProjection={[]}

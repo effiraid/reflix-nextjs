@@ -7,8 +7,8 @@ import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useBrowseData, useClipData } from "./ClipDataProvider";
-import { collectExpandableFolderIds, findNode } from "@/lib/categories";
-import type { CategoryTree, Locale } from "@/lib/types";
+import { collectExpandableFolderIds, filterCategoriesByMode, findNode } from "@/lib/categories";
+import type { CategoryTree, ContentMode, Locale } from "@/lib/types";
 
 interface LeftPanelContentProps {
   categories: CategoryTree;
@@ -22,6 +22,9 @@ interface LeftPanelContentProps {
       community: string;
       expandAllFolders: string;
       collapseAllFolders: string;
+      modeAll: string;
+      modeDirection: string;
+      modeGame: string;
     };
     clip: {
       folders: string;
@@ -37,14 +40,26 @@ export function LeftPanelContent({
   const clips = useClipData();
   const { initialTotalCount } = useBrowseData();
   const { updateURL } = useFilterSync();
+  const contentMode = useFilterStore((s) => s.contentMode);
   const { reshuffleClips, setFilterBarOpen, setActiveFilterTab } = useUIStore();
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
   );
 
-  const totalTagCount = new Set(clips.flatMap((c) => c.tags || [])).size;
-  const expandableFolderIds = collectExpandableFolderIds(categories);
+  const visibleCategories = useMemo(
+    () => filterCategoriesByMode(categories, contentMode),
+    [categories, contentMode]
+  );
+
+  const totalTagCount = useMemo(
+    () => new Set(clips.flatMap((c) => c.tags || [])).size,
+    [clips]
+  );
+  const expandableFolderIds = useMemo(
+    () => collectExpandableFolderIds(visibleCategories),
+    [visibleCategories]
+  );
   const allFoldersExpanded =
     expandableFolderIds.length > 0 &&
     expandableFolderIds.every((id) => expandedFolderIds.includes(id));
@@ -119,6 +134,15 @@ export function LeftPanelContent({
         </button>
       </div>
 
+      {/* Content mode toggle */}
+      <ContentModeToggle
+        contentMode={contentMode}
+        onChange={(mode) => {
+          updateURL({ contentMode: mode, selectedFolders: [] });
+        }}
+        dict={dict.browse}
+      />
+
       {/* Folder tree */}
       <div className="rounded-xl border border-border bg-surface/40 p-1.5">
         <div className="flex items-center gap-1">
@@ -154,7 +178,7 @@ export function LeftPanelContent({
         {foldersExpanded && (
           <div className="pt-1">
             <FolderTree
-              categories={categories}
+              categories={visibleCategories}
               folderCounts={folderCounts}
               lang={lang}
               expandedFolderIds={expandedFolderIds}
@@ -167,7 +191,7 @@ export function LeftPanelContent({
                 }
 
                 // 하위 폴더가 있으면 클릭 시 자동으로 펼치기
-                const node = findNode(folderId, categories);
+                const node = findNode(folderId, visibleCategories);
                 const hasChildren = node?.children && Object.keys(node.children).length > 0;
                 if (hasChildren) {
                   setExpandedFolderIds((current) =>
@@ -205,4 +229,42 @@ function getDefaultExpandedFolderIds(categories: CategoryTree): string[] {
   return Object.entries(categories)
     .filter(([, node]) => node.children && Object.keys(node.children).length > 0)
     .map(([id]) => id);
+}
+
+const CONTENT_MODES: { value: ContentMode | null; dictKey: "modeAll" | "modeDirection" | "modeGame" }[] = [
+  { value: null, dictKey: "modeAll" },
+  { value: "direction", dictKey: "modeDirection" },
+  { value: "game", dictKey: "modeGame" },
+];
+
+function ContentModeToggle({
+  contentMode,
+  onChange,
+  dict,
+}: {
+  contentMode: ContentMode | null;
+  onChange: (mode: ContentMode | null) => void;
+  dict: { modeAll: string; modeDirection: string; modeGame: string };
+}) {
+  return (
+    <div className="flex gap-1 rounded-lg bg-surface/60 p-1 border border-border">
+      {CONTENT_MODES.map(({ value, dictKey }) => {
+        const active = contentMode === value;
+        return (
+          <button
+            key={dictKey}
+            type="button"
+            onClick={() => onChange(value)}
+            className={`flex-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
+              active
+                ? "bg-accent text-white shadow-sm"
+                : "text-muted hover:text-foreground hover:bg-surface-hover"
+            }`}
+          >
+            {dict[dictKey]}
+          </button>
+        );
+      })}
+    </div>
+  );
 }

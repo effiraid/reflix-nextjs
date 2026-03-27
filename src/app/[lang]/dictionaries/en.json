@@ -28,7 +28,10 @@
     "sortNewest": "Newest",
     "sortRating": "Top Rated",
     "sortName": "Name",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "modeAll": "All",
+    "modeDirection": "Cinematic",
+    "modeGame": "Game"
   },
   "clip": {
     "play": "Play",
@@ -67,5 +70,64 @@
     "clearAll": "Clear all",
     "loading": "Loading...",
     "loadFailed": "Could not load this clip."
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "signInWithEmail": "Sign in with email",
+    "sendMagicLink": "Send magic link",
+    "sendingMagicLink": "Sending magic link...",
+    "checkEmail": "Check your email ✉️",
+    "checkEmailDesc": "We sent a magic link. Check your inbox.",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "termsNotice": "By signing in, you agree to our Terms of Service",
+    "checkEmailError": "Please check your email address",
+    "account": "Account",
+    "email": "Email",
+    "subscription": "Subscription",
+    "proActive": "Pro subscription active",
+    "freeTier": "Free tier",
+    "manageViaStripe": "Manage your subscription via Stripe Customer Portal.",
+    "upgradeToPro": "Upgrade to Pro"
+  },
+  "pricing": {
+    "title": "Pricing",
+    "subtitle": "Explore 1,000+ game animation references with tag-based search",
+    "free": "Start free",
+    "subscribe": "Subscribe",
+    "currentPlan": "Current plan",
+    "preparingCheckout": "Preparing checkout...",
+    "recommended": "★ Recommended",
+    "perMonth": "mo",
+    "freeClips": "50 free clips",
+    "freeViews": "20 views/day",
+    "freeBoards": "1 board",
+    "proLibrary": "Full library",
+    "proViews": "Unlimited views",
+    "proBoards": "Unlimited boards"
+  },
+  "gate": {
+    "proOnly": "Pro-only clip",
+    "signInRequired": "Sign in required",
+    "signInToView": "Sign in to view this clip",
+    "proRequired": "A Pro subscription is required to view this clip",
+    "subscribeCta": "Subscribe",
+    "browseFree": "Browse free clips",
+    "dailyLimitTitle": "You've used all free views for today",
+    "dailyLimitDesc": "Upgrade to Pro for unlimited views",
+    "subscribePro": "Subscribe to Pro",
+    "comeBackTomorrow": "Come back tomorrow"
+  },
+  "board": {
+    "title": "Boards",
+    "empty": "No boards yet. Create your first board",
+    "newBoardPlaceholder": "New board name",
+    "create": "Create board",
+    "delete": "Delete board",
+    "add": "Add",
+    "remove": "Remove",
+    "freeLimitNotice": "Free accounts are limited to 1 board. Upgrade to Pro.",
+    "signInNotice": "Sign in to use boards"
   }
 }

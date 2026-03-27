@@ -1,6 +1,6 @@
-import { ClipDetailsPanel } from "@/components/clip/ClipDetailsPanel";
 import { ClipDetailLayout } from "@/components/clip/ClipDetailLayout";
-import { ShareButton } from "@/components/clip/ShareButton";
+import { InspectorSidebarSections } from "@/components/clip/InspectorSidebarSections";
+import { AccessGate } from "@/components/auth/AccessGate";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -20,30 +20,29 @@ export function ClipDetailView({
   tagI18n = {},
 }: ClipDetailViewProps) {
   return (
-    <ClipDetailLayout
-      videoUrl={clip.videoUrl}
-      thumbnailUrl={clip.thumbnailUrl}
-      duration={clip.duration}
-    >
-      <ClipDetailsPanel
-        clip={clip}
-        categories={categories}
-        lang={lang}
-        dict={dict}
-        tagI18n={tagI18n}
-        className="lg:w-80 lg:shrink-0"
-        pagefindBody
-        headerAction={(
-          <ShareButton
-            clipId={clip.id}
+    <AccessGate clipAccessTier={clip.accessTier ?? "pro"} lang={lang}>
+      <ClipDetailLayout
+        videoUrl={clip.videoUrl}
+        thumbnailUrl={clip.thumbnailUrl}
+        duration={clip.duration}
+      >
+        <aside
+          data-pagefind-body
+          className="w-full space-y-5 text-sm text-foreground lg:w-80 lg:shrink-0"
+        >
+          <div className="sr-only">
+            {clip.i18n.title[lang] || clip.name} {clip.tags.join(" ")}{" "}
+            {clip.aiTags?.description[lang] || clip.aiTags?.description.ko || ""}
+          </div>
+          <InspectorSidebarSections
+            clip={clip}
+            categories={categories}
             lang={lang}
-            label={dict.clip.share}
-            copiedLabel={dict.clip.copied}
-            variant="icon-only"
-            className="rounded-full border border-border bg-surface p-2 transition-colors hover:bg-surface/80"
+            dict={dict}
+            tagI18n={tagI18n}
           />
-        )}
-      />
-    </ClipDetailLayout>
+        </aside>
+      </ClipDetailLayout>
+    </AccessGate>
   );
 }

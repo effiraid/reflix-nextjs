@@ -1,4 +1,4 @@
-import type { CategoryTree, Locale, SortBy } from "./types";
+import type { AccessTier, CategoryTree, ContentMode, Locale, SortBy } from "./types";
 import { collectDescendantIds } from "./categories";
 import { getAllClipTags } from "./aiTags";
 import { searchClips, type SearchableClipRecord } from "./clipSearch";
@@ -11,12 +11,19 @@ export interface FilterState {
   searchQuery: string;
   sortBy: SortBy;
   category: string | null;
+  contentMode: ContentMode | null;
 }
+
+const CONTENT_MODE_KEYWORD: Record<ContentMode, string> = {
+  direction: "연출",
+  game: "게임",
+};
 
 interface FilterableClipRecord extends SearchableClipRecord {
   category: string;
   folders?: string[];
   star: number;
+  accessTier?: AccessTier;
 }
 
 export function filterClips<T extends FilterableClipRecord>(
@@ -24,12 +31,23 @@ export function filterClips<T extends FilterableClipRecord>(
   filters: FilterState,
   categories?: CategoryTree,
   tagI18n: Record<string, string> = {},
-  lang: Locale = "ko"
+  lang: Locale = "ko",
+  userTier?: AccessTier
 ): T[] {
   let result = clips;
 
+  // Tier-based gating: free/unauthed users see only free clips
+  if (userTier && userTier !== "pro") {
+    result = result.filter((c) => (c.accessTier ?? "pro") === "free");
+  }
+
   if (filters.category) {
     result = result.filter((c) => c.category === filters.category);
+  }
+
+  if (filters.contentMode) {
+    const keyword = CONTENT_MODE_KEYWORD[filters.contentMode];
+    result = result.filter((c) => c.name.includes(keyword));
   }
 
   if (filters.selectedFolders.length > 0) {

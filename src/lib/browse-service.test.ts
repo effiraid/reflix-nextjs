@@ -60,6 +60,7 @@ describe("browse-service", () => {
       starFilter: 3,
       searchQuery: "arcane",
       sortBy: "name",
+      contentMode: null,
     });
   });
 
@@ -75,6 +76,7 @@ describe("browse-service", () => {
         starFilter: null,
         searchQuery: "",
         sortBy: "newest",
+        contentMode: null,
       },
       pageSize: 10,
     });

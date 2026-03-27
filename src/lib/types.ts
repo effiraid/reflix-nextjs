@@ -13,6 +13,8 @@ export interface AIGeneratedTags {
   generatedAt: string;
 }
 
+export type AccessTier = "free" | "pro";
+
 export interface Clip {
   id: string;
   name: string;
@@ -34,6 +36,7 @@ export interface Clip {
     description: { ko: string; en: string };
   };
   aiTags?: AIGeneratedTags | null;
+  accessTier?: AccessTier;
   videoUrl: string;
   thumbnailUrl: string;
   previewUrl: string;
@@ -53,6 +56,7 @@ export interface BrowseSummaryRecord {
   duration: number;
   star: number;
   category: string;
+  accessTier?: AccessTier;
 }
 
 export interface BrowseClipRecord extends BrowseSummaryRecord {
@@ -111,3 +115,5 @@ export type Locale = "ko" | "en";
 export type SortBy = "newest" | "rating" | "name";
 
 export type ViewMode = "masonry" | "grid" | "list";
+
+export type ContentMode = "direction" | "game";

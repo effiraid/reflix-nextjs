@@ -3,11 +3,21 @@ export const MEDIA_SESSION_COOKIE_NAME = "reflix-media-session";
 const DEFAULT_TTL_SECONDS = 21_600;
 const PROTECTED_PREFIXES = ["/videos/", "/previews/"] as const;
 
-type MediaSessionPayload = {
-  v: number;
+type MediaSessionPayloadV1 = {
+  v: 1;
   host: string;
   exp: number;
 };
+
+type MediaSessionPayloadV2 = {
+  v: 2;
+  host: string;
+  exp: number;
+  userId?: string;
+  tier: "free" | "pro";
+};
+
+export type MediaSessionPayload = MediaSessionPayloadV1 | MediaSessionPayloadV2;
 
 type MediaSessionEnv = Record<string, string | undefined>;
 
@@ -106,19 +116,31 @@ export async function verifyMediaSessionToken(
       return null;
     }
 
-    const payload = JSON.parse(decoder.decode(decodeBase64Url(body))) as MediaSessionPayload;
+    const raw = JSON.parse(decoder.decode(decodeBase64Url(body)));
     if (
-      typeof payload.v !== "number" ||
-      typeof payload.host !== "string" ||
-      typeof payload.exp !== "number"
+      typeof raw.v !== "number" ||
+      typeof raw.host !== "string" ||
+      typeof raw.exp !== "number"
     ) {
       return null;
     }
 
-    return payload.exp > now ? payload : null;
+    if (raw.exp <= now) return null;
+
+    // Normalize v1 → v2 compatible shape
+    if (raw.v === 1) {
+      return { v: 1, host: raw.host, exp: raw.exp } as MediaSessionPayload;
+    }
+
+    return raw as MediaSessionPayload;
   } catch {
     return null;
   }
+}
+
+/** Extract tier from a verified payload. V1 tokens default to "free". */
+export function getPayloadTier(payload: MediaSessionPayload): "free" | "pro" {
+  return payload.v === 2 ? payload.tier : "free";
 }
 
 export function getMediaSessionConfig(env: MediaSessionEnv): MediaSessionConfig {

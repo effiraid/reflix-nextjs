@@ -58,6 +58,7 @@ export function BrowseClient({
       searchQuery: s.searchQuery,
       sortBy: s.sortBy,
       category: s.category,
+      contentMode: s.contentMode,
     }))
   );
   const { quickViewOpen, setQuickViewOpen, stepThumbnailSize, shuffleSeed, thumbnailSize } = useUIStore(
@@ -92,6 +93,7 @@ export function BrowseClient({
 
   const hasActiveBrowseFilters =
     filters.category !== null ||
+    filters.contentMode !== null ||
     filters.selectedFolders.length > 0 ||
     filters.selectedTags.length > 0 ||
     filters.excludedTags.length > 0 ||
@@ -334,7 +336,6 @@ export function BrowseClient({
       {quickViewOpen && selectedClip ? (
         <QuickViewModal
           clip={selectedClip}
-          categories={categories}
           lang={lang}
           tagI18n={tagI18n}
           dict={dict}

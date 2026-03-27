@@ -44,6 +44,7 @@ export function parseBrowsePageQuery(
       parsedStar !== null && Number.isFinite(parsedStar) ? parsedStar : null,
     searchQuery: searchParams.get("q") ?? "",
     sortBy,
+    contentMode: null,
   };
 }
 

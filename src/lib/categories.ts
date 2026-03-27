@@ -1,4 +1,44 @@
-import type { CategoryNode, CategoryTree, Locale } from "./types";
+import type { CategoryNode, CategoryTree, ContentMode, Locale } from "./types";
+
+/**
+ * Top-level folder slugs that belong to each content mode.
+ * "direction" = 연출 (cinematic/direction) folders
+ * "game" = 게임 (in-game motion) folders
+ */
+const CONTENT_MODE_SLUGS: Record<ContentMode, Set<string>> = {
+  direction: new Set([
+    "direction-video",
+    "dialogue",
+    "reaction",
+    "daily",
+  ]),
+  game: new Set([
+    "movement",
+    "combat",
+    "hit-reaction",
+    "return",
+    "idle",
+    "direction-game",
+    "weapons",
+    "poses",
+  ]),
+};
+
+/** Filter a category tree to only include top-level folders matching the given content mode. */
+export function filterCategoriesByMode(
+  tree: CategoryTree,
+  mode: ContentMode | null
+): CategoryTree {
+  if (!mode) return tree;
+  const slugs = CONTENT_MODE_SLUGS[mode];
+  const filtered: CategoryTree = {};
+  for (const [id, node] of Object.entries(tree)) {
+    if (slugs.has(node.slug)) {
+      filtered[id] = node;
+    }
+  }
+  return filtered;
+}
 
 /** Collect a folder ID and all its descendant IDs from the category tree. */
 export function collectDescendantIds(

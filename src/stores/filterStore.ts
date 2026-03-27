@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SortBy } from "@/lib/types";
+import type { ContentMode, SortBy } from "@/lib/types";
 
 interface FilterStore {
   selectedFolders: string[];
@@ -9,8 +9,10 @@ interface FilterStore {
   searchQuery: string;
   sortBy: SortBy;
   category: string | null;
+  contentMode: ContentMode | null;
 
   setCategory: (category: string | null) => void;
+  setContentMode: (mode: ContentMode | null) => void;
   setStarFilter: (star: number | null) => void;
   setSearchQuery: (query: string) => void;
   setSortBy: (sort: SortBy) => void;
@@ -28,8 +30,10 @@ export const useFilterStore = create<FilterStore>((set) => ({
   searchQuery: "",
   sortBy: "newest",
   category: null,
+  contentMode: null,
 
   setCategory: (category) => set({ category }),
+  setContentMode: (mode) => set({ contentMode: mode }),
 
   setStarFilter: (star) => set({ starFilter: star }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -44,6 +48,7 @@ export const useFilterStore = create<FilterStore>((set) => ({
       searchQuery: "",
       sortBy: "newest",
       category: null,
+      contentMode: null,
     }),
 
   removeTag: (tag) =>

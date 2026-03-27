@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TagFilterPanel } from "./TagFilterPanel";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
 import { useFilterStore } from "@/stores/filterStore";
 
 const clips = [
@@ -67,19 +68,9 @@ describe("TagFilterPanel", () => {
         lang="ko"
         tagI18n={{}}
         dict={{
-          browse: {
-            tagSearchPlaceholder: "태그 검색",
-            allTags: "모든 태그",
-            noResults: "결과 없음",
-          },
-          clip: {
-            tags: "태그",
-          },
-          common: {
-            select: "선택",
-            exclude: "제외",
-            close: "닫기",
-          },
+          browse: koDict.browse,
+          clip: koDict.clip,
+          common: koDict.common,
         }}
         updateURL={vi.fn()}
       />
@@ -102,20 +93,9 @@ describe("TagFilterPanel", () => {
         lang="ko"
         tagI18n={{}}
         dict={{
-          browse: {
-            tagSearchPlaceholder: "태그 검색",
-            allTags: "모든 태그",
-            noResults: "결과 없음",
-          },
-          clip: {
-            tags: "태그",
-          },
-          common: {
-            select: "선택",
-            exclude: "제외",
-            close: "닫기",
-            loading: "로딩 중...",
-          },
+          browse: koDict.browse,
+          clip: koDict.clip,
+          common: koDict.common,
         }}
         updateURL={vi.fn()}
       />

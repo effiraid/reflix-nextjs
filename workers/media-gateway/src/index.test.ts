@@ -38,12 +38,13 @@ function createEnv(overrides: Record<string, unknown> = {}) {
   };
 }
 
-async function createValidCookie() {
+async function createValidCookie(tier: "free" | "pro" = "pro") {
   const token = await signMediaSessionToken(
     {
-      v: 1,
+      v: 2,
       host: "reflix.dev",
       exp: Date.now() + 60_000,
+      tier,
     },
     "test-secret"
   );
@@ -420,5 +421,70 @@ describe("Anti-embedding headers", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("X-Frame-Options")).toBeNull();
     expect(response.headers.get("Content-Security-Policy")).toBeNull();
+  });
+});
+
+describe("Tier-based access control", () => {
+  it("rejects /videos/ for free tier users", async () => {
+    const freeCookie = await createValidCookie("free");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: freeCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body).toEqual({ error: "pro_required", message: expect.any(String) });
+  });
+
+  it("allows /videos/ for pro tier users", async () => {
+    const proCookie = await createValidCookie("pro");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: proCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+
+  it("allows /previews/ for free tier users", async () => {
+    const freeCookie = await createValidCookie("free");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: { Cookie: freeCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+
+  it("treats v1 tokens as free tier (backwards compat)", async () => {
+    const v1Token = await signMediaSessionToken(
+      { v: 1, host: "reflix.dev", exp: Date.now() + 60_000 },
+      "test-secret"
+    );
+    const v1Cookie = `${MEDIA_SESSION_COOKIE_NAME}=${v1Token}`;
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+
+    // v1 → free → videos blocked
+    const videoReq = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: v1Cookie, Origin: "https://reflix.dev" },
+    });
+    const videoRes = await worker.fetch(videoReq, env);
+    expect(videoRes.status).toBe(403);
+
+    // v1 → free → previews allowed
+    const previewReq = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: { Cookie: v1Cookie, Origin: "https://reflix.dev" },
+    });
+    const previewRes = await worker.fetch(previewReq, env);
+    expect(previewRes.status).toBe(200);
   });
 });

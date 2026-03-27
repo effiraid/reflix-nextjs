@@ -1,9 +1,11 @@
+import * as React from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BrowseClient } from "./BrowseClient";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { BrowseClipRecord, BrowseProjectionRecord, BrowseSummaryRecord, ClipIndex } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 
@@ -60,7 +62,6 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("next/dynamic", () => {
-  const React = require("react");
   return {
     __esModule: true,
     default: (fn: () => Promise<unknown>) => {
@@ -166,16 +167,8 @@ function makeFullBrowseState(overrides?: Partial<typeof browseDataState>) {
 }
 
 const dict = {
-  browse: {
-    noResults: "결과 없음",
-  },
-  clip: {
-    detail: "상세 보기",
-    tags: "태그",
-    rating: "별점",
-    duration: "재생시간",
-  },
-} as Dictionary;
+  ...koDict,
+} satisfies Dictionary;
 
 describe("BrowseClient", () => {
   beforeEach(() => {
