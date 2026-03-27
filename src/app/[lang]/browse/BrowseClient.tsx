@@ -187,7 +187,7 @@ export function BrowseClient({
   const showFeed = viewMode === "feed" && !hasFeedBlockingFilters;
   const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
   const initialDisplayClips = useMemo(() => {
-    if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
+    if (!projectionClips || projectionStatus !== "ready" || (columnCount > 3 && !showFeed)) {
       return initialClips;
     }
 
@@ -196,7 +196,7 @@ export function BrowseClient({
     );
 
     return initialClips.map((clip) => projectionById.get(clip.id) ?? clip);
-  }, [columnCount, initialClips, projectionClips, projectionStatus]);
+  }, [columnCount, initialClips, projectionClips, projectionStatus, showFeed]);
 
   // Apply filters only after projection preload is ready.
   const browseResults = useMemo(
