@@ -1,4 +1,4 @@
-import type { AccessTier, CategoryTree, ContentMode, Locale, SortBy } from "./types";
+import type { CategoryTree, ContentMode, Locale, SortBy } from "./types";
 import { collectDescendantIds } from "./categories";
 import { getAllClipTags } from "./aiTags";
 import { searchClips, type SearchableClipRecord } from "./clipSearch";
@@ -23,7 +23,6 @@ interface FilterableClipRecord extends SearchableClipRecord {
   category: string;
   folders?: string[];
   star: number;
-  accessTier?: AccessTier;
 }
 
 export function filterClips<T extends FilterableClipRecord>(
@@ -31,15 +30,9 @@ export function filterClips<T extends FilterableClipRecord>(
   filters: FilterState,
   categories?: CategoryTree,
   tagI18n: Record<string, string> = {},
-  lang: Locale = "ko",
-  userTier?: AccessTier
+  lang: Locale = "ko"
 ): T[] {
   let result = clips;
-
-  // Tier-based gating: free/unauthed users see only free clips
-  if (userTier && userTier !== "pro") {
-    result = result.filter((c) => (c.accessTier ?? "pro") === "free");
-  }
 
   if (filters.category) {
     result = result.filter((c) => c.category === filters.category);

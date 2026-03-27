@@ -1,6 +1,7 @@
 import { act, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MasonryGrid } from "./MasonryGrid";
+import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { ClipIndex } from "@/lib/types";
 
@@ -192,6 +193,11 @@ describe("MasonryGrid", () => {
       rightPanelOpen: true,
       viewMode: "masonry",
     });
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
+    });
   });
 
   it("recreates each virtualized column when the grid width changes", () => {
@@ -332,5 +338,20 @@ describe("MasonryGrid", () => {
       lang: "en",
       tagI18n: { clip: "Clip" },
     });
+  });
+
+  it("does not pass locked states through for legacy access-tier data", () => {
+    const tieredClips = clips.map((clip, index) => ({
+      ...clip,
+      accessTier: index === 0 ? "free" : "pro",
+    })) as unknown as ClipIndex[];
+
+    render(
+      <main data-masonry-scroll>
+        <MasonryGrid clips={tieredClips} />
+      </main>
+    );
+
+    expect(clipCardProps.some((props) => props.locked === true)).toBe(false);
   });
 });

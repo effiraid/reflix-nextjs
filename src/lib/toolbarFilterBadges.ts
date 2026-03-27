@@ -1,16 +1,7 @@
-import type { Locale } from "./types";
-
 export const BADGE_GAP_PX = 6;
 
-export function getOverflowBadgeLabel(
-  hiddenBadgeCount: number,
-  lang: Locale
-): string {
-  if (lang === "ko") {
-    return `외 ${hiddenBadgeCount}건`;
-  }
-
-  return `+${hiddenBadgeCount} more`;
+export function getOverflowBadgeLabel(hiddenBadgeCount: number): string {
+  return `+${hiddenBadgeCount}`;
 }
 
 export function getVisibleBadgeCount({

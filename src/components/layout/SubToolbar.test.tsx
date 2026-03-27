@@ -3,8 +3,19 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { SubToolbar } from "./SubToolbar";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
+import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterStore } from "@/stores/filterStore";
+
+const { routerPushMock } = vi.hoisted(() => ({
+  routerPushMock: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: routerPushMock,
+  }),
+}));
 
 const dict = {
   clip: koDict.clip,
@@ -24,6 +35,7 @@ describe("SubToolbar", () => {
   );
 
   beforeEach(() => {
+    routerPushMock.mockReset();
     useUIStore.setState({
       filterBarOpen: false,
       thumbnailSize: 2,
@@ -38,6 +50,11 @@ describe("SubToolbar", () => {
       searchQuery: "",
       sortBy: "newest",
       category: null,
+    });
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
     });
   });
 
@@ -55,7 +72,22 @@ describe("SubToolbar", () => {
     expect(screen.queryByText("무작위")).not.toBeInTheDocument();
   });
 
-  it("increments the shuffle seed when the shuffle icon is clicked", () => {
+  it("routes free users to pricing instead of reshuffling", () => {
+    render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Pro 전용 기능" }));
+
+    expect(useUIStore.getState().shuffleSeed).toBe(0);
+    expect(routerPushMock).toHaveBeenCalledWith("/ko/pricing");
+  });
+
+  it("increments the shuffle seed when the Pro-only icon is clicked by a Pro user", () => {
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "pro",
+      isLoading: false,
+    });
+
     render(<SubToolbar lang="ko" dict={dict} categories={categories} />);
 
     fireEvent.click(screen.getByRole("button", { name: "무작위로 섞기" }));
@@ -133,7 +165,7 @@ describe("SubToolbar", () => {
           return 44;
         }
 
-        if (/^외 \d+건$/.test(text)) {
+        if (/^\+\d+$/.test(text)) {
           return 48;
         }
 
@@ -162,7 +194,7 @@ describe("SubToolbar", () => {
     expect(badgeTrack).toHaveClass("overflow-hidden");
     expect(within(badgeTrack).getByText("이동")).toBeInTheDocument();
     expect(within(badgeTrack).getByText("걷기")).toBeInTheDocument();
-    expect(within(badgeTrack).getByText("외 3건")).toBeInTheDocument();
+    expect(within(badgeTrack).getByText("+3")).toBeInTheDocument();
     expect(within(badgeTrack).queryByText("달리기")).not.toBeInTheDocument();
     expect(within(badgeTrack).queryByText("점프")).not.toBeInTheDocument();
     expect(within(badgeTrack).queryByText("-마법")).not.toBeInTheDocument();

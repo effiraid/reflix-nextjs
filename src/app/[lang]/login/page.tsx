@@ -1,11 +1,47 @@
+import { Suspense } from "react";
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/app/[lang]/dictionaries";
 import { LoginForm } from "./LoginForm";
 
+function AuthErrorBanner({
+  searchParams,
+  isKo,
+}: {
+  searchParams: Promise<{ error?: string }>;
+  isKo: boolean;
+}) {
+  const sp = searchParams as Promise<{ error?: string }>;
+  return (
+    <Suspense>
+      <AuthErrorBannerInner searchParams={sp} isKo={isKo} />
+    </Suspense>
+  );
+}
+
+async function AuthErrorBannerInner({
+  searchParams,
+  isKo,
+}: {
+  searchParams: Promise<{ error?: string }>;
+  isKo: boolean;
+}) {
+  const { error } = await searchParams;
+  if (error !== "auth") return null;
+  return (
+    <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+      {isKo
+        ? "로그인에 실패했습니다. 다시 시도해주세요."
+        : "Login failed. Please try again."}
+    </div>
+  );
+}
+
 export default async function LoginPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ lang: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const { lang } = await params;
   const dict = await getDictionary(lang as Locale);
@@ -21,6 +57,8 @@ export default async function LoginPage({
               : "Animation Reference Library"}
           </p>
         </div>
+
+        <AuthErrorBanner searchParams={searchParams} isKo={lang === "ko"} />
 
         <LoginForm lang={lang as Locale} dict={dict} />
 

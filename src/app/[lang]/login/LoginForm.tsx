@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
+
+const AUTH_CHANNEL = "reflix-auth";
 
 interface LoginFormProps {
   lang: Locale;
@@ -34,17 +38,33 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+    const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
+    if (!redirectTo) {
+      setState("error");
+      setErrorMsg(
+        isKo ? "로그인 리다이렉트 설정이 올바르지 않습니다" : "Login redirect is misconfigured"
+      );
+      return;
+    }
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/browse`,
+        emailRedirectTo: redirectTo,
       },
     });
 
     if (error) {
       setState("error");
+      const isRateLimit =
+        error.status === 429 || error.message?.toLowerCase().includes("rate");
       setErrorMsg(
-        isKo ? "이메일을 확인해주세요" : "Please check your email address"
+        isRateLimit
+          ? isKo
+            ? "잠시 후 다시 시도해주세요 (60초 제한)"
+            : "Please wait before trying again (60s limit)"
+          : isKo
+            ? "매직 링크 전송에 실패했습니다"
+            : "Failed to send magic link"
       );
     } else {
       setState("sent");
@@ -60,27 +80,24 @@ export function LoginForm({ lang }: LoginFormProps) {
       );
       return;
     }
+    const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
+    if (!redirectTo) {
+      setState("error");
+      setErrorMsg(
+        isKo ? "로그인 리다이렉트 설정이 올바르지 않습니다" : "Login redirect is misconfigured"
+      );
+      return;
+    }
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/${lang}/browse`,
+        redirectTo,
       },
     });
   }
 
   if (state === "sent") {
-    return (
-      <div className="rounded-lg border border-border bg-surface p-6 text-center">
-        <p className="text-sm font-medium text-green-600 dark:text-green-400">
-          {isKo ? "이메일을 확인하세요 ✉️" : "Check your email ✉️"}
-        </p>
-        <p className="mt-2 text-xs text-muted">
-          {isKo
-            ? "매직 링크를 보냈습니다. 받은 편지함을 확인해주세요."
-            : "We sent a magic link. Check your inbox."}
-        </p>
-      </div>
-    );
+    return <WaitingForLogin lang={lang} />;
   }
 
   return (
@@ -139,6 +156,60 @@ export function LoginForm({ lang }: LoginFormProps) {
         <GoogleIcon />
         {isKo ? "Google로 계속하기" : "Continue with Google"}
       </button>
+    </div>
+  );
+}
+
+function WaitingForLogin({ lang }: { lang: Locale }) {
+  const router = useRouter();
+  const isKo = lang === "ko";
+
+  useEffect(() => {
+    const supabase = createClient();
+    if (!supabase) return;
+
+    // 1. BroadcastChannel — instant cross-tab notification
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel(AUTH_CHANNEL);
+      bc.onmessage = (e) => {
+        if (e.data === "SIGNED_IN") {
+          router.replace(`/${lang}/browse`);
+        }
+      };
+    } catch {
+      // BroadcastChannel not supported — polling is the fallback
+    }
+
+    // 2. Poll session every 2s — catches cookie-based cross-tab login
+    const interval = setInterval(async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        router.replace(`/${lang}/browse`);
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(interval);
+      bc?.close();
+    };
+  }, [lang, router]);
+
+  return (
+    <div className="rounded-lg border border-border bg-surface p-6 text-center">
+      <p className="text-sm font-medium text-green-600 dark:text-green-400">
+        {isKo ? "이메일을 확인하세요 ✉️" : "Check your email ✉️"}
+      </p>
+      <p className="mt-2 text-xs text-muted">
+        {isKo
+          ? "매직 링크를 보냈습니다. 받은 편지함을 확인해주세요."
+          : "We sent a magic link. Check your inbox."}
+      </p>
+      <p className="mt-3 text-xs text-muted animate-pulse">
+        {isKo
+          ? "다른 탭에서 로그인하면 자동으로 이동합니다"
+          : "You'll be redirected once logged in from another tab"}
+      </p>
     </div>
   );
 }

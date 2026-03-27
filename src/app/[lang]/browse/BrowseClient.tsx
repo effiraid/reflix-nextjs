@@ -6,11 +6,12 @@ import { MasonryGrid } from "@/components/clip/MasonryGrid";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
-import { useFilterStore } from "@/stores/filterStore";
+import { filterClips, shuffleClips, type FilterState } from "@/lib/filter";
+import { useAuthStore } from "@/stores/authStore";
 import { useClipStore } from "@/stores/clipStore";
+import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useBrowseData } from "./ClipDataProvider";
-import { filterClips, shuffleClips } from "@/lib/filter";
 import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
 import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
@@ -27,6 +28,57 @@ function scrollToClip(clipId: string) {
     const el = document.querySelector(`[data-clip-id="${clipId}"]`);
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   });
+}
+
+const FREE_SEARCH_LIMIT = 5;
+
+function countActiveFilterAxes(filters: FilterState): number {
+  return [
+    filters.category !== null,
+    filters.contentMode !== null,
+    filters.selectedFolders.length > 0,
+    filters.selectedTags.length > 0 || filters.excludedTags.length > 0,
+    filters.starFilter !== null,
+  ].filter(Boolean).length;
+}
+
+function limitFiltersToSingleAxis(filters: FilterState): FilterState {
+  const limitedFilters: FilterState = {
+    ...filters,
+    category: null,
+    contentMode: null,
+    selectedFolders: [],
+    selectedTags: [],
+    excludedTags: [],
+    starFilter: null,
+  };
+
+  if (filters.category !== null) {
+    limitedFilters.category = filters.category;
+    return limitedFilters;
+  }
+
+  if (filters.contentMode !== null) {
+    limitedFilters.contentMode = filters.contentMode;
+    return limitedFilters;
+  }
+
+  if (filters.selectedFolders.length > 0) {
+    limitedFilters.selectedFolders = filters.selectedFolders;
+    return limitedFilters;
+  }
+
+  if (filters.selectedTags.length > 0 || filters.excludedTags.length > 0) {
+    limitedFilters.selectedTags = filters.selectedTags;
+    limitedFilters.excludedTags = filters.excludedTags;
+    return limitedFilters;
+  }
+
+  if (filters.starFilter !== null) {
+    limitedFilters.starFilter = filters.starFilter;
+  }
+
+  return limitedFilters;
 }
 
 interface BrowseClientProps {
@@ -61,6 +113,12 @@ export function BrowseClient({
       contentMode: s.contentMode,
     }))
   );
+  const { user, tier } = useAuthStore(
+    useShallow((s) => ({
+      user: s.user,
+      tier: s.tier,
+    }))
+  );
   const { quickViewOpen, setQuickViewOpen, stepThumbnailSize, shuffleSeed, thumbnailSize } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
@@ -71,6 +129,13 @@ export function BrowseClient({
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
+  const isProUser = Boolean(user) && tier === "pro";
+  const activeFilterAxes = countActiveFilterAxes(filters);
+  const isFilterCombinationLimited = activeFilterAxes > 1 && !isProUser;
+  const effectiveFilters = useMemo(
+    () => (isFilterCombinationLimited ? limitFiltersToSingleAxis(filters) : filters),
+    [filters, isFilterCombinationLimited]
+  );
 
   // Sync URL → Zustand filters
   useFilterSync();
@@ -100,6 +165,7 @@ export function BrowseClient({
     filters.starFilter !== null ||
     filters.searchQuery.length > 0 ||
     filters.sortBy !== "newest";
+  const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
   const initialDisplayClips = useMemo(() => {
     if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
       return initialClips;
@@ -113,29 +179,57 @@ export function BrowseClient({
   }, [columnCount, initialClips, projectionClips, projectionStatus]);
 
   // Apply filters only after projection preload is ready.
-  const filtered = useMemo(
+  const browseResults = useMemo(
     () => {
       if (!projectionClips || projectionStatus !== "ready" || !hasActiveBrowseFilters) {
-        return shuffleSeed === 0
-          ? initialDisplayClips
-          : shuffleClips(initialDisplayClips);
+        return {
+          clips:
+            shuffleSeed === 0
+              ? initialDisplayClips
+              : shuffleClips(initialDisplayClips),
+          totalResultCount: initialTotalCount,
+          hiddenCount: 0,
+        };
       }
 
-      const visibleClips = filterClips(projectionClips, filters, categories, tagI18n, lang);
-      return shuffleSeed === 0 ? visibleClips : shuffleClips(visibleClips);
+      const allResults = filterClips(
+        projectionClips,
+        effectiveFilters,
+        categories,
+        tagI18n,
+        lang
+      );
+      const isLimited = hasSearchOrFilter && !isProUser;
+      const visibleResults = isLimited
+        ? allResults.slice(0, FREE_SEARCH_LIMIT)
+        : allResults;
+
+      return {
+        clips:
+          shuffleSeed === 0 ? visibleResults : shuffleClips(visibleResults),
+        totalResultCount: allResults.length,
+        hiddenCount: isLimited
+          ? Math.max(0, allResults.length - FREE_SEARCH_LIMIT)
+          : 0,
+      };
     },
     [
       initialDisplayClips,
+      initialTotalCount,
       projectionClips,
       projectionStatus,
       hasActiveBrowseFilters,
-      filters,
+      effectiveFilters,
+      hasSearchOrFilter,
+      isProUser,
       categories,
       tagI18n,
       shuffleSeed,
       lang,
     ]
   );
+  const filtered = browseResults.clips;
+  const hiddenCount = browseResults.hiddenCount;
   const indexMap = useMemo(
     () => new Map(filtered.map((c, i) => [c.id, i])),
     [filtered]
@@ -145,7 +239,7 @@ export function BrowseClient({
     selectedIndex >= 0 ? filtered[selectedIndex] : null;
   const visibleResultCount =
     projectionClips && projectionStatus === "ready" && hasActiveBrowseFilters
-      ? filtered.length
+      ? browseResults.totalResultCount
       : initialTotalCount;
   const resultCountLabel =
     lang === "ko" ? `${visibleResultCount}개 클립` : `${visibleResultCount} clips`;
@@ -320,11 +414,41 @@ export function BrowseClient({
 
   return (
     <>
-      {filters.searchQuery ? (
+      {hasSearchOrFilter ? (
         <div className="border-b border-border px-4 py-2">
           <p className="text-xs text-muted" aria-live="polite">
             {resultCountLabel}
           </p>
+        </div>
+      ) : null}
+      {isFilterCombinationLimited ? (
+        <div className="border-b border-border bg-surface-alt px-4 py-2">
+          <p className="text-xs text-muted">
+            {lang === "ko"
+              ? "필터 조합은 Pro 전용입니다"
+              : "Filter combinations require Pro"}
+          </p>
+          <a
+            href={`/${lang}/pricing`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {lang === "ko" ? "Pro 구독하기" : "Get Pro"}
+          </a>
+        </div>
+      ) : null}
+      {hiddenCount > 0 ? (
+        <div className="flex items-center justify-between border-b border-border bg-surface-alt px-4 py-3">
+          <p className="text-xs text-muted">
+            {lang === "ko"
+              ? `${hiddenCount}개 결과가 더 있습니다`
+              : `${hiddenCount} more results available`}
+          </p>
+          <a
+            href={`/${lang}/pricing`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {lang === "ko" ? "Pro로 전체 보기" : "View all with Pro"}
+          </a>
         </div>
       ) : null}
       <MasonryGrid

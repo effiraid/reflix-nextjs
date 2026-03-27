@@ -32,15 +32,9 @@ async function getSessionTier(request: NextRequest): Promise<{
 
     if (!user) return { tier: "free" };
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tier")
-      .eq("id", user.id)
-      .single();
-
     return {
       userId: user.id,
-      tier: profile?.tier === "pro" ? "pro" : "free",
+      tier: "pro",
     };
   } catch {
     return { tier: "free" };
@@ -76,6 +70,9 @@ async function withMediaSession(
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    // Keep the cookie domain explicit in env config (for example `.reflix.dev`).
+    // Origin allowlisting is handled downstream, so avoid wildcard host logic
+    // or localhost-only production exceptions in this proxy layer.
     domain: config.domain,
     path: "/",
     maxAge: config.ttlSeconds,
@@ -103,6 +100,14 @@ export async function proxy(request: NextRequest) {
   );
 
   if (pathnameHasLocale) {
+    if (pathname.match(/^\/[a-z]{2}\/account(?:\/|$)/)) {
+      const { userId } = await getSessionTier(request);
+      if (!userId) {
+        const lang = pathname.split("/")[1] || "ko";
+        return NextResponse.redirect(new URL(`/${lang}/login`, request.url));
+      }
+    }
+
     return withMediaSession(request, NextResponse.next());
   }
 

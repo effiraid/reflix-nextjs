@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setTier, setLoading, setDailyViews } = useAuthStore();
+  const { setUser, setTier, setLoading } = useAuthStore();
 
   useEffect(() => {
     const supabase = createClient();
@@ -13,78 +13,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) {
       setUser(null);
       setTier("free");
-      setDailyViews(0);
       setLoading(false);
       return;
     }
 
     const client = supabase;
 
-    async function loadSession() {
+    async function loadProfile(userId: string) {
       try {
-        const {
-          data: { session },
-        } = await client.auth.getSession();
+        const { data: profile } = await client
+          .from("profiles")
+          .select("tier")
+          .eq("id", userId)
+          .single();
 
-        if (session?.user) {
-          setUser(session.user);
-          await loadProfile(session.user.id);
-        } else {
-          setUser(null);
-          setTier("free");
+        if (profile) {
+          setTier(profile.tier as "free" | "pro");
         }
       } catch {
-        setUser(null);
-        setTier("free");
-      } finally {
-        setLoading(false);
+        // Profile table may not exist yet — ignore
       }
     }
 
-    async function loadProfile(userId: string) {
-      const { data: profile } = await client
-        .from("profiles")
-        .select("tier")
-        .eq("id", userId)
-        .single();
-
-      if (profile) {
-        setTier(profile.tier as "free" | "pro");
-      }
-
-      // Load today's usage
-      const today = new Date().toISOString().slice(0, 10);
-      const { data: usage } = await client
-        .from("daily_usage")
-        .select("clip_views")
-        .eq("user_id", userId)
-        .eq("date", today)
-        .single();
-
-      if (usage) {
-        setDailyViews(usage.clip_views);
-      }
-    }
-
-    loadSession();
-
+    // Single listener: handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT
+    // Avoids lock contention from concurrent getSession() + onAuthStateChange
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
+    } = client.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
         setUser(session.user);
-        await loadProfile(session.user.id);
         setLoading(false);
-      } else if (event === "SIGNED_OUT") {
+        // Load tier & daily usage in background (non-blocking)
+        loadProfile(session.user.id);
+      } else {
         setUser(null);
         setTier("free");
-        setDailyViews(0);
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [setUser, setTier, setLoading, setDailyViews]);
+    // Safety: if onAuthStateChange never fires (e.g. network issue),
+    // resolve loading after 2s so the UI isn't stuck on skeleton
+    const safetyTimeout = setTimeout(() => {
+      if (useAuthStore.getState().isLoading) {
+        setLoading(false);
+      }
+    }, 2000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
+  }, [setUser, setTier, setLoading]);
 
   return <>{children}</>;
 }

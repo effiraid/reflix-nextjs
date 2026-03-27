@@ -7,8 +7,6 @@ import { getMediaUrl } from "@/lib/mediaUrl";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
-import { useAuthStore } from "@/stores/authStore";
-import { ProBadge } from "@/components/auth/ProBadge";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface ClipCardProps {
@@ -34,10 +32,7 @@ export function ClipCard({
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
   const { selectedClipId, setSelectedClipId } = useClipStore();
-  const { tier: userTier } = useAuthStore();
   const isSelected = selectedClipId === clip.id;
-  const isProClip = (clip.accessTier ?? "pro") === "pro";
-  const showProBadge = isProClip && userTier !== "pro";
   const [isHovered, setIsHovered] = useState(false);
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
 
@@ -133,13 +128,11 @@ export function ClipCard({
           disablePictureInPicture
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
-          className="absolute inset-0 w-full h-full object-contain"
+          className="absolute inset-0 h-full w-full object-contain"
           onContextMenu={(e) => e.preventDefault()}
           onError={() => setFailedPreviewUrl(previewUrl)}
         />
       )}
-
-      {showProBadge ? <ProBadge /> : null}
 
       {showInfo && (
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">

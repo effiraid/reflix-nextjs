@@ -1,6 +1,5 @@
 import { ClipDetailLayout } from "@/components/clip/ClipDetailLayout";
 import { InspectorSidebarSections } from "@/components/clip/InspectorSidebarSections";
-import { AccessGate } from "@/components/auth/AccessGate";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { CategoryTree, Clip, Locale } from "@/lib/types";
 
@@ -20,29 +19,27 @@ export function ClipDetailView({
   tagI18n = {},
 }: ClipDetailViewProps) {
   return (
-    <AccessGate clipAccessTier={clip.accessTier ?? "pro"} lang={lang}>
-      <ClipDetailLayout
-        videoUrl={clip.videoUrl}
-        thumbnailUrl={clip.thumbnailUrl}
-        duration={clip.duration}
+    <ClipDetailLayout
+      videoUrl={clip.videoUrl}
+      thumbnailUrl={clip.thumbnailUrl}
+      duration={clip.duration}
+    >
+      <aside
+        data-pagefind-body
+        className="w-full space-y-5 text-sm text-foreground lg:w-80 lg:shrink-0"
       >
-        <aside
-          data-pagefind-body
-          className="w-full space-y-5 text-sm text-foreground lg:w-80 lg:shrink-0"
-        >
-          <div className="sr-only">
-            {clip.i18n.title[lang] || clip.name} {clip.tags.join(" ")}{" "}
-            {clip.aiTags?.description[lang] || clip.aiTags?.description.ko || ""}
-          </div>
-          <InspectorSidebarSections
-            clip={clip}
-            categories={categories}
-            lang={lang}
-            dict={dict}
-            tagI18n={tagI18n}
-          />
-        </aside>
-      </ClipDetailLayout>
-    </AccessGate>
+        <div className="sr-only">
+          {clip.i18n.title[lang] || clip.name} {clip.tags.join(" ")}{" "}
+          {clip.aiTags?.description[lang] || clip.aiTags?.description.ko || ""}
+        </div>
+        <InspectorSidebarSections
+          clip={clip}
+          categories={categories}
+          lang={lang}
+          dict={dict}
+          tagI18n={tagI18n}
+        />
+      </aside>
+    </ClipDetailLayout>
   );
 }
