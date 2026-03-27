@@ -12,6 +12,7 @@ import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useBrowseData } from "./ClipDataProvider";
+import { FeedView } from "./FeedView";
 import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
 import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
@@ -125,6 +126,7 @@ export function BrowseClient({
     stepThumbnailSize,
     shuffleSeed,
     thumbnailSize,
+    viewMode,
   } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
@@ -132,6 +134,7 @@ export function BrowseClient({
       stepThumbnailSize: s.stepThumbnailSize,
       shuffleSeed: s.shuffleSeed,
       thumbnailSize: s.thumbnailSize,
+      viewMode: s.viewMode,
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
@@ -171,6 +174,17 @@ export function BrowseClient({
     filters.starFilter !== null ||
     filters.searchQuery.length > 0 ||
     filters.sortBy !== "newest";
+
+  // Feed-specific filter check: exclude contentMode and sortBy
+  const hasFeedBlockingFilters =
+    filters.category !== null ||
+    filters.selectedFolders.length > 0 ||
+    filters.selectedTags.length > 0 ||
+    filters.excludedTags.length > 0 ||
+    filters.starFilter !== null ||
+    filters.searchQuery.length > 0;
+
+  const showFeed = viewMode === "feed" && !hasFeedBlockingFilters;
   const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
   const initialDisplayClips = useMemo(() => {
     if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
@@ -434,6 +448,28 @@ export function BrowseClient({
       <div className="flex flex-1 items-center justify-center p-8 text-muted">
         {emptyStateLabel}
       </div>
+    );
+  }
+
+  if (showFeed) {
+    return (
+      <>
+        <FeedView
+          clips={initialDisplayClips}
+          categories={categories}
+          lang={lang}
+          onOpenQuickView={openQuickViewForClip}
+        />
+        {quickViewOpen && selectedClip ? (
+          <QuickViewModal
+            clip={selectedClip}
+            lang={lang}
+            tagI18n={tagI18n}
+            dict={dict}
+            onClose={handleCloseQuickView}
+          />
+        ) : null}
+      </>
     );
   }
 
