@@ -1,0 +1,156 @@
+{
+  "id": "L3TR52T313IMH",
+  "name": "연출 호라이즌 침 뱉기",
+  "ext": "mp4",
+  "size": 1258624,
+  "width": 1280,
+  "height": 720,
+  "duration": 3.579773,
+  "tags": [
+    "호라이즌",
+    "침",
+    "뱉기",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        120,
+        98,
+        65
+      ],
+      "ratio": 36
+    },
+    {
+      "color": [
+        222,
+        202,
+        192
+      ],
+      "ratio": 16
+    },
+    {
+      "color": [
+        54,
+        39,
+        23
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        182,
+        146,
+        97
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        183,
+        155,
+        139
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        84,
+        53,
+        37
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        222,
+        188,
+        133
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        195,
+        196,
+        89
+      ],
+      "ratio": 2.16
+    },
+    {
+      "color": [
+        157,
+        155,
+        69
+      ],
+      "ratio": 2.06
+    }
+  ],
+  "btime": 1653975942197,
+  "mtime": 1652429181855,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 침 뱉기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "침 뱉기",
+      "말하기",
+      "서 있기",
+      "응시하기"
+    ],
+    "emotion": [
+      "경멸",
+      "무시",
+      "불쾌",
+      "침착함",
+      "대립"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "투샷",
+      "아이레벨 샷",
+      "오픈 필드 배경",
+      "실내 배경 전환"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "여전사",
+      "부족민",
+      "원주민"
+    ],
+    "effects": [
+      "없음"
+    ],
+    "description": {
+      "ko": "이 클립은 게임 '호라이즌'의 두 캐릭터가 대화하는 장면을 보여준다. 남성 캐릭터가 여성 캐릭터를 향해 침을 뱉으며 경멸을 표현하고, 이어서 'Good riddance'라고 말하며 노골적인 불쾌감을 드러낸다. 카메라는 아이레벨 미디엄 샷으로 두 캐릭터의 상호작용과 감정 표현에 집중한다.",
+      "en": "This clip shows a scene of two characters from the game 'Horizon' in conversation. A male character expresses contempt by spitting towards the female character, then verbally reinforces his disdain by saying 'Good riddance.' The camera uses an eye-level medium shot, focusing on the characters' interaction and emotional expressions."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T07:00:46.515Z"
+  },
+  "videoUrl": "/videos/L3TR52T313IMH.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T313IMH.webp",
+  "previewUrl": "/previews/L3TR52T313IMH.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABhAAEBAQEBAAAAAAAAAAAAAAAGBQQCBwEAAwEBAAAAAAAAAAAAAAAAAQIDBQQQAAICAgEFAQEAAAAAAAAAAAEAAhEhMUHBURIDkTKBEQEBAQAAAAAAAAAAAAAAAAAAEQH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDn1kRPckfxeiXcU+MWRL4ub8h+nLsd6p7J1gOOJ8sEMUgVvLFvm+KwtSjMuhV0MhInoVfDQZ6kyywCwRoKGeinOAkX/9k=",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T30GME3",
+    "L3TR52T30RO73",
+    "L3TR52T318DTE",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G"
+  ]
+}

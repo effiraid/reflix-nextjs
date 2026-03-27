@@ -46,7 +46,12 @@ export function useVideoKeyboard({
     function handleKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented) return;
       if (isTypingTarget(e.target)) return;
-      if (isNestedInteractiveTarget(e.target)) return;
+      if (e.key === " " && isNestedInteractiveTarget(e.target)) {
+        // Allow spacebar on buttons/links inside dialogs for play/pause
+        // but prevent the default button click behavior
+      } else if (isNestedInteractiveTarget(e.target)) {
+        return;
+      }
 
       switch (e.key) {
         case " ":

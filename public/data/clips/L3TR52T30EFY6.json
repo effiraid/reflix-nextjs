@@ -1,0 +1,150 @@
+{
+  "id": "L3TR52T30EFY6",
+  "name": "연출 호라이즌 대화 제스처 0429_2",
+  "ext": "mp4",
+  "size": 1016615,
+  "width": 1280,
+  "height": 720,
+  "duration": 2.979773,
+  "tags": [
+    "호라이즌",
+    "대화",
+    "제스처",
+    "연출"
+  ],
+  "folders": [
+    "MDDWHMJN8180H",
+    "L475K68YP1NH3"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        228,
+        170,
+        128
+      ],
+      "ratio": 41
+    },
+    {
+      "color": [
+        60,
+        29,
+        21
+      ],
+      "ratio": 30
+    },
+    {
+      "color": [
+        115,
+        57,
+        40
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        184,
+        104,
+        74
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        136,
+        90,
+        71
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        184,
+        129,
+        102
+      ],
+      "ratio": 2.37
+    },
+    {
+      "color": [
+        249,
+        204,
+        157
+      ],
+      "ratio": 2.37
+    },
+    {
+      "color": [
+        152,
+        79,
+        50
+      ],
+      "ratio": 1.82
+    },
+    {
+      "color": [
+        214,
+        128,
+        81
+      ],
+      "ratio": 1.71
+    }
+  ],
+  "btime": 1653975938831,
+  "mtime": 1652429138725,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 대화 제스처 0429_2",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "제스처",
+      "말하기"
+    ],
+    "emotion": [
+      "자신감",
+      "단호함"
+    ],
+    "composition": [
+      "미디엄 클로즈업",
+      "로우 앵글",
+      "아웃포커스"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "게임 캐릭터",
+      "남성 캐릭터"
+    ],
+    "effects": [
+      "따뜻한 색감"
+    ],
+    "description": {
+      "ko": "갑옷을 입은 남성 게임 캐릭터가 미디엄 클로즈업으로 잡힌 채 대화하고 있다. 따뜻한 주황빛의 아웃포커스 배경을 뒤로 하고 손짓과 함께 자신감에 찬 표정으로 말한다. 카메라가 캐릭터보다 약간 낮은 위치에서 위를 향해 포착하여 그의 존재감을 강조한다.",
+      "en": "A male game character in armor is shown in a medium close-up, engaged in dialogue. He speaks with confident expressions and hand gestures against a warm, orange-toned, blurred background. The camera is positioned slightly below eye level, capturing him from a low angle to emphasize his presence."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:58:17.471Z"
+  },
+  "videoUrl": "/videos/L3TR52T30EFY6.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30EFY6.webp",
+  "previewUrl": "/previews/L3TR52T30EFY6.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEBAQAAAAAAAAAAAAAAAAAFBgQBAQEBAQAAAAAAAAAAAAAAAAIEBQMQAAICAAQHAQAAAAAAAAAAAAEAAhFBIUKRBHEDUTHhFBMRAQEBAAAAAAAAAAAAAAAAAAARAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/ALARAdTDniBgE36ZYAOLG4o+peWCLGJMc0GRokXaR+khGr8lcKp/tyCtp3SPSxp3a0jMUgq5SCtz1//Z",
+  "category": "dialogue-cinematic",
+  "relatedClips": [
+    "L3TR52T310BLE",
+    "L3TR52T30ATKO",
+    "L3TR52T30GME3",
+    "L3TR52T30RO73",
+    "L3TR52T30WFY5"
+  ]
+}

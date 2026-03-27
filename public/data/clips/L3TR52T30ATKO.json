@@ -1,0 +1,131 @@
+{
+  "id": "L3TR52T30ATKO",
+  "name": "연출 호라이즌 돌아눕기 눕기",
+  "ext": "mp4",
+  "size": 1496014,
+  "width": 1280,
+  "height": 720,
+  "duration": 5.2,
+  "tags": [
+    "호라이즌",
+    "눕기",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZHF566Z"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        40,
+        14,
+        11
+      ],
+      "ratio": 70
+    },
+    {
+      "color": [
+        214,
+        138,
+        90
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        83,
+        43,
+        30
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        117,
+        68,
+        45
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        250,
+        239,
+        217
+      ],
+      "ratio": 2.12
+    },
+    {
+      "color": [
+        247,
+        217,
+        155
+      ],
+      "ratio": 0.7
+    }
+  ],
+  "btime": 1653975939912,
+  "mtime": 1668088152829,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 돌아눕기 눕기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "눕기",
+      "돌아눕기",
+      "응시하다",
+      "손뻗기"
+    ],
+    "emotion": [
+      "회상",
+      "사색",
+      "고뇌",
+      "아련함"
+    ],
+    "composition": [
+      "미디엄 클로즈업",
+      "로우 앵글",
+      "아치형 프레임",
+      "실루엣"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "주인공",
+      "인간형"
+    ],
+    "effects": [
+      "따뜻한 조명",
+      "역광",
+      "실루엣",
+      "깊이감"
+    ],
+    "description": {
+      "ko": "주인공 알로이가 실내에서 눕다가 천천히 돌아누워 위를 응시합니다. 배경의 아치형 구조물 너머로는 따뜻한 역광 속에 두 인물의 실루엣이 보여 과거의 회상이나 깊은 사색에 잠긴 듯한 분위기를 연출합니다.",
+      "en": "The protagonist, Aloy, is lying down indoors and slowly turns onto her back, gazing upwards. Beyond an archway in the background, two silhouetted figures are visible against a warm backlighting, creating an atmosphere of deep contemplation or reflection on the past."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:57:53.742Z"
+  },
+  "videoUrl": "/videos/L3TR52T30ATKO.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30ATKO.webp",
+  "previewUrl": "/previews/L3TR52T30ATKO.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABeAAEBAQEAAAAAAAAAAAAAAAAGBwUEAQEAAwEAAAAAAAAAAAAAAAADAQAFBBAAAgICAgMBAAAAAAAAAAAAAQARAjEDQhIhUUEiEQEBAQAAAAAAAAAAAAAAAAAAARH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwCINbraNdgDiIZQHt7ES8djS1Td361U9zLK8KDuSAPjnQT5AYVhqQYTgUwwsBjKbgmFLwRpn//Z",
+  "category": "sit-lie-stand",
+  "relatedClips": [
+    "L3TR52T30WFY5",
+    "L3TR52T30EFY6",
+    "L3TR52T30GME3",
+    "L3TR52T30RO73",
+    "L3TR52T313IMH"
+  ]
+}

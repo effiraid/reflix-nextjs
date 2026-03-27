@@ -1,66 +1,126 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-24T12:54:45.507Z",
+  "updatedAt": "2026-03-27T07:17:29.326Z",
   "entries": {
     "L3TR52T22TPVR": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1669363438000,
-      "exportSignature": "sha256:f7e32313cbc23d87f66e93f9c63b48bf9fa17fe6f1f2bcc68bad19f15d5875ea"
+      "exportSignature": "sha256:15cb3bd16a9bb50203475f3fa7c8cc97d34fa22ebe5e5338115970e82dc4d57e"
     },
     "L3TR52T27B2VL": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1654612116136,
-      "exportSignature": "sha256:18e8672662ce4f43e697a66db0caa07a94b9354782e32df0ff6a2418ae4dd3e8"
+      "exportSignature": "sha256:c731b66263bc2c3ca2fc05438a4fc4bbcd0a78eca4059bf7aa1e0e9cd4ab3210"
     },
     "L3TR52T2A751G": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1654612116171,
-      "exportSignature": "sha256:09d2c1daf4d6e6f5d03853010a298417675e404c55102bdb0c4653bef273ca17"
+      "exportSignature": "sha256:7576370d951956c24a493fdcd403830aebfacce596f76a8d464c68f346e30fd2"
     },
     "L3TR52T2BJCOW": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1654612116221,
-      "exportSignature": "sha256:4cd657998fe5345896de763aa814a7d869e577f8362a63ee2fc9506518ab9041"
+      "exportSignature": "sha256:d17b3ac243b4c0c8c138a2aa387a413c72401994bd3389c25120e1a457e472b7"
     },
     "L3TR52T2F47S1": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1638336620000,
-      "exportSignature": "sha256:83527c67bae3b193b6fe88c1bb4266eef8cdaf17049e979be96320d3f2476864"
+      "exportSignature": "sha256:05e69e2530e8324e19a610a51ca0cf41eb416fc4ee6e161726a2e01dac71d153"
     },
     "L3TR52T2K3FY9": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1654612116366,
-      "exportSignature": "sha256:c0b7a5a04e09ad8ea015e5b8aa258d67612d37f5444608eb368b9c764b4afb7c"
+      "exportSignature": "sha256:7561e45a535268f3b3ea666d20c4a0f92e2909cb4f3f7153a144008be76f0ccb"
     },
     "L3TR52T2RH4G6": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1638336172000,
-      "exportSignature": "sha256:4a3a0f025835729ae66194d92cea4a1d818f55ead1b1785d03bd56e9c5a5bf07"
+      "exportSignature": "sha256:28be894a828c63a51469d8c622245edb1db97518d50a4b6ddca58d1be83cb8be"
     },
     "L3TR52T2S1A9X": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1669363438000,
-      "exportSignature": "sha256:fd73820b64ed18d0acb8094b762fe6d87e66f61bc9f94a32a04a3201d7105c9b"
+      "exportSignature": "sha256:55a54707905454bbe85aa065d52ab5894272522324c77d6ff806a3bd39bb105b"
     },
     "L3TR52T2VXUHO": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1669363437000,
-      "exportSignature": "sha256:8c51d4eb3042a7d077208dd333e888f100d42755d696e286a1b355113530504b"
+      "exportSignature": "sha256:a5eaa967e21df9aead6c92f4efb0a9c2d2f21152bf9a893467eca408636a1913"
     },
     "L3TR52T302BJZ": {
-      "publishedAt": "2026-03-24T12:54:45.507Z",
-      "batchName": "proposal-2026-03-24T12:51:07.514Z",
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
       "eagleMtime": 1669363213000,
-      "exportSignature": "sha256:14459cdf031221ed82e6f9d5e3618bfb46d28c128ca6761fcd597401d2cf1590"
+      "exportSignature": "sha256:b6d7c84dcfb071689f7892da5d89514e36e04f83cb4a389baeb49dff60a741d6"
+    },
+    "L3TR52T30ATKO": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1668088152829,
+      "exportSignature": "sha256:c8c239ef2b00787719e0ee4b90d6a4a2bf88b8430d81be038ff9e7aca002690c"
+    },
+    "L3TR52T30EFY6": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1652429138725,
+      "exportSignature": "sha256:d76b361c8e0fec4df716859b7faa88251521d63393e3850ae27f6fa496ce3696"
+    },
+    "L3TR52T30GME3": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1649240644140,
+      "exportSignature": "sha256:5b565d192d56b5a3bbd03090d6c105329b3a3480db5b1e4c352975164f841e02"
+    },
+    "L3TR52T30LHZT": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1668087489540,
+      "exportSignature": "sha256:57e6b76736bd492c81167a5674c6a5030e2420e1118f3e68baf5d651a1dfb179"
+    },
+    "L3TR52T30RO73": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1649240653335,
+      "exportSignature": "sha256:9a8aa9c4944d3851883ffeb10d17d4df0c2aa06da0f132fd7b80c9ffd5b44b49"
+    },
+    "L3TR52T30WFY5": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1652429174191,
+      "exportSignature": "sha256:8ad6dce3ee060923844c6e9373e604267596ce9747455eb31435f99ee549b5a8"
+    },
+    "L3TR52T310BLE": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1654612114659,
+      "exportSignature": "sha256:74f0792111196df2ccddb386cb931240c1a8ce7668474d60519af5f05cd7c8c5"
+    },
+    "L3TR52T313IMH": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1652429181855,
+      "exportSignature": "sha256:f72f47d88020798b40d5037d28048136c9015775d134a867fa94830a4b01cf03"
+    },
+    "L3TR52T318DTE": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1652429129357,
+      "exportSignature": "sha256:befcf6dc3baa4e83e4de8a7824d540b78ade2344dff1326f95bf225b9bd0daf2"
+    },
+    "L3TR52T31CFQ9": {
+      "publishedAt": "2026-03-27T07:17:29.326Z",
+      "batchName": "batch-2026-03-27-expand-20",
+      "eagleMtime": 1637016440000,
+      "exportSignature": "sha256:fa9b31d0a9ad20e280a88c72aa726c6e12b590737e8828384cc570c0d0bb049e"
     }
   }
 }

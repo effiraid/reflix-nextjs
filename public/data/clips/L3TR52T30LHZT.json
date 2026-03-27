@@ -1,0 +1,154 @@
+{
+  "id": "L3TR52T30LHZT",
+  "name": "연출 원신 흠 궁금 뭐지",
+  "ext": "mp4",
+  "size": 1054007,
+  "width": 1280,
+  "height": 720,
+  "duration": 4.737,
+  "tags": [
+    "원신",
+    "궁금",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        136,
+        174,
+        86
+      ],
+      "ratio": 39
+    },
+    {
+      "color": [
+        180,
+        212,
+        225
+      ],
+      "ratio": 23
+    },
+    {
+      "color": [
+        168,
+        180,
+        160
+      ],
+      "ratio": 18
+    },
+    {
+      "color": [
+        62,
+        91,
+        82
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        134,
+        149,
+        26
+      ],
+      "ratio": 4.14
+    },
+    {
+      "color": [
+        181,
+        174,
+        103
+      ],
+      "ratio": 3.05
+    },
+    {
+      "color": [
+        220,
+        180,
+        77
+      ],
+      "ratio": 2.92
+    },
+    {
+      "color": [
+        99,
+        89,
+        72
+      ],
+      "ratio": 1.82
+    },
+    {
+      "color": [
+        194,
+        221,
+        66
+      ],
+      "ratio": 0.44
+    }
+  ],
+  "btime": 1653975943076,
+  "mtime": 1668087489540,
+  "i18n": {
+    "title": {
+      "ko": "연출 원신 흠 궁금 뭐지",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "설명",
+      "서있다",
+      "떠다니다"
+    ],
+    "emotion": [
+      "궁금함",
+      "설명적",
+      "차분함"
+    ],
+    "composition": [
+      "미디엄샷",
+      "투샷",
+      "오버숄더샷",
+      "개방된 배경"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "플레이어블캐릭터",
+      "동료캐릭터",
+      "요정캐릭터"
+    ],
+    "effects": [
+      "대화창",
+      "파티클",
+      "빛이펙트"
+    ],
+    "description": {
+      "ko": "밝고 개방적인 자연 환경에서 두 캐릭터, 페이몬과 여행자가 대화하는 장면입니다. 페이몬은 떠다니며 여행자에게 설명을 하고 있으며, 작은 노란색 파티클 이펙트가 주변에 나타납니다. 카메라는 여행자의 뒤편에서 두 캐릭터를 미디엄샷으로 담고 있습니다.",
+      "en": "The scene features two characters, Paimon and the Traveler, engaged in conversation within a bright and open natural environment. Paimon floats while explaining something to the Traveler, with small yellow particle effects appearing around her. The camera captures both characters in a medium shot from behind the Traveler."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:59:05.947Z"
+  },
+  "videoUrl": "/videos/L3TR52T30LHZT.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30LHZT.webp",
+  "previewUrl": "/previews/L3TR52T30LHZT.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABjAAADAQEBAAAAAAAAAAAAAAAFBgQDAgEBAQEBAQAAAAAAAAAAAAAAAAUDBAEQAAIBAwUBAQAAAAAAAAAAAAEAAjERAyFRgUHhcRIRAQEBAQEBAAAAAAAAAAAAAAABETESAv/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AKtMf3dNigOt3kl5OQAeIsuXdQHRKNtkd+rvomHJ3e7EsiSStlZJK6UeODseuWgUDhHrl3FApfXGmv/Z",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T31CFQ9",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G",
+    "L3TR52T2BJCOW",
+    "L3TR52T2K3FY9"
+  ]
+}

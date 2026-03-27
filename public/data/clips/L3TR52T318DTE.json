@@ -1,0 +1,147 @@
+{
+  "id": "L3TR52T318DTE",
+  "name": "연출 호라이즌 계단 올라가기",
+  "ext": "mp4",
+  "size": 1181470,
+  "width": 1280,
+  "height": 720,
+  "duration": 4.179773,
+  "tags": [
+    "호라이즌",
+    "올라가기",
+    "계단",
+    "오르기",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        51,
+        30,
+        19
+      ],
+      "ratio": 46
+    },
+    {
+      "color": [
+        210,
+        140,
+        96
+      ],
+      "ratio": 22
+    },
+    {
+      "color": [
+        150,
+        96,
+        63
+      ],
+      "ratio": 16
+    },
+    {
+      "color": [
+        110,
+        71,
+        51
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        84,
+        57,
+        81
+      ],
+      "ratio": 0.88
+    },
+    {
+      "color": [
+        249,
+        237,
+        191
+      ],
+      "ratio": 0.56
+    },
+    {
+      "color": [
+        121,
+        100,
+        80
+      ],
+      "ratio": 0.39
+    },
+    {
+      "color": [
+        248,
+        208,
+        153
+      ],
+      "ratio": 0.33
+    }
+  ],
+  "btime": 1653975938458,
+  "mtime": 1652429129357,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 계단 올라가기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "올라가기",
+      "계단 오르기",
+      "걷기",
+      "연출"
+    ],
+    "emotion": [
+      "장엄함",
+      "경외감",
+      "탐험"
+    ],
+    "composition": [
+      "풀샷",
+      "로우 앵글",
+      "오버 더 숄더 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "전사",
+      "주인공",
+      "탐험가"
+    ],
+    "effects": [
+      "빛 연출",
+      "글로우 효과",
+      "명암 대비"
+    ],
+    "description": {
+      "ko": "웅장한 고대 유적지 또는 사원 내부에서 한 캐릭터가 빛나는 계단을 천천히 올라갑니다. 주인공으로 보이는 캐릭터가 뒤에서 그 모습을 지켜보고 있으며, 따뜻한 빛 연출과 섬세한 문양들이 신비롭고 장엄한 분위기를 자아냅니다. 낮은 카메라 앵글은 공간의 규모감을 강조하며 연출적인 움직임을 더욱 돋보이게 합니다.",
+      "en": "Inside a magnificent ancient ruin or temple, a character slowly ascends illuminated stairs. Another character, presumed to be the protagonist, watches from behind, as warm lighting and intricate patterns create a mysterious and grand atmosphere. A low camera angle emphasizes the scale of the environment and enhances the cinematic movement."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T07:01:08.460Z"
+  },
+  "videoUrl": "/videos/L3TR52T318DTE.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T318DTE.webp",
+  "previewUrl": "/previews/L3TR52T318DTE.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABeAAADAQEBAAAAAAAAAAAAAAAEBwYDBQIBAQEBAQAAAAAAAAAAAAAAAAQCBQMQAAICAgIDAQAAAAAAAAAAAAEAAhEhMRNBUTKhEhEBAQAAAAAAAAAAAAAAAAAAAAH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwCU4xRy8MQJKzLh39ZSUheBhzJWxY58oiJAsG/CfxskfYLW/cWUwnpE2jF9y25HaqD1ohlNQi9h3//Z",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T30GME3",
+    "L3TR52T30RO73",
+    "L3TR52T313IMH",
+    "L3TR52T2F47S1",
+    "L3TR52T2VXUHO"
+  ]
+}

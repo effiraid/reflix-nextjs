@@ -1,0 +1,164 @@
+{
+  "id": "L3TR52T31CFQ9",
+  "name": "연출 원신 팔짱 여자 아이  요정 페이몬",
+  "ext": "mp4",
+  "size": 545217,
+  "width": 1280,
+  "height": 720,
+  "duration": 2.530975,
+  "tags": [
+    "요정",
+    "원신",
+    "아이",
+    "팔짱",
+    "페이몬",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        105,
+        143,
+        62
+      ],
+      "ratio": 34
+    },
+    {
+      "color": [
+        189,
+        217,
+        225
+      ],
+      "ratio": 22
+    },
+    {
+      "color": [
+        147,
+        171,
+        158
+      ],
+      "ratio": 14
+    },
+    {
+      "color": [
+        213,
+        191,
+        124
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        134,
+        150,
+        120
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        164,
+        171,
+        65
+      ],
+      "ratio": 4.39
+    },
+    {
+      "color": [
+        66,
+        70,
+        53
+      ],
+      "ratio": 2.87
+    },
+    {
+      "color": [
+        55,
+        98,
+        64
+      ],
+      "ratio": 1.79
+    },
+    {
+      "color": [
+        174,
+        206,
+        92
+      ],
+      "ratio": 1.11
+    }
+  ],
+  "btime": 1653975936813,
+  "mtime": 1637016440000,
+  "i18n": {
+    "title": {
+      "ko": "연출 원신 팔짱 여자 아이  요정 페이몬",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "설명",
+      "떠다님",
+      "제스처",
+      "경청"
+    ],
+    "emotion": [
+      "진지함",
+      "설명적",
+      "사려깊음",
+      "집중"
+    ],
+    "composition": [
+      "미디엄샷",
+      "투샷",
+      "오버더숄더",
+      "전신샷 (페이몬)",
+      "후면샷 (루미네)",
+      "와이드샷 (배경 포함)"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "요정",
+      "여행자",
+      "소녀",
+      "주인공"
+    ],
+    "effects": [
+      "대화창",
+      "캐릭터 애니메이션",
+      "부유 이펙트",
+      "미세한 잔상 (페이몬 날개)",
+      "자연광"
+    ],
+    "description": {
+      "ko": "밝은 야외 배경에서 요정 페이몬이 떠다니며 여행자 루미네에게 손짓으로 무언가를 설명하고 있는 대화 장면입니다. 루미네는 뒤돌아 선 채 페이몬의 말을 경청하고 있으며, 전체적으로 차분하고 느린 페이스로 이야기가 전개됩니다. 캐릭터들의 미세한 움직임과 대화창이 시각적 요소를 더합니다.",
+      "en": "In a bright outdoor setting, the fairy Paimon floats and gestures with her hands as she explains something to the Traveler Lumine. Lumine stands with her back to the camera, attentively listening to Paimon's words, creating a calm and slow-paced dialogue scene. Subtle character animations and dialogue boxes enhance the visual storytelling."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T07:01:30.370Z"
+  },
+  "videoUrl": "/videos/L3TR52T31CFQ9.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T31CFQ9.webp",
+  "previewUrl": "/previews/L3TR52T31CFQ9.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABkAAEBAQEAAAAAAAAAAAAAAAAFBAYHAQEBAQEAAAAAAAAAAAAAAAAEAwIFEAACAQMDBQEBAAAAAAAAAAABAAJBAxEyccFhM1HREiETEQEBAQEBAQAAAAAAAAAAAAAAEQExEkH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwC7t+2qOCPquWH+nRRFwAPG+26jT0ZCrKZDP4xxmPDUSt9b1GZHPjwE8qJ4CehYbW3pVDXdNt6VI13V7wx//9k=",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T30LHZT",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G",
+    "L3TR52T2BJCOW",
+    "L3TR52T2K3FY9"
+  ]
+}

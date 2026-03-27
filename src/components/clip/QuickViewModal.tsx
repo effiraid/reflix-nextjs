@@ -72,6 +72,8 @@ export function QuickViewModal({
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
+    dialogRef.current?.focus();
+
     return () => {
       previousFocusRef.current?.focus();
     };

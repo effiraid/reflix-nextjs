@@ -1,0 +1,155 @@
+{
+  "id": "L3TR52T30GME3",
+  "name": "연출 호라이즌 말 내리기",
+  "ext": "mp4",
+  "size": 1060909,
+  "width": 1280,
+  "height": 720,
+  "duration": 3.179773,
+  "tags": [
+    "호라이즌",
+    "내리기",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        131,
+        63,
+        52
+      ],
+      "ratio": 36
+    },
+    {
+      "color": [
+        53,
+        17,
+        14
+      ],
+      "ratio": 14
+    },
+    {
+      "color": [
+        184,
+        93,
+        76
+      ],
+      "ratio": 14
+    },
+    {
+      "color": [
+        221,
+        133,
+        101
+      ],
+      "ratio": 13
+    },
+    {
+      "color": [
+        84,
+        39,
+        31
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        199,
+        119,
+        96
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        243,
+        172,
+        125
+      ],
+      "ratio": 2.28
+    },
+    {
+      "color": [
+        90,
+        17,
+        12
+      ],
+      "ratio": 1.75
+    },
+    {
+      "color": [
+        150,
+        103,
+        93
+      ],
+      "ratio": 1.03
+    }
+  ],
+  "btime": 1653975940249,
+  "mtime": 1649240644140,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 말 내리기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "착지",
+      "등장",
+      "위협",
+      "전투 준비"
+    ],
+    "emotion": [
+      "위압감",
+      "긴장",
+      "도전"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "로우 앵글",
+      "역동적 구도"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "주인공",
+      "적대자",
+      "기계 생명체"
+    ],
+    "effects": [
+      "카메라 흔들림",
+      "먼지 이펙트",
+      "발광 이펙트",
+      "모션 블러",
+      "붉은색 색감"
+    ],
+    "description": {
+      "ko": "역동적인 카메라 움직임과 함께 위협적인 모습의 적대자가 등장하는 애니메이션입니다. 적대자는 땅에 착지하며 엄청난 위압감을 뿜어내고, 카메라 흔들림과 먼지 효과가 그 충격을 강조합니다. 주인공은 새로운 위협에 맞설 준비를 하는 듯한 긴장감이 느껴집니다.",
+      "en": "This animation features a menacing antagonist making a dramatic entrance with dynamic camera movement. The antagonist lands on the ground, exuding immense pressure, with camera shake and dust effects emphasizing the impact. The protagonist appears tense, preparing to confront this new threat."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:58:45.780Z"
+  },
+  "videoUrl": "/videos/L3TR52T30GME3.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30GME3.webp",
+  "previewUrl": "/previews/L3TR52T30GME3.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABcAAEBAQEAAAAAAAAAAAAAAAAGBQQBAQEBAQEAAAAAAAAAAAAAAAAEBQIDEAACAwEAAwEAAAAAAAAAAAAAAQIRITGBYUEDEQEBAQEAAAAAAAAAAAAAAAAAQTEB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AESNv443vgktlFfK32T1+n1WZHBVpLc5BqSb6w5I8xFDgcYjjwTB+a4yOVmRzm0//2Q==",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T30RO73",
+    "L3TR52T313IMH",
+    "L3TR52T318DTE",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G"
+  ]
+}

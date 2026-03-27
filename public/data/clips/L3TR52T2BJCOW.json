@@ -15,7 +15,6 @@
     "연출"
   ],
   "folders": [
-    "L475K68YP1NH3",
     "MN34S0ZRPT5WD"
   ],
   "star": 3,
@@ -142,12 +141,12 @@
   "thumbnailUrl": "/thumbnails/L3TR52T2BJCOW.webp",
   "previewUrl": "/previews/L3TR52T2BJCOW.mp4",
   "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABYAAEBAQEBAQAAAAAAAAAAAAAABQMGBAcBAQEBAQAAAAAAAAAAAAAAAAADAgEQAQEBAQEBAAAAAAAAAAAAAAABAhEDMREBAQAAAAAAAAAAAAAAAAAAAAH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD4hx7c5lrBr1kWteck65ni/rVs4lfRSooDqYAD/9k=",
-  "category": "direction-video",
+  "category": "daily-other",
   "relatedClips": [
-    "L3TR52T22TPVR",
     "L3TR52T27B2VL",
     "L3TR52T2A751G",
-    "L3TR52T2F47S1",
-    "L3TR52T2K3FY9"
+    "L3TR52T2K3FY9",
+    "L3TR52T22TPVR",
+    "L3TR52T2F47S1"
   ]
 }

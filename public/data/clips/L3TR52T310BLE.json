@@ -1,0 +1,169 @@
+{
+  "id": "L3TR52T310BLE",
+  "name": "연출 아케인 패싸움2 몸싸움 전투 격투 교전",
+  "ext": "mp4",
+  "size": 5954196,
+  "width": 1280,
+  "height": 720,
+  "duration": 42.582,
+  "tags": [
+    "연출",
+    "교전",
+    "아케인",
+    "싸움",
+    "격투",
+    "전투",
+    "주먹",
+    "무기",
+    "일대일",
+    "공격"
+  ],
+  "folders": [
+    "L951Y2DB121ZU",
+    "LNPMWX908R1NR",
+    "L475K68YP1NH3",
+    "MN34S7XS08AQ1"
+  ],
+  "star": 3,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        12,
+        8,
+        6
+      ],
+      "ratio": 57
+    },
+    {
+      "color": [
+        61,
+        42,
+        32
+      ],
+      "ratio": 20
+    },
+    {
+      "color": [
+        38,
+        25,
+        20
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        97,
+        59,
+        42
+      ],
+      "ratio": 4.96
+    },
+    {
+      "color": [
+        43,
+        36,
+        27
+      ],
+      "ratio": 2.75
+    },
+    {
+      "color": [
+        75,
+        60,
+        43
+      ],
+      "ratio": 1.43
+    },
+    {
+      "color": [
+        153,
+        85,
+        55
+      ],
+      "ratio": 1.11
+    }
+  ],
+  "btime": 1653975936864,
+  "mtime": 1654612114659,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 패싸움2 몸싸움 전투 격투 교전",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "격투",
+      "몸싸움",
+      "주먹질",
+      "발차기",
+      "던지기",
+      "타격",
+      "기절",
+      "피격",
+      "구타",
+      "근접전"
+    ],
+    "emotion": [
+      "분노",
+      "고통",
+      "결의",
+      "격렬함",
+      "피로",
+      "투지",
+      "승리",
+      "패배"
+    ],
+    "composition": [
+      "클로즈업",
+      "미디엄샷",
+      "풀샷",
+      "로우앵글",
+      "오버헤드샷",
+      "다이나믹 앵글"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "주인공",
+      "조연",
+      "악당",
+      "폭력배",
+      "싸움꾼",
+      "인간"
+    ],
+    "effects": [
+      "파티클",
+      "먼지",
+      "피",
+      "상처",
+      "카메라 흔들림",
+      "블러 효과",
+      "충격파",
+      "그림자"
+    ],
+    "description": {
+      "ko": "이 클립은 '아케인'의 격렬한 패싸움을 보여줍니다. 다양한 캐릭터들이 주먹과 발차기를 주고받으며 치열한 육탄전을 벌입니다. 클로즈업과 역동적인 카메라워크, 그리고 시각적인 이펙트들은 캐릭터들의 고통과 분노, 그리고 치열한 전투 상황을 생생하게 전달합니다.",
+      "en": "This clip showcases an intense brawl from 'Arcane,' with various characters engaging in fierce hand-to-hand combat, exchanging punches and kicks. Close-ups, dynamic camera work, and visual effects vividly convey the characters' pain and anger, and the intense battle situation."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T07:00:25.062Z"
+  },
+  "videoUrl": "/videos/L3TR52T310BLE.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T310BLE.webp",
+  "previewUrl": "/previews/L3TR52T310BLE.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABWAAEAAwEBAQAAAAAAAAAAAAAAAwQFBwIGAQEBAQEAAAAAAAAAAAAAAAADAAQCEAEBAQEAAAAAAAAAAAAAAAAAARESEQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A4OtSarNmUZEfMR5Gnr3Y4I+PAMzgCT//2Q==",
+  "category": "combat-ready",
+  "relatedClips": [
+    "L3TR52T2RH4G6",
+    "L3TR52T30EFY6",
+    "L3TR52T22TPVR",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G"
+  ]
+}

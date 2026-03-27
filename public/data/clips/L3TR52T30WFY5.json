@@ -1,0 +1,159 @@
+{
+  "id": "L3TR52T30WFY5",
+  "name": "연출 호라이즌 의자 앉기",
+  "ext": "mp4",
+  "size": 1510785,
+  "width": 1280,
+  "height": 720,
+  "duration": 5.134,
+  "tags": [
+    "호라이즌",
+    "앉기",
+    "의자",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZHF566Z"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        62,
+        42,
+        30
+      ],
+      "ratio": 59
+    },
+    {
+      "color": [
+        140,
+        97,
+        63
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        106,
+        70,
+        44
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        231,
+        195,
+        149
+      ],
+      "ratio": 4.91
+    },
+    {
+      "color": [
+        185,
+        129,
+        89
+      ],
+      "ratio": 4.55
+    },
+    {
+      "color": [
+        26,
+        15,
+        11
+      ],
+      "ratio": 3.55
+    },
+    {
+      "color": [
+        84,
+        75,
+        91
+      ],
+      "ratio": 2.31
+    },
+    {
+      "color": [
+        84,
+        76,
+        64
+      ],
+      "ratio": 1.36
+    },
+    {
+      "color": [
+        112,
+        101,
+        94
+      ],
+      "ratio": 0.47
+    }
+  ],
+  "btime": 1653975941748,
+  "mtime": 1652429174191,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 의자 앉기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "일어서기",
+      "대화",
+      "응시",
+      "연출"
+    ],
+    "emotion": [
+      "위엄",
+      "권위",
+      "자신감",
+      "심각함"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "로우 앵글",
+      "풀 샷",
+      "오버더숄더 샷",
+      "대칭 구도"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "지도자",
+      "부족장",
+      "주인공"
+    ],
+    "effects": [
+      "따뜻한 조명",
+      "그림자 효과",
+      "환경 조명",
+      "정교한 디테일",
+      "움직이는 카메라"
+    ],
+    "description": {
+      "ko": "웅장한 왕좌에 앉아있던 부족장이 주인공을 마주하며 위엄 있게 일어섭니다. 따뜻한 조명과 정교한 의상 디테일이 캐릭터의 권위적인 모습을 강조하며, 긴장감 있는 대화의 시작을 알리는 연출입니다.",
+      "en": "An imposing chieftain, initially seated on an ornate throne, rises majestically to face the protagonist. Warm lighting and intricate costume details emphasize the character's authority, setting the stage for a tense dialogue."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:59:49.174Z"
+  },
+  "videoUrl": "/videos/L3TR52T30WFY5.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30WFY5.webp",
+  "previewUrl": "/previews/L3TR52T30WFY5.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABYAAEBAQEBAAAAAAAAAAAAAAAFBAYBAwEBAQEAAAAAAAAAAAAAAAAAAQQCEAEBAQEBAAMBAAAAAAAAAAABABECMRMhAxIRAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDDHCGwmbbT5l5xzIXoBMol6QLjzPHRzj63p1+v9/eWQxko+RUq+SRrX0LXQH//2Q==",
+  "category": "sit-lie-stand",
+  "relatedClips": [
+    "L3TR52T30ATKO",
+    "L3TR52T30EFY6",
+    "L3TR52T30GME3",
+    "L3TR52T30RO73",
+    "L3TR52T313IMH"
+  ]
+}

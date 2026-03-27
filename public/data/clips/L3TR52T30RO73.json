@@ -1,0 +1,152 @@
+{
+  "id": "L3TR52T30RO73",
+  "name": "연출 호라이즌 물건 목걸이 걸어주기",
+  "ext": "mp4",
+  "size": 3748566,
+  "width": 1280,
+  "height": 720,
+  "duration": 12.1,
+  "tags": [
+    "호라이즌",
+    "물건",
+    "목걸이",
+    "걸기",
+    "연출"
+  ],
+  "folders": [
+    "MN34S0ZRPT5WD"
+  ],
+  "star": 4,
+  "annotation": "작품",
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        6,
+        10,
+        10
+      ],
+      "ratio": 52
+    },
+    {
+      "color": [
+        32,
+        49,
+        55
+      ],
+      "ratio": 16
+    },
+    {
+      "color": [
+        43,
+        64,
+        68
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        21,
+        38,
+        37
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        65,
+        79,
+        89
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        78,
+        97,
+        105
+      ],
+      "ratio": 4.03
+    },
+    {
+      "color": [
+        38,
+        42,
+        40
+      ],
+      "ratio": 0.66
+    },
+    {
+      "color": [
+        152,
+        168,
+        169
+      ],
+      "ratio": 0.43
+    }
+  ],
+  "btime": 1653975940569,
+  "mtime": 1649240653335,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 물건 목걸이 걸어주기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "물건 전달",
+      "목걸이 걸기",
+      "교감",
+      "감정 표현"
+    ],
+    "emotion": [
+      "따뜻함",
+      "애정",
+      "다정함",
+      "감동",
+      "유대감"
+    ],
+    "composition": [
+      "투샷",
+      "미디엄 클로즈업",
+      "클로즈업",
+      "로우 앵글"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "주인공",
+      "조연",
+      "여성",
+      "인간"
+    ],
+    "effects": [
+      "역광",
+      "환경광",
+      "부드러운 조명",
+      "몽환적 분위기"
+    ],
+    "description": {
+      "ko": "어두운 밤하늘 아래, 한 여성이 다른 여성에게 소중한 목걸이를 직접 걸어주는 따뜻한 장면입니다. 두 인물은 서로를 부드러운 눈빛으로 바라보며 깊은 애정과 유대감을 표현합니다. 몽환적인 역광과 주변의 신비로운 식물들이 감동적인 순간을 더욱 부각시킵니다.",
+      "en": "Under a dark night sky, one woman tenderly places a precious necklace around another woman's neck. The two characters exchange soft gazes, expressing deep affection and a strong bond. The dreamlike backlighting and mystical flora in the background further enhance this touching moment."
+    },
+    "model": "gemini-2.5-flash",
+    "generatedAt": "2026-03-27T06:59:29.336Z"
+  },
+  "videoUrl": "/videos/L3TR52T30RO73.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T30RO73.webp",
+  "previewUrl": "/previews/L3TR52T30RO73.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABaAAEBAQEBAQAAAAAAAAAAAAACBQQBBwYBAQADAQAAAAAAAAAAAAAAAAMBAAIEEAEBAQEAAwEAAAAAAAAAAAAAARFRITECAxEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APKsbcStaLfFI5kf6u1b/O+4+ZaZcrBnYfQhdQNPISUz/9k=",
+  "category": "daily-other",
+  "relatedClips": [
+    "L3TR52T30GME3",
+    "L3TR52T313IMH",
+    "L3TR52T318DTE",
+    "L3TR52T27B2VL",
+    "L3TR52T2A751G"
+  ]
+}
