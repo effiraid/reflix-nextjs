@@ -110,6 +110,6 @@ export type Locale = "ko" | "en";
 
 export type SortBy = "newest" | "rating" | "name";
 
-export type ViewMode = "masonry" | "grid" | "list";
+export type ViewMode = "masonry" | "grid" | "list" | "feed";
 
 export type ContentMode = "direction" | "game";
