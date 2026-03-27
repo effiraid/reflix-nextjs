@@ -4,7 +4,24 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
+function validateStripeKey() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
+
+  if (process.env.NODE_ENV === "production" && key.startsWith("sk_test_")) {
+    throw new Error(
+      "STRIPE_SECRET_KEY is a test key but NODE_ENV is production"
+    );
+  }
+  if (process.env.NODE_ENV !== "production" && key.startsWith("sk_live_")) {
+    console.warn(
+      "[stripe] WARNING: using a live key in non-production environment"
+    );
+  }
+}
+
 function getStripe() {
+  validateStripeKey();
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
 }
 
@@ -34,6 +51,41 @@ export async function POST(request: NextRequest) {
   }
 
   const { lang = "ko" } = await request.json();
+
+  // Check for existing active subscription — prevent duplicate checkouts
+  const { data: existingSub } = await getSupabaseAdmin()
+    .from("subscriptions")
+    .select("stripe_subscription_id, status")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
+  if (existingSub) {
+    // User already has an active subscription — redirect to Customer Portal
+    const { data: profile } = await getSupabaseAdmin()
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.stripe_customer_id) {
+      const origin = request.headers.get("origin") ?? request.nextUrl.origin;
+      const portalSession =
+        await getStripe().billingPortal.sessions.create({
+          customer: profile.stripe_customer_id,
+          return_url: `${origin}/${lang}/account`,
+        });
+      return NextResponse.json({
+        url: portalSession.url,
+        portal: true,
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Already subscribed" },
+      { status: 409 }
+    );
+  }
 
   // Get or create Stripe customer
   const { data: profile } = await getSupabaseAdmin()
