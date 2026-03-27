@@ -11,6 +11,7 @@ interface LandingClipCardProps {
   aspectRatio?: string;
   overlay?: React.ReactNode;
   disableVideo?: boolean;
+  priority?: boolean;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export function LandingClipCard({
   aspectRatio,
   overlay,
   disableVideo = false,
+  priority = false,
   className = "",
 }: LandingClipCardProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -55,6 +57,8 @@ export function LandingClipCard({
         width={clip.width}
         height={clip.height}
         sizes="33vw"
+        priority={priority}
+        loading={priority ? "eager" : undefined}
         className="h-full w-full object-cover"
       />
 

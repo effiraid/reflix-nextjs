@@ -84,6 +84,7 @@ interface FeatureRowProps {
   clip: BrowseClipRecord;
   overlay: React.ReactNode;
   reversed?: boolean;
+  priority?: boolean;
 }
 
 function FeatureRow({
@@ -92,6 +93,7 @@ function FeatureRow({
   clip,
   overlay,
   reversed = false,
+  priority = false,
 }: FeatureRowProps) {
   const textBlock = (
     <div className="flex flex-1 flex-col justify-center">
@@ -114,6 +116,7 @@ function FeatureRow({
         autoPlay
         aspectRatio="16/9"
         overlay={overlay}
+        priority={priority}
         className="w-full"
       />
     </div>
@@ -159,6 +162,7 @@ export function LandingFeatures({ featureClips, dict }: LandingFeaturesProps) {
             description={dict.featureTagDesc}
             clip={featureClips[0]}
             overlay={<TagBadgesOverlay badges={tagBadges} />}
+            priority
           />
         )}
 
