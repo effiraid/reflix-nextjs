@@ -67,7 +67,7 @@ export function FeedCategorySection({
               lang={lang}
               enablePreview
               previewOnHover
-              showInfo={false}
+              showInfo
               onOpenQuickView={onOpenQuickView}
             />
           ))}
