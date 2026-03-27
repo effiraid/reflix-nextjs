@@ -24,7 +24,7 @@ Relevant existing pieces:
 Important observation from the current flow:
 
 - The existing client callback page is optimized for "finish auth and close/return to original tab" behavior.
-- That is acceptable for magic-link cross-tab login, but less natural for same-tab OAuth redirects.
+- That behavior feels abrupt for same-tab OAuth redirects and should be removed.
 - Manual identity linking will reuse OAuth, so this flow should become explicit about where the user lands after success.
 
 ## User Problem
@@ -75,6 +75,11 @@ State handling:
 - Error: show a short friendly message under the card
 - Success: show a small success notice after returning to the account page
 
+Important UX rule:
+
+- Do not close the browser tab after successful login or linking.
+- The callback page should act as a short-lived processing screen, then automatically move the user to the target page.
+
 ## Architecture
 
 ### 1. Keep identity-linking state local to the account page
@@ -97,7 +102,7 @@ Reason:
 
 This can live directly in `AccountClient` unless the component starts getting crowded. If it does, extract a small helper or child component.
 
-### 3. Reuse the auth callback page, but make post-success navigation explicit
+### 3. Reuse the auth callback page, but make post-success navigation explicit and remove tab-closing behavior
 
 The callback page should support redirecting to a safe internal destination after successful session handling.
 
@@ -109,7 +114,14 @@ For normal sign-in, the default destination should become:
 
 - `/${lang}/browse`
 
-This makes the OAuth return behavior understandable and prevents the user from getting stuck on a "close this tab" screen after a same-tab redirect.
+This makes the OAuth return behavior understandable and prevents the user from seeing a confusing tab-close experience after a same-tab redirect.
+
+Required callback behavior after success:
+
+- keep the existing processing screen while auth tokens/session are being resolved
+- optionally broadcast auth success for cross-tab listeners
+- navigate with client-side redirect to the safe destination
+- never call `window.close()`
 
 ## Data Flow
 
@@ -127,7 +139,7 @@ This makes the OAuth return behavior understandable and prevents the user from g
 3. User is redirected to Google.
 4. Google redirects back to the existing auth callback page.
 5. Callback page completes session handling.
-6. Callback page redirects to the safe account URL.
+6. Callback page automatically redirects to the safe account URL.
 7. Account page reloads identities and shows Google as connected.
 
 ## Error Handling
@@ -167,6 +179,7 @@ Minimum coverage:
 3. Callback behavior test
    - successful auth callback redirects to `/[lang]/account?linked=google` when linking flow requested that destination
    - normal auth callback redirects to `/[lang]/browse` by default
+   - callback success never attempts to close the tab
 4. Failure test
    - identity fetch failure shows inline error without crashing the page
 
@@ -190,6 +203,7 @@ The MVP is successful when:
 - returning from Google lands them back on the account page
 - the account page clearly shows Google is linked
 - the rest of the login flow still works
+- successful login/linking never asks the user to close a tab
 - no duplicate-account UX is introduced by the new feature itself
 
 ## Open Decisions
