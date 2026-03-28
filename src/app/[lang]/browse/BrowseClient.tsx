@@ -131,6 +131,7 @@ export function BrowseClient({
     shuffleSeed,
     thumbnailSize,
     viewMode,
+    openPricingModal,
   } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
@@ -139,6 +140,7 @@ export function BrowseClient({
       shuffleSeed: s.shuffleSeed,
       thumbnailSize: s.thumbnailSize,
       viewMode: s.viewMode,
+      openPricingModal: s.openPricingModal,
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
@@ -190,6 +192,9 @@ export function BrowseClient({
     filters.searchQuery.length > 0 ||
     filters.sortBy !== "newest";
 
+  // 전체 탭(contentMode === null)에서 무료 유저는 5개까지만 노출
+  const isAllTabLimited = filters.contentMode === null && !isProUser;
+
   const showFeed = viewMode === "feed" && !hasFeedBlockingFilters(filters);
   const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
   const initialDisplayClips = useMemo(() => {
@@ -201,31 +206,47 @@ export function BrowseClient({
       projectionClips.map((clip) => [clip.id, clip] as const)
     );
 
-    return initialClips.map((clip) => projectionById.get(clip.id) ?? clip);
+    return initialClips.map((clip) => {
+      const projection = projectionById.get(clip.id);
+      return projection ? { ...clip, ...projection } : clip;
+    });
   }, [columnCount, initialClips, projectionClips, projectionStatus]);
 
   // Apply filters only after projection preload is ready.
   const browseResults = useMemo(
     () => {
       if (!projectionClips || projectionStatus !== "ready" || !hasActiveBrowseFilters) {
+        const clips =
+          shuffleSeed === 0
+            ? initialDisplayClips
+            : shuffleClips(initialDisplayClips);
+        const lockedClipIds = isAllTabLimited
+          ? new Set(clips.slice(FREE_SEARCH_LIMIT).map((c) => c.id))
+          : new Set<string>();
         return {
-          clips:
-            shuffleSeed === 0
-              ? initialDisplayClips
-              : shuffleClips(initialDisplayClips),
+          clips,
           totalResultCount: initialTotalCount,
-          lockedClipIds: new Set<string>(),
+          lockedClipIds,
         };
       }
 
+      // Merge initial media fields (thumbnailUrl, lqipBase64, etc.) into
+      // projection records, since filter-index omits them for payload size.
+      const summaryById = new Map(
+        initialClips.map((clip) => [clip.id, clip] as const)
+      );
+      const mergedProjection = projectionClips.map((clip) => {
+        const summary = summaryById.get(clip.id);
+        return summary ? { ...summary, ...clip } : clip;
+      });
       const allResults = filterClips(
-        projectionClips,
+        mergedProjection,
         effectiveFilters,
         categories,
         tagI18n,
         lang
       );
-      const isLimited = hasSearchOrFilter && !isProUser;
+      const isLimited = (hasSearchOrFilter || isAllTabLimited) && !isProUser;
       const orderedResults =
         shuffleSeed === 0 ? allResults : shuffleClips(allResults);
       const lockedClipIds = isLimited
@@ -247,6 +268,7 @@ export function BrowseClient({
       effectiveFilters,
       hasSearchOrFilter,
       isProUser,
+      isAllTabLimited,
       categories,
       tagI18n,
       shuffleSeed,
@@ -497,9 +519,13 @@ export function BrowseClient({
             {hasSearchOrFilter ? resultCountLabel : null}
             {hasSearchOrFilter && lockedCount > 0 ? " · " : null}
             {lockedCount > 0
-              ? lang === "ko"
-                ? `${lockedCount}개 결과는 Pro 전용`
-                : `${lockedCount} results require Pro`
+              ? isAllTabLimited && !hasSearchOrFilter
+                ? lang === "ko"
+                  ? "전체 보기는 Pro 전용 · 연출/게임 탭에서 무료로 탐색하세요"
+                  : "All view requires Pro · Browse free in Direction/Game tabs"
+                : lang === "ko"
+                  ? `${lockedCount}개 결과는 Pro 전용`
+                  : `${lockedCount} results require Pro`
               : null}
             {isFilterCombinationLimited
               ? lang === "ko"
@@ -508,12 +534,13 @@ export function BrowseClient({
               : null}
           </p>
           {(lockedCount > 0 || isFilterCombinationLimited) ? (
-            <a
-              href={`/${lang}/pricing`}
+            <button
+              type="button"
+              onClick={openPricingModal}
               className="text-xs font-medium text-primary hover:underline"
             >
               {lang === "ko" ? "Pro로 잠금 해제" : "Unlock with Pro"}
-            </a>
+            </button>
           ) : null}
         </div>
       ) : null}
