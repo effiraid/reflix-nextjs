@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BrowsePageShell } from "./page";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
-import type { BrowseProjectionRecord, BrowseSummaryRecord } from "@/lib/types";
+import type { BrowseFilterIndexRecord, BrowseSummaryRecord } from "@/lib/types";
 
 const dict = {
   ...koDict,
@@ -73,7 +73,6 @@ describe("BrowsePage", () => {
         width: 100,
         height: 100,
         duration: 1,
-        star: 0,
         category: "action",
       },
       {
@@ -85,7 +84,6 @@ describe("BrowsePage", () => {
         width: 100,
         height: 100,
         duration: 1,
-        star: 0,
         category: "action",
       },
       {
@@ -97,12 +95,13 @@ describe("BrowsePage", () => {
         width: 100,
         height: 100,
         duration: 1,
-        star: 0,
         category: "action",
       },
     ];
-    const browseProjection: BrowseProjectionRecord[] = browseSummary.map((clip) => ({
-      ...clip,
+    const browseFilterIndex: BrowseFilterIndexRecord[] = browseSummary.map((clip) => ({
+      id: clip.id,
+      name: clip.name,
+      category: clip.category,
       tags: [],
       folders: [],
       aiStructuredTags: [],
@@ -119,7 +118,7 @@ describe("BrowsePage", () => {
         tagGroups={{ groups: [], parentGroups: [] }}
         tagI18n={{}}
         browseSummary={browseSummary}
-        browseProjection={browseProjection}
+        browseFilterIndex={browseFilterIndex}
         rawSearchParams={{ q: "Alpha" }}
       />
     );
@@ -139,7 +138,7 @@ describe("BrowsePage", () => {
         tagGroups={{ groups: [], parentGroups: [] }}
         tagI18n={{}}
         browseSummary={[]}
-        browseProjection={[]}
+        browseFilterIndex={[]}
         rawSearchParams={{}}
       />
     );

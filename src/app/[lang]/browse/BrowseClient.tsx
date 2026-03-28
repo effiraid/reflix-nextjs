@@ -33,6 +33,14 @@ const QuickViewModal = dynamic(
   { ssr: false }
 );
 
+const KeyboardHelpOverlay = dynamic(
+  () =>
+    import("@/components/layout/KeyboardHelpOverlay").then(
+      (m) => m.KeyboardHelpOverlay
+    ),
+  { ssr: false }
+);
+
 function scrollToClip(clipId: string) {
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-clip-id="${clipId}"]`);
@@ -46,7 +54,6 @@ function countActiveFilterAxes(filters: FilterState): number {
     filters.contentMode !== null,
     filters.selectedFolders.length > 0 || filters.excludedFolders.length > 0,
     filters.selectedTags.length > 0 || filters.excludedTags.length > 0,
-    filters.starFilter !== null,
   ].filter(Boolean).length;
 }
 
@@ -59,7 +66,6 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
     excludedFolders: [],
     selectedTags: [],
     excludedTags: [],
-    starFilter: null,
   };
 
   if (filters.category !== null) {
@@ -82,10 +88,6 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
     limitedFilters.selectedTags = filters.selectedTags;
     limitedFilters.excludedTags = filters.excludedTags;
     return limitedFilters;
-  }
-
-  if (filters.starFilter !== null) {
-    limitedFilters.starFilter = filters.starFilter;
   }
 
   return limitedFilters;
@@ -117,7 +119,6 @@ export function BrowseClient({
       excludedFolders: s.excludedFolders,
       selectedTags: s.selectedTags,
       excludedTags: s.excludedTags,
-      starFilter: s.starFilter,
       searchQuery: s.searchQuery,
       sortBy: s.sortBy,
       category: s.category,
@@ -139,6 +140,8 @@ export function BrowseClient({
     thumbnailSize,
     viewMode,
     openPricingModal,
+    keyboardHelpOpen,
+    toggleKeyboardHelp,
   } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
@@ -148,6 +151,8 @@ export function BrowseClient({
       thumbnailSize: s.thumbnailSize,
       viewMode: s.viewMode,
       openPricingModal: s.openPricingModal,
+      keyboardHelpOpen: s.keyboardHelpOpen,
+      toggleKeyboardHelp: s.toggleKeyboardHelp,
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
@@ -199,7 +204,6 @@ export function BrowseClient({
     filters.excludedFolders.length > 0 ||
     filters.selectedTags.length > 0 ||
     filters.excludedTags.length > 0 ||
-    filters.starFilter !== null ||
     filters.searchQuery.length > 0 ||
     filters.sortBy !== "newest";
 
@@ -464,9 +468,15 @@ export function BrowseClient({
         allowRepeat: true,
         enabled: !quickViewOpen,
       },
+      {
+        key: "?",
+        action: () => toggleKeyboardHelp(),
+        enabled: !quickViewOpen && !keyboardHelpOpen,
+      },
     ],
     [
       quickViewOpen,
+      keyboardHelpOpen,
       selectedClip,
       selectedClipLocked,
       selectedIndex,
@@ -474,6 +484,7 @@ export function BrowseClient({
       setQuickViewOpen,
       stepThumbnailSize,
       navigateGrid,
+      toggleKeyboardHelp,
     ]
   );
   useKeyboardShortcuts(shortcuts);
@@ -560,6 +571,7 @@ export function BrowseClient({
         <div className="flex flex-1 items-center justify-center p-8 text-muted">
           {emptyStateLabel}
         </div>
+        <KeyboardHelpOverlay dict={dict} />
       </>
     );
   }
@@ -582,6 +594,7 @@ export function BrowseClient({
             onClose={handleCloseQuickView}
           />
         ) : null}
+        <KeyboardHelpOverlay dict={dict} />
       </>
     );
   }
@@ -592,16 +605,12 @@ export function BrowseClient({
       {hasSearchOrFilter || lockedCount > 0 || isFilterCombinationLimited ? (
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <p className="text-xs text-muted" aria-live="polite">
-            {hasSearchOrFilter ? resultCountLabel : null}
-            {hasSearchOrFilter && lockedCount > 0 ? " · " : null}
+            {hasSearchOrFilter || lockedCount > 0 ? resultCountLabel : null}
+            {lockedCount > 0 ? " · " : null}
             {lockedCount > 0
-              ? isAllTabLimited && !hasSearchOrFilter
-                ? lang === "ko"
-                  ? "전체 보기는 Pro 전용 · 연출/게임 탭에서 무료로 탐색하세요"
-                  : "All view requires Pro · Browse free in Direction/Game tabs"
-                : lang === "ko"
-                  ? `${lockedCount}개 결과는 Pro 전용`
-                  : `${lockedCount} results require Pro`
+              ? lang === "ko"
+                ? `${lockedCount}개 결과는 Pro 전용`
+                : `${lockedCount} results require Pro`
               : null}
             {isFilterCombinationLimited
               ? lang === "ko"
@@ -636,6 +645,7 @@ export function BrowseClient({
           onClose={handleCloseQuickView}
         />
       ) : null}
+      <KeyboardHelpOverlay dict={dict} />
     </>
   );
 }

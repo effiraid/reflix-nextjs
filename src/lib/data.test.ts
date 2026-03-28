@@ -22,8 +22,6 @@ const remoteClip = {
   duration: 3.2,
   tags: ["tag"],
   folders: ["folder"],
-  star: 3,
-  annotation: "annotation",
   url: "",
   palettes: [],
   btime: 0,
@@ -89,7 +87,6 @@ describe("getClip", () => {
           width: 640,
           height: 360,
           duration: 1,
-          star: 3,
           category: "direction-video",
         },
       ])
@@ -106,7 +103,6 @@ describe("getClip", () => {
           width: 640,
           height: 360,
           duration: 1,
-          star: 3,
           category: "direction-video",
           tags: ["magic"],
           aiStructuredTags: ["attack"],
@@ -149,7 +145,7 @@ describe("getClip", () => {
     expect(result.clips[0].id).toBe("A");
   });
 
-  it("loadBrowseCards reads from cards.json with fallback to projection", async () => {
+  it("loadBrowseCards reads from cards.json", async () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-cards-"));
     fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
       recursive: true,
@@ -166,7 +162,6 @@ describe("getClip", () => {
           width: 640,
           height: 360,
           duration: 1,
-          star: 3,
           category: "direction-video",
         },
       ])
@@ -180,6 +175,39 @@ describe("getClip", () => {
     expect("searchTokens" in cards[0]).toBe(false);
   });
 
+  it("loadBrowseCards falls back to browse summary when cards.json is missing", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-cards-summary-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "browse", "summary.json"),
+      JSON.stringify([
+        {
+          id: "S",
+          name: "Summary Only",
+          thumbnailUrl: "/thumbnails/S.webp",
+          previewUrl: "/previews/S.mp4",
+          lqipBase64: "",
+          width: 640,
+          height: 360,
+          duration: 1,
+          category: "acting",
+        },
+      ])
+    );
+
+    process.chdir(tempDir);
+
+    const cards = await loadBrowseCards();
+    expect(cards).toEqual([
+      expect.objectContaining({
+        id: "S",
+        name: "Summary Only",
+      }),
+    ]);
+  });
+
   it("loadBrowseFilterIndex reads from filter-index.json", async () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-filter-"));
     fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
@@ -190,10 +218,12 @@ describe("getClip", () => {
       JSON.stringify([
         {
           id: "A",
+          name: "Arcane",
+          category: "action",
           tags: ["magic"],
           aiStructuredTags: ["attack"],
           folders: ["f1"],
-          lightTokens: ["arcane", "magic"],
+          searchTokens: ["arcane", "magic"],
         },
       ])
     );
@@ -203,7 +233,62 @@ describe("getClip", () => {
     const index = await loadBrowseFilterIndex();
     expect(index).toHaveLength(1);
     expect(index[0].tags).toEqual(["magic"]);
-    expect(index[0].lightTokens).toEqual(["arcane", "magic"]);
+    expect(index[0].searchTokens).toEqual(["arcane", "magic"]);
+  });
+
+  it("loadBrowseFilterIndex falls back to clip index when filter-index.json is missing", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-filter-index-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "index.json"),
+      JSON.stringify({
+        clips: [
+          {
+            id: "A",
+            name: "Arcane Burst",
+            thumbnailUrl: "/thumbnails/A.webp",
+            previewUrl: "/previews/A.mp4",
+            lqipBase64: "",
+            width: 640,
+            height: 360,
+            duration: 1,
+            category: "action",
+            tags: ["magic"],
+            folders: ["folder-1"],
+            aiTags: {
+              actionType: ["burst"],
+              emotion: [],
+              composition: [],
+              pacing: "fast",
+              characterType: [],
+              effects: [],
+              description: {
+                ko: "아케인 버스트",
+                en: "Arcane burst",
+              },
+              model: "gemini",
+              generatedAt: "2026-03-28T00:00:00.000Z",
+            },
+          },
+        ],
+        totalCount: 1,
+        generatedAt: "2026-03-28T00:00:00.000Z",
+      })
+    );
+
+    process.chdir(tempDir);
+
+    const index = await loadBrowseFilterIndex();
+    expect(index).toEqual([
+      expect.objectContaining({
+        id: "A",
+        name: "Arcane Burst",
+        category: "action",
+        tags: ["magic"],
+        folders: ["folder-1"],
+      }),
+    ]);
+    expect(index[0].searchTokens).toContain("arcane");
   });
 
   it("loadLandingStats reads from landing-stats.json", async () => {

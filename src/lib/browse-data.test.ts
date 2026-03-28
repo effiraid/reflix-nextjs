@@ -15,7 +15,6 @@ describe("browse-data", () => {
       width: 1280,
       height: 720,
       duration: 2.1,
-      star: 4,
       category: "combat",
       tags: ["magic"],
       aiStructuredTags: ["spell", "attack"],
@@ -39,7 +38,6 @@ describe("browse-data", () => {
       width: 640,
       height: 360,
       duration: 1,
-      star: 0,
       category: "idle",
     });
 
@@ -73,7 +71,6 @@ describe("browse-data", () => {
         width: 1280,
         height: 720,
         duration: 2.1,
-        star: 4,
         category: "combat",
         thumbnailUrl: "/thumbnails/clip-3.webp",
         previewUrl: "/previews/clip-3.mp4",

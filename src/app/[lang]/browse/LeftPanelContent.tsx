@@ -72,17 +72,18 @@ export function LeftPanelContent({
     ? dict.browse.collapseAllFolders
     : dict.browse.expandAllFolders;
 
-  // Pre-compute folder counts: folderId → number of clips in that folder
-  const folderCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
+  // Pre-compute folder → clip IDs for unique counting across parent folders
+  const folderClipIds = useMemo(() => {
+    const map: Record<string, string[]> = {};
     for (const clip of clips) {
       if (clip.folders) {
         for (const folderId of clip.folders) {
-          counts[folderId] = (counts[folderId] || 0) + 1;
+          if (!map[folderId]) map[folderId] = [];
+          map[folderId].push(clip.id);
         }
       }
     }
-    return counts;
+    return map;
   }, [clips]);
 
   function setAllFoldersExpanded(expanded: boolean) {
@@ -127,7 +128,7 @@ export function LeftPanelContent({
       return;
     }
 
-    targetElement.scrollIntoView({ block: "nearest" });
+    targetElement.scrollIntoView({ block: "center" });
     setPendingScrollFolderId((current) =>
       current === pendingScrollFolderId ? null : current
     );
@@ -145,7 +146,6 @@ export function LeftPanelContent({
               excludedTags: [],
               selectedFolders: [],
               excludedFolders: [],
-              starFilter: null,
               sortBy: "newest",
             });
             setViewMode("feed");
@@ -226,11 +226,11 @@ export function LeftPanelContent({
             )}
           </button>
         </div>
-        {foldersExpanded && (
+        {foldersExpanded ? (
           <div ref={treeContainerRef} className="pt-1">
             <FolderTree
               categories={visibleCategories}
-              folderCounts={folderCounts}
+              folderClipIds={folderClipIds}
               lang={lang}
               expandedFolderIds={expandedFolderIds}
               onFolderClick={({ folderId, metaKey, ctrlKey, altKey }) => {
@@ -273,7 +273,7 @@ export function LeftPanelContent({
               }}
             />
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

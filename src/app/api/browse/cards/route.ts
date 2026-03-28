@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { loadBrowseFilterIndex } from "@/lib/data";
+import { loadBrowseCards } from "@/lib/data";
 
 export async function GET() {
-  const filterIndex = await loadBrowseFilterIndex();
-  const body = JSON.stringify(filterIndex);
+  const cards = await loadBrowseCards();
+  const body = JSON.stringify(cards);
 
   return new NextResponse(body, {
     headers: {

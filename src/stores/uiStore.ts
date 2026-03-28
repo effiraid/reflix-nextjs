@@ -22,6 +22,7 @@ interface UIStore {
   shuffleSeed: number;
   pricingModalOpen: boolean;
   pricingModalIntent: PricingModalIntent | null;
+  keyboardHelpOpen: boolean;
 
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -37,6 +38,7 @@ interface UIStore {
   reshuffleClips: () => void;
   openPricingModal: (intent?: PricingModalIntent) => void;
   closePricingModal: () => void;
+  toggleKeyboardHelp: () => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -52,6 +54,7 @@ export const useUIStore = create<UIStore>()(
       shuffleSeed: 0,
       pricingModalOpen: false,
       pricingModalIntent: null,
+      keyboardHelpOpen: false,
 
       toggleLeftPanel: () =>
         set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
@@ -81,6 +84,8 @@ export const useUIStore = create<UIStore>()(
           pricingModalOpen: false,
           pricingModalIntent: null,
         }),
+      toggleKeyboardHelp: () =>
+        set((state) => ({ keyboardHelpOpen: !state.keyboardHelpOpen })),
     }),
     {
       name: "reflix-ui",

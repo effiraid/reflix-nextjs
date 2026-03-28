@@ -8,7 +8,6 @@ export interface FilterState {
   excludedFolders: string[];
   selectedTags: string[];
   excludedTags: string[];
-  starFilter: number | null;
   searchQuery: string;
   sortBy: SortBy;
   category: string | null;
@@ -23,7 +22,6 @@ export function hasFeedBlockingFilters(state: FilterState): boolean {
     state.excludedFolders.length > 0 ||
     state.selectedTags.length > 0 ||
     state.excludedTags.length > 0 ||
-    state.starFilter !== null ||
     state.searchQuery.length > 0
   );
 }
@@ -36,7 +34,6 @@ const CONTENT_MODE_KEYWORD: Record<ContentMode, string> = {
 interface FilterableClipRecord extends SearchableClipRecord {
   category: string;
   folders?: string[];
-  star: number;
 }
 
 export function filterClips<T extends FilterableClipRecord>(
@@ -85,10 +82,6 @@ export function filterClips<T extends FilterableClipRecord>(
     });
   }
 
-  if (filters.starFilter !== null) {
-    result = result.filter((c) => c.star >= filters.starFilter!);
-  }
-
   if (filters.searchQuery) {
     return searchClips(result, {
       lang,
@@ -111,7 +104,7 @@ export function shuffleClips<T>(items: T[], rng: () => number = Math.random): T[
   return shuffled;
 }
 
-function sortClips<T extends Pick<FilterableClipRecord, "name" | "star">>(
+function sortClips<T extends Pick<FilterableClipRecord, "name">>(
   clips: T[],
   sortBy: SortBy
 ): T[] {
@@ -119,8 +112,6 @@ function sortClips<T extends Pick<FilterableClipRecord, "name" | "star">>(
   switch (sortBy) {
     case "newest":
       return sorted;
-    case "rating":
-      return sorted.sort((a, b) => b.star - a.star);
     case "name":
       return sorted.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "ko"));
   }

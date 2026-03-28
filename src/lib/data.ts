@@ -86,11 +86,8 @@ export async function loadBrowseCards(): Promise<BrowseCardRecord[]> {
       "cards.json"
     );
   } catch {
-    // Fallback: derive from projection if cards.json doesn't exist yet
-    const projection = await loadBrowseProjection();
-    return projection.map(
-      ({ tags, aiStructuredTags, folders, searchTokens, ...card }) => card
-    );
+    // Fallback: cards and summary share the same lightweight media fields.
+    return loadBrowseSummary();
   }
 }
 
@@ -104,15 +101,10 @@ export async function loadBrowseFilterIndex(): Promise<
       "filter-index.json"
     );
   } catch {
-    // Fallback: derive from projection if filter-index.json doesn't exist yet
-    const projection = await loadBrowseProjection();
-    return projection.map((p) => ({
-      id: p.id,
-      tags: p.tags ?? [],
-      aiStructuredTags: p.aiStructuredTags,
-      folders: p.folders ?? [],
-      lightTokens: p.searchTokens,
-    }));
+    // Fallback: derive from clip index so filter/search can still work
+    // without depending on the larger projection artifact.
+    const clipIndex = await getClipIndex();
+    return buildBrowseArtifactsFromClipIndex(clipIndex.clips).filterIndex;
   }
 }
 

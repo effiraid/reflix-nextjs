@@ -23,8 +23,6 @@ export interface Clip {
   duration: number;
   tags: string[];
   folders: string[];
-  star: number;
-  annotation: string;
   url: string;
   palettes: { color: [number, number, number]; ratio: number }[];
   btime: number;
@@ -51,7 +49,6 @@ export interface BrowseSummaryRecord {
   width: number;
   height: number;
   duration: number;
-  star: number;
   category: string;
   tags?: string[];
 }
@@ -78,10 +75,12 @@ export type BrowseCardRecord = BrowseSummaryRecord;
 
 export interface BrowseFilterIndexRecord {
   id: string;
+  name: string;
+  category: string;
   tags: string[];
   aiStructuredTags: string[];
   folders: string[];
-  lightTokens: string[];
+  searchTokens: string[];
 }
 
 export interface LandingStats {
@@ -125,7 +124,7 @@ export interface TagGroupData {
 
 export type Locale = "ko" | "en";
 
-export type SortBy = "newest" | "rating" | "name";
+export type SortBy = "newest" | "name";
 
 export type ViewMode = "masonry" | "grid" | "list" | "feed";
 

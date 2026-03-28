@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { memo, useMemo, type ComponentType } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { CategoryNode, CategoryTree, Locale } from "@/lib/types";
 import { useFilterStore } from "@/stores/filterStore";
 import { collectDescendantIds } from "@/lib/categories";
@@ -128,7 +129,7 @@ const FOLDER_ICONS: Record<string, ComponentType<LucideProps>> = {
 
 interface FolderTreeProps {
   categories: CategoryTree;
-  folderCounts: Record<string, number>;
+  folderClipIds: Record<string, string[]>;
   lang: Locale;
   expandedFolderIds: string[];
   onFolderClick: (selection: {
@@ -142,7 +143,7 @@ interface FolderTreeProps {
 
 export function FolderTree({
   categories,
-  folderCounts,
+  folderClipIds,
   lang,
   expandedFolderIds,
   onFolderClick,
@@ -156,7 +157,7 @@ export function FolderTree({
           id={id}
           node={node}
           categories={categories}
-          folderCounts={folderCounts}
+          folderClipIds={folderClipIds}
           lang={lang}
           depth={0}
           expandedFolderIds={expandedFolderIds}
@@ -168,21 +169,11 @@ export function FolderTree({
   );
 }
 
-function FolderNode({
-  id,
-  node,
-  categories,
-  folderCounts,
-  lang,
-  depth,
-  expandedFolderIds,
-  onFolderClick,
-  onFolderExpandToggle,
-}: {
+interface FolderNodeProps {
   id: string;
   node: CategoryNode;
   categories: CategoryTree;
-  folderCounts: Record<string, number>;
+  folderClipIds: Record<string, string[]>;
   lang: Locale;
   depth: number;
   expandedFolderIds: string[];
@@ -193,14 +184,47 @@ function FolderNode({
     altKey: boolean;
   }) => void;
   onFolderExpandToggle: (folderId: string) => void;
-}) {
-  const { selectedFolders, excludedFolders } = useFilterStore();
+}
+
+const FolderNode = memo(function FolderNode({
+  id,
+  node,
+  categories,
+  folderClipIds,
+  lang,
+  depth,
+  expandedFolderIds,
+  onFolderClick,
+  onFolderExpandToggle,
+}: FolderNodeProps) {
+  const { selectedFolders, excludedFolders } = useFilterStore(
+    useShallow((state) => ({
+      selectedFolders: state.selectedFolders,
+      excludedFolders: state.excludedFolders,
+    }))
+  );
   const hasChildren = node.children && Object.keys(node.children).length > 0;
   const expanded = expandedFolderIds.includes(id);
-  const allIds = collectDescendantIds(id, categories);
+
+  const allIds = useMemo(
+    () => collectDescendantIds(id, categories),
+    [id, categories]
+  );
+
   const isSelected = allIds.some((fid) => selectedFolders.includes(fid));
   const isExcluded = allIds.some((fid) => excludedFolders.includes(fid));
-  const count = allIds.reduce((sum, fid) => sum + (folderCounts[fid] || 0), 0);
+
+  const count = useMemo(() => {
+    const clipSet = new Set<string>();
+    for (const fid of allIds) {
+      const clips = folderClipIds[fid];
+      if (clips) {
+        for (const c of clips) clipSet.add(c);
+      }
+    }
+    return clipSet.size;
+  }, [allIds, folderClipIds]);
+
   const Icon = FOLDER_ICONS[node.slug];
 
   return (
@@ -265,7 +289,7 @@ function FolderNode({
               id={childId}
               node={childNode}
               categories={categories}
-              folderCounts={folderCounts}
+              folderClipIds={folderClipIds}
               lang={lang}
               depth={depth + 1}
               expandedFolderIds={expandedFolderIds}
@@ -277,4 +301,4 @@ function FolderNode({
       )}
     </div>
   );
-}
+});

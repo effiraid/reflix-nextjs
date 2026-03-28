@@ -12,7 +12,6 @@ export type FilterURLUpdates = Partial<{
   excludedTags: string[];
   excludedFolders: string[];
   selectedFolders: string[];
-  starFilter: number | null;
   sortBy: SortBy;
   searchQuery: string;
 }>;
@@ -29,8 +28,6 @@ export function updateFilterURL(pathname: string, updates: FilterURLUpdates) {
   state.excludedTags.forEach((t) => params.append("exclude", t));
   state.excludedFolders.forEach((f) => params.append("excludeFolder", f));
   state.selectedFolders.forEach((f) => params.append("folder", f));
-  if (state.starFilter !== null)
-    params.set("star", String(state.starFilter));
   if (state.sortBy !== "newest") params.set("sort", state.sortBy);
   if (state.searchQuery) params.set("q", state.searchQuery);
 
@@ -56,10 +53,9 @@ export function useFilterSync() {
     const tags = searchParams.getAll("tag");
     const excludeTags = searchParams.getAll("exclude");
     const excludeFolders = searchParams.getAll("excludeFolder");
-    const star = searchParams.get("star");
     const rawSort = searchParams.get("sort");
     const sort: SortBy | null =
-      rawSort && ["newest", "rating", "name"].includes(rawSort)
+      rawSort && ["newest", "name"].includes(rawSort)
         ? (rawSort as SortBy)
         : null;
     const folders = searchParams.getAll("folder");
@@ -75,7 +71,6 @@ export function useFilterSync() {
       selectedTags: tags,
       excludedTags: excludeTags,
       excludedFolders: excludeFolders,
-      starFilter: star ? Number(star) : null,
       sortBy: sort || "newest",
       selectedFolders: folders,
       searchQuery: searchQuery || "",

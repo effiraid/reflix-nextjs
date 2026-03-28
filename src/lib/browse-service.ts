@@ -1,6 +1,7 @@
 import { filterClips, type FilterState } from "./filter";
 import type {
   BrowseCardRecord,
+  BrowseFilterIndexRecord,
   BrowseProjectionRecord,
   BrowseSummaryRecord,
   CategoryTree,
@@ -8,10 +9,15 @@ import type {
   SortBy,
 } from "./types";
 
+type BrowseFilterableRecord =
+  | BrowseProjectionRecord
+  | BrowseFilterIndexRecord
+  | BrowseSummaryRecord;
+
 interface ListBrowseResultsOptions {
   cards?: BrowseCardRecord[];
   summary: BrowseSummaryRecord[];
-  projection: BrowseProjectionRecord[];
+  projection: BrowseFilterableRecord[];
   filters: FilterState;
   categories?: CategoryTree;
   tagI18n?: Record<string, string>;
@@ -31,11 +37,9 @@ export function parseBrowsePageQuery(
 ): FilterState {
   const rawSort = searchParams.get("sort");
   const sortBy: SortBy =
-    rawSort === "rating" || rawSort === "name" || rawSort === "newest"
+    rawSort === "name" || rawSort === "newest"
       ? rawSort
       : "newest";
-  const rawStar = searchParams.get("star");
-  const parsedStar = rawStar ? Number(rawStar) : null;
 
   return {
     category: searchParams.get("category"),
@@ -43,12 +47,22 @@ export function parseBrowsePageQuery(
     excludedFolders: searchParams.getAll("excludeFolder"),
     selectedTags: searchParams.getAll("tag"),
     excludedTags: searchParams.getAll("exclude"),
-    starFilter:
-      parsedStar !== null && Number.isFinite(parsedStar) ? parsedStar : null,
     searchQuery: searchParams.get("q") ?? "",
     sortBy,
     contentMode: null,
   };
+}
+
+export function requiresDetailedBrowseIndex(
+  filters: Pick<FilterState, "selectedFolders" | "excludedFolders" | "selectedTags" | "excludedTags" | "searchQuery">,
+): boolean {
+  return (
+    filters.selectedFolders.length > 0 ||
+    filters.excludedFolders.length > 0 ||
+    filters.selectedTags.length > 0 ||
+    filters.excludedTags.length > 0 ||
+    filters.searchQuery.trim().length > 0
+  );
 }
 
 export function listBrowseResults({

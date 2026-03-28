@@ -2,16 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { GET } from "./route";
 
 vi.mock("@/lib/data", () => ({
-  loadBrowseProjection: vi.fn(async () => [
+  loadBrowseFilterIndex: vi.fn(async () => [
     {
       id: "A",
       name: "Arcane",
-      thumbnailUrl: "/thumbnails/A.webp",
-      previewUrl: "/previews/A.mp4",
-      lqipBase64: "",
-      width: 640,
-      height: 360,
-      duration: 1,
       category: "action",
       tags: ["magic"],
       aiStructuredTags: ["burst"],
@@ -21,8 +15,8 @@ vi.mock("@/lib/data", () => ({
   ]),
 }));
 
-describe("browse projection route", () => {
-  it("returns browse projection data with cache headers", async () => {
+describe("browse filter-index route", () => {
+  it("returns filter-index data with cache headers", async () => {
     const response = await GET();
     const body = await response.json();
 
@@ -32,6 +26,8 @@ describe("browse projection route", () => {
         searchTokens: ["arcane", "burst"],
       }),
     ]);
-    expect(response.headers.get("Cache-Control")).toContain("stale-while-revalidate");
+    expect(response.headers.get("Cache-Control")).toContain(
+      "stale-while-revalidate"
+    );
   });
 });

@@ -1,6 +1,7 @@
 import type {
   AIGeneratedTags,
   BrowseClipRecord,
+  BrowseFilterIndexRecord,
   BrowseProjectionRecord,
   BrowseSummaryRecord,
   ClipIndex,
@@ -69,7 +70,6 @@ export function toBrowseSummaryRecord(
     width: record.width,
     height: record.height,
     duration: record.duration,
-    star: record.star,
     category: record.category,
     tags: normalizeStringList(record.tags),
   };
@@ -88,11 +88,28 @@ export function normalizeBrowseProjectionRecord(
   };
 }
 
+export function normalizeBrowseFilterIndexRecord(
+  record: Partial<BrowseFilterIndexRecord> &
+    Pick<BrowseFilterIndexRecord, "id" | "name" | "category">
+): BrowseFilterIndexRecord {
+  return {
+    id: record.id,
+    name: record.name,
+    category: record.category,
+    tags: normalizeStringList(record.tags),
+    aiStructuredTags: normalizeStringList(record.aiStructuredTags),
+    folders: normalizeStringList(record.folders),
+    searchTokens: normalizeStringList(record.searchTokens),
+  };
+}
+
 export function buildBrowseArtifactsFromClipIndex(
   clips: ClipIndex[]
 ): {
   summary: BrowseSummaryRecord[];
   projection: BrowseProjectionRecord[];
+  cards: BrowseSummaryRecord[];
+  filterIndex: BrowseFilterIndexRecord[];
 } {
   const summary = clips.map((clip) => toBrowseSummaryRecord(clip));
   const projection = clips.map((clip): BrowseProjectionRecord =>
@@ -105,9 +122,24 @@ export function buildBrowseArtifactsFromClipIndex(
       searchTokens: clip.searchTokens ?? buildSearchTokens(clip),
     })
   );
+  const cards = summary;
+  const filterIndex = clips.map((clip): BrowseFilterIndexRecord =>
+    normalizeBrowseFilterIndexRecord({
+      id: clip.id,
+      name: clip.name,
+      category: clip.category,
+      tags: clip.tags ?? [],
+      aiStructuredTags:
+        clip.aiStructuredTags ?? getStructuredAiTags(clip.aiTags),
+      folders: clip.folders ?? [],
+      searchTokens: clip.searchTokens ?? buildSearchTokens(clip),
+    })
+  );
 
   return {
     summary,
     projection,
+    cards,
+    filterIndex,
   };
 }

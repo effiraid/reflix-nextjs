@@ -54,7 +54,6 @@ const clips = [
     name: "Clip 1",
     tags: ["combat"],
     folders: ["movement"],
-    star: 0,
     category: "action",
     width: 100,
     height: 100,
@@ -88,7 +87,6 @@ describe("LeftPanelContent", () => {
       excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
-      starFilter: null,
     });
     useUIStore.setState({
       filterBarOpen: false,
@@ -114,9 +112,11 @@ describe("LeftPanelContent", () => {
     expect(screen.getByText("이동")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: dict.clip.folders }));
+    expect(screen.getByRole("button", { name: dict.clip.folders })).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByText("이동")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: dict.clip.folders }));
+    expect(screen.getByRole("button", { name: dict.clip.folders })).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText("이동")).toBeInTheDocument();
   });
 
@@ -167,7 +167,7 @@ describe("LeftPanelContent", () => {
     expect(useUIStore.getState().activeFilterTab).toBe("tags");
   });
 
-  it("shows the full library count in the all shortcut even when the current results are filtered", () => {
+  it("shows the full library count in the browse shortcut even when the current results are filtered", () => {
     render(
       <LeftPanelContent
         categories={categories}
@@ -176,7 +176,9 @@ describe("LeftPanelContent", () => {
       />
     );
 
-    const allShortcut = screen.getAllByText("전체")[0].closest("button");
+    const allShortcut = screen.getByRole("button", {
+      name: new RegExp(`${dict.browse.all}\\s*24`),
+    });
     expect(allShortcut).toHaveTextContent("24");
   });
 

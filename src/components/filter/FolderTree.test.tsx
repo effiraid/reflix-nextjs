@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { Profiler } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { FolderTree } from "./FolderTree";
 import type { CategoryTree } from "@/lib/types";
+import { useFilterStore } from "@/stores/filterStore";
 
 const categories: CategoryTree = {
   movement: {
@@ -16,11 +18,24 @@ const categories: CategoryTree = {
   },
 };
 
-const folderCounts: Record<string, number> = {
-  movement: 1,
+const folderClipIds: Record<string, string[]> = {
+  movement: ["clip1"],
 };
 
 describe("FolderTree", () => {
+  beforeEach(() => {
+    useFilterStore.setState({
+      selectedFolders: [],
+      excludedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "",
+      sortBy: "newest",
+      category: null,
+      contentMode: null,
+    });
+  });
+
   it("reports folder click modifier keys when clicking anywhere on the row", () => {
     const onFolderClick = vi.fn();
     const onFolderExpandToggle = vi.fn();
@@ -28,7 +43,7 @@ describe("FolderTree", () => {
     render(
       <FolderTree
         categories={categories}
-        folderCounts={folderCounts}
+        folderClipIds={folderClipIds}
         lang="ko"
         expandedFolderIds={["movement"]}
         onFolderClick={onFolderClick}
@@ -49,5 +64,30 @@ describe("FolderTree", () => {
       ctrlKey: false,
       altKey: true,
     });
+  });
+
+  it("does not re-render folder nodes when unrelated filter state changes", () => {
+    const commits: string[] = [];
+
+    render(
+      <Profiler id="FolderTree" onRender={(_, phase) => commits.push(phase)}>
+        <FolderTree
+          categories={categories}
+          folderClipIds={folderClipIds}
+          lang="ko"
+          expandedFolderIds={["movement"]}
+          onFolderClick={vi.fn()}
+          onFolderExpandToggle={vi.fn()}
+        />
+      </Profiler>
+    );
+
+    expect(commits).toEqual(["mount"]);
+
+    act(() => {
+      useFilterStore.setState({ searchQuery: "dash" });
+    });
+
+    expect(commits).toEqual(["mount"]);
   });
 });

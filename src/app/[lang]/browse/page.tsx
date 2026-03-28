@@ -6,7 +6,7 @@ import {
   getTagGroups,
   getTagI18n,
   loadBrowseCards,
-  loadBrowseProjection,
+  loadBrowseFilterIndex,
   loadBrowseSummary,
 } from "@/lib/data";
 import { Navbar } from "@/components/layout/Navbar";
@@ -19,7 +19,11 @@ import { FilterPanel } from "@/components/filter/FilterPanel";
 import { SubToolbar } from "@/components/layout/SubToolbar";
 import { RightPanelContent } from "@/components/layout/RightPanelContent";
 import type { Locale } from "@/lib/types";
-import { listBrowseResults, parseBrowsePageQuery } from "@/lib/browse-service";
+import {
+  listBrowseResults,
+  parseBrowsePageQuery,
+  requiresDetailedBrowseIndex,
+} from "@/lib/browse-service";
 import { BrandSplash } from "@/components/splash/BrandSplash";
 
 function toURLSearchParams(
@@ -102,6 +106,8 @@ function BrowsePageContent({
   lang: Locale;
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
+  const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
+  const shouldLoadDetailedIndex = requiresDetailedBrowseIndex(filters);
   const [
     dict,
     categories,
@@ -109,7 +115,7 @@ function BrowsePageContent({
     tagI18n,
     browseCards,
     browseSummary,
-    browseProjection,
+    browseFilterIndex,
   ] = use(
     Promise.all([
       getDictionary(lang as Locale),
@@ -118,7 +124,9 @@ function BrowsePageContent({
       getTagI18n(),
       loadBrowseCards(),
       loadBrowseSummary(),
-      loadBrowseProjection(),
+      shouldLoadDetailedIndex
+        ? loadBrowseFilterIndex()
+        : Promise.resolve(null),
     ])
   );
 
@@ -131,7 +139,8 @@ function BrowsePageContent({
       tagI18n={tagI18n}
       browseCards={browseCards}
       browseSummary={browseSummary}
-      browseProjection={browseProjection}
+      browseFilterIndex={browseFilterIndex}
+      preloadDetailedIndex={shouldLoadDetailedIndex}
       rawSearchParams={rawSearchParams}
     />
   );
@@ -145,7 +154,8 @@ export function BrowsePageShell({
   tagI18n,
   browseCards,
   browseSummary,
-  browseProjection,
+  browseFilterIndex,
+  preloadDetailedIndex = false,
   rawSearchParams,
 }: {
   lang: Locale;
@@ -155,26 +165,45 @@ export function BrowsePageShell({
   tagI18n: Awaited<ReturnType<typeof getTagI18n>>;
   browseCards?: Awaited<ReturnType<typeof loadBrowseCards>>;
   browseSummary: Awaited<ReturnType<typeof loadBrowseSummary>>;
-  browseProjection: Awaited<ReturnType<typeof loadBrowseProjection>>;
+  browseFilterIndex: Awaited<ReturnType<typeof loadBrowseFilterIndex>> | null;
+  preloadDetailedIndex?: boolean;
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
   const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
   const initialBrowseResults = listBrowseResults({
     cards: browseCards,
     summary: browseSummary,
-    projection: browseProjection,
+    projection: browseFilterIndex ?? browseCards ?? browseSummary,
     filters,
     categories,
     tagI18n,
     lang,
   });
 
+  const collectionLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: lang === "ko" ? "애니메이션 레퍼런스 탐색" : "Browse Animation References",
+    description:
+      lang === "ko"
+        ? "태그 기반 검색으로 게임 애니메이션 레퍼런스를 탐색하세요."
+        : "Browse game animation references with tag-based search.",
+    url: `${BASE_URL}/${lang}/browse`,
+    isPartOf: { "@type": "WebSite", name: "Reflix", url: BASE_URL },
+    numberOfItems: browseCards?.length ?? browseSummary.length,
+  };
+
   return (
     <ClipDataProvider
       clips={initialBrowseResults.items}
       initialTotalCount={initialBrowseResults.totalCount}
       totalClipCount={browseCards?.length ?? browseSummary.length}
+      preloadDetailedIndex={preloadDetailedIndex}
     >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+      />
       <div className="h-screen flex flex-col">
         <Suspense>
           <Navbar lang={lang} dict={dict} tagI18n={tagI18n} />

@@ -7,7 +7,6 @@ interface ActiveFiltersProps {
   onRemoveTag: (tag: string) => void;
   onRemoveExcludeTag: (tag: string) => void;
   onRemoveFolder: (folderId: string) => void;
-  onClearStar: () => void;
   onClearCategory: () => void;
 }
 
@@ -16,17 +15,15 @@ export function ActiveFilters({
   onRemoveTag,
   onRemoveExcludeTag,
   onRemoveFolder,
-  onClearStar,
   onClearCategory,
 }: ActiveFiltersProps) {
-  const { selectedTags, excludedTags, selectedFolders, starFilter, category } =
+  const { selectedTags, excludedTags, selectedFolders, category } =
     useFilterStore();
 
   const hasFilters =
     selectedTags.length > 0 ||
     excludedTags.length > 0 ||
     selectedFolders.length > 0 ||
-    starFilter !== null ||
     category !== null;
 
   if (!hasFilters) return null;
@@ -45,12 +42,6 @@ export function ActiveFilters({
       {excludedTags.map((t) => (
         <FilterChip key={`ex-${t}`} label={`−${t}`} variant="exclude" onRemove={() => onRemoveExcludeTag(t)} />
       ))}
-      {starFilter !== null && (
-        <FilterChip
-          label={`★${starFilter}+`}
-          onRemove={onClearStar}
-        />
-      )}
       <button
         onClick={onClearAll}
         className="text-xs text-muted hover:text-foreground shrink-0"

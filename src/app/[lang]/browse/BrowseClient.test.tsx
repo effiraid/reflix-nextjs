@@ -119,6 +119,14 @@ vi.mock("next/dynamic", () => {
   };
 });
 
+vi.mock("@/components/clip/ClipRatingPanel", () => ({
+  ClipRatingPanel: () => null,
+}));
+
+vi.mock("@/hooks/useClipDetail", () => ({
+  useClipDetail: () => ({ detail: null, isLoading: false }),
+}));
+
 vi.mock("@/components/clip/VideoPlayer", () => ({
   VideoPlayer: ({ videoUrl }: { videoUrl: string }) => (
     <div data-testid="video-player" data-video-url={videoUrl} />
@@ -143,7 +151,6 @@ const clips: ClipIndex[] = [
     name: "Alpha",
     tags: [],
     folders: [],
-    star: 0,
     category: "action",
     width: 100,
     height: 100,
@@ -157,7 +164,6 @@ const clips: ClipIndex[] = [
     name: "Beta",
     tags: [],
     folders: [],
-    star: 0,
     category: "action",
     width: 100,
     height: 100,
@@ -171,7 +177,6 @@ const clips: ClipIndex[] = [
     name: "Gamma",
     tags: [],
     folders: [],
-    star: 0,
     category: "action",
     width: 100,
     height: 100,
@@ -191,7 +196,6 @@ const initialSummaryClips: BrowseSummaryRecord[] = clips.slice(0, 1).map((clip) 
   width: clip.width,
   height: clip.height,
   duration: clip.duration,
-  star: clip.star,
   category: clip.category,
 }));
 
@@ -233,7 +237,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
-      starFilter: null,
+
       contentMode: null,
     });
     useClipStore.setState({
@@ -323,7 +327,7 @@ describe("BrowseClient", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     });
     await waitFor(() => {
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.queryByRole("dialog", { name: "Alpha" })).not.toBeInTheDocument();
     });
   });
 
@@ -353,7 +357,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "Alpha",
       sortBy: "newest",
-      starFilter: null,
+
     });
 
     render(
@@ -373,7 +377,6 @@ describe("BrowseClient", () => {
       name: `Match ${index + 1}`,
       tags: [],
       folders: [],
-      star: index,
       category: "action",
       width: 100,
       height: 100,
@@ -401,7 +404,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "match",
       sortBy: "newest",
-      starFilter: null,
+
       contentMode: null,
     });
 
@@ -438,7 +441,6 @@ describe("BrowseClient", () => {
       name: `Match ${index + 1}`,
       tags: [],
       folders: [],
-      star: index,
       category: "action",
       width: 100,
       height: 100,
@@ -466,7 +468,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "match",
       sortBy: "newest",
-      starFilter: null,
+
       contentMode: null,
     });
 
@@ -501,7 +503,6 @@ describe("BrowseClient", () => {
       name: `Match ${index + 1}`,
       tags: [],
       folders: [],
-      star: index,
       category: "action",
       width: 100,
       height: 100,
@@ -529,7 +530,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "match",
       sortBy: "newest",
-      starFilter: null,
+
       contentMode: null,
     });
 
@@ -572,7 +573,6 @@ describe("BrowseClient", () => {
         name: "Mage Low",
         tags: ["마법"],
         folders: [],
-        star: 3,
         category: "action",
         width: 100,
         height: 100,
@@ -586,7 +586,6 @@ describe("BrowseClient", () => {
         name: "Mage High",
         tags: ["마법"],
         folders: [],
-        star: 5,
         category: "action",
         width: 100,
         height: 100,
@@ -600,7 +599,6 @@ describe("BrowseClient", () => {
         name: "Other High",
         tags: ["걷기"],
         folders: [],
-        star: 5,
         category: "action",
         width: 100,
         height: 100,
@@ -623,13 +621,12 @@ describe("BrowseClient", () => {
     };
 
     useFilterStore.setState({
-      category: null,
+      category: "action",
       selectedFolders: [],
       selectedTags: ["마법"],
       excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
-      starFilter: 4,
       contentMode: null,
     });
 
@@ -680,7 +677,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "Beta",
       sortBy: "newest",
-      starFilter: null,
+
     });
 
     render(
@@ -703,7 +700,7 @@ describe("BrowseClient", () => {
       excludedTags: [],
       searchQuery: "없는 검색어",
       sortBy: "newest",
-      starFilter: null,
+
     });
 
     render(
@@ -729,7 +726,6 @@ describe("BrowseClient", () => {
       projectionClips: clips.map((clip, index) => ({
         ...clip,
         tags: index < 2 ? ["마법"] : ["걷기"],
-        star: index === 0 ? 3 : 5,
         aiStructuredTags: [],
         searchTokens: [clip.name.toLowerCase()],
       })),
@@ -738,13 +734,12 @@ describe("BrowseClient", () => {
     };
 
     useFilterStore.setState({
-      category: null,
+      category: "action",
       selectedFolders: [],
       selectedTags: ["마법"],
       excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
-      starFilter: 4,
       contentMode: null,
     });
 
@@ -756,7 +751,7 @@ describe("BrowseClient", () => {
       />
     );
 
-    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-b");
+    expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-a,clip-b");
     expect(screen.queryByText("필터 조합은 Pro 전용입니다")).not.toBeInTheDocument();
   });
 });

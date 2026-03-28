@@ -62,8 +62,8 @@ export function groupClipsByTopCategory(
 const MAX_SUBS = 3;
 
 /**
- * Pick the highest-star clip as hero, next 3 highest as subs.
- * Stable sort: ties preserve original array order (proxy for newest-first).
+ * Pick the first clip as hero, next 3 as subs.
+ * Preserves original array order (newest-first).
  */
 export function pickHeroAndSubs(clips: BrowseSummaryRecord[]): {
   hero: BrowseSummaryRecord | null;
@@ -71,11 +71,7 @@ export function pickHeroAndSubs(clips: BrowseSummaryRecord[]): {
 } {
   if (clips.length === 0) return { hero: null, subs: [] };
 
-  const sorted = clips
-    .map((clip, idx) => ({ clip, idx }))
-    .sort((a, b) => b.clip.star - a.clip.star || a.idx - b.idx);
-
-  const hero = sorted[0].clip;
-  const subs = sorted.slice(1, 1 + MAX_SUBS).map((s) => s.clip);
+  const hero = clips[0];
+  const subs = clips.slice(1, 1 + MAX_SUBS);
   return { hero, subs };
 }

@@ -31,8 +31,7 @@ const CATEGORIES: CategoryTree = {
 
 function makeClip(
   id: string,
-  category: string,
-  star: number
+  category: string
 ): BrowseSummaryRecord {
   return {
     id,
@@ -43,7 +42,6 @@ function makeClip(
     width: 1920,
     height: 1080,
     duration: 2,
-    star,
     category,
   };
 }
@@ -81,9 +79,9 @@ describe("buildLeafToTopMap", () => {
 describe("groupClipsByTopCategory", () => {
   it("groups clips by top-level category", () => {
     const clips = [
-      makeClip("1", "walk", 5),
-      makeClip("2", "run", 3),
-      makeClip("3", "attack", 4),
+      makeClip("1", "walk"),
+      makeClip("2", "run"),
+      makeClip("3", "attack"),
     ];
     const map = buildLeafToTopMap(CATEGORIES);
     const grouped = groupClipsByTopCategory(clips, map);
@@ -93,7 +91,7 @@ describe("groupClipsByTopCategory", () => {
   });
 
   it("puts unknown categories under 'uncategorized'", () => {
-    const clips = [makeClip("1", "unknown-slug", 3)];
+    const clips = [makeClip("1", "unknown-slug")];
     const map = buildLeafToTopMap(CATEGORIES);
     const grouped = groupClipsByTopCategory(clips, map);
 
@@ -108,35 +106,35 @@ describe("groupClipsByTopCategory", () => {
 });
 
 describe("pickHeroAndSubs", () => {
-  it("picks highest-star clip as hero, next 3 as subs", () => {
+  it("picks first clip as hero, next 3 as subs", () => {
     const clips = [
-      makeClip("1", "walk", 3),
-      makeClip("2", "walk", 5),
-      makeClip("3", "walk", 4),
-      makeClip("4", "walk", 4),
-      makeClip("5", "walk", 2),
+      makeClip("1", "walk"),
+      makeClip("2", "walk"),
+      makeClip("3", "walk"),
+      makeClip("4", "walk"),
+      makeClip("5", "walk"),
     ];
     const { hero, subs } = pickHeroAndSubs(clips);
 
-    expect(hero!.id).toBe("2");
+    expect(hero!.id).toBe("1");
     expect(subs).toHaveLength(3);
-    expect(subs[0].id).toBe("3");
-    expect(subs[1].id).toBe("4");
-    expect(subs[2].id).toBe("1");
+    expect(subs[0].id).toBe("2");
+    expect(subs[1].id).toBe("3");
+    expect(subs[2].id).toBe("4");
   });
 
   it("returns hero only when fewer than 2 clips", () => {
-    const clips = [makeClip("1", "walk", 3)];
+    const clips = [makeClip("1", "walk")];
     const { hero, subs } = pickHeroAndSubs(clips);
     expect(hero!.id).toBe("1");
     expect(subs).toHaveLength(0);
   });
 
-  it("handles all-zero stars by using array order", () => {
+  it("uses array order for hero selection", () => {
     const clips = [
-      makeClip("a", "walk", 0),
-      makeClip("b", "walk", 0),
-      makeClip("c", "walk", 0),
+      makeClip("a", "walk"),
+      makeClip("b", "walk"),
+      makeClip("c", "walk"),
     ];
     const { hero, subs } = pickHeroAndSubs(clips);
     expect(hero!.id).toBe("a");
@@ -145,7 +143,7 @@ describe("pickHeroAndSubs", () => {
 
   it("limits subs to 3 even with many clips", () => {
     const clips = Array.from({ length: 10 }, (_, i) =>
-      makeClip(`${i}`, "walk", i)
+      makeClip(`${i}`, "walk")
     );
     const { subs } = pickHeroAndSubs(clips);
     expect(subs).toHaveLength(3);

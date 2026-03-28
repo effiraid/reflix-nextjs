@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { listBrowseResults, parseBrowsePageQuery } from "./browse-service";
-import type { BrowseProjectionRecord, BrowseSummaryRecord } from "./types";
+import {
+  listBrowseResults,
+  parseBrowsePageQuery,
+  requiresDetailedBrowseIndex,
+} from "./browse-service";
+import type { BrowseFilterIndexRecord, BrowseSummaryRecord } from "./types";
 
 const summary: BrowseSummaryRecord[] = [
   {
@@ -12,7 +16,6 @@ const summary: BrowseSummaryRecord[] = [
     width: 640,
     height: 360,
     duration: 1,
-    star: 4,
     category: "direction-video",
   },
   {
@@ -24,21 +27,24 @@ const summary: BrowseSummaryRecord[] = [
     width: 640,
     height: 360,
     duration: 1,
-    star: 2,
     category: "acting",
   },
 ];
 
-const projection: BrowseProjectionRecord[] = [
+const filterIndex: BrowseFilterIndexRecord[] = [
   {
-    ...summary[0],
+    id: summary[0].id,
+    name: summary[0].name,
+    category: summary[0].category,
     tags: ["마법"],
     aiStructuredTags: ["폭발"],
     folders: ["folder-1"],
     searchTokens: ["arcane", "burst", "폭발"],
   },
   {
-    ...summary[1],
+    id: summary[1].id,
+    name: summary[1].name,
+    category: summary[1].category,
     tags: ["걷기"],
     aiStructuredTags: ["슬픔"],
     folders: ["folder-2"],
@@ -49,7 +55,7 @@ const projection: BrowseProjectionRecord[] = [
 describe("browse-service", () => {
   it("parses browse deep-link query params into filter state", () => {
     const filters = parseBrowsePageQuery(
-      new URLSearchParams("q=arcane&tag=%EB%A7%88%EB%B2%95&folder=folder-1&star=3&sort=name")
+      new URLSearchParams("q=arcane&tag=%EB%A7%88%EB%B2%95&folder=folder-1&sort=name")
     );
 
     expect(filters).toEqual({
@@ -58,7 +64,6 @@ describe("browse-service", () => {
       excludedFolders: [],
       selectedTags: ["마법"],
       excludedTags: [],
-      starFilter: 3,
       searchQuery: "arcane",
       sortBy: "name",
       contentMode: null,
@@ -68,14 +73,13 @@ describe("browse-service", () => {
   it("returns summary records for a deep-link query page", () => {
     const result = listBrowseResults({
       summary,
-      projection,
+      projection: filterIndex,
       filters: {
         category: null,
         selectedFolders: [],
         excludedFolders: [],
         selectedTags: ["폭발"],
         excludedTags: [],
-        starFilter: null,
         searchQuery: "",
         sortBy: "newest",
         contentMode: null,
@@ -88,11 +92,54 @@ describe("browse-service", () => {
     expect(result.nextOffset).toBeNull();
   });
 
+  it("uses only lightweight records for simple filters", () => {
+    const result = listBrowseResults({
+      summary,
+      projection: summary,
+      filters: {
+        category: "acting",
+        selectedFolders: [],
+        excludedFolders: [],
+        selectedTags: [],
+        excludedTags: [],
+        searchQuery: "",
+        sortBy: "newest",
+        contentMode: null,
+      },
+      pageSize: 10,
+    });
+
+    expect(result.totalCount).toBe(1);
+    expect(result.items.map((item) => item.id)).toEqual(["B"]);
+  });
+
   it("parses excluded folders from browse deep-link query params", () => {
     const filters = parseBrowsePageQuery(
       new URLSearchParams("folder=folder-1&excludeFolder=folder-2")
     );
 
     expect(filters.excludedFolders).toEqual(["folder-2"]);
+  });
+
+  it("flags only tag, folder, and search filters as requiring the detailed index", () => {
+    expect(
+      requiresDetailedBrowseIndex({
+        selectedFolders: [],
+        excludedFolders: [],
+        selectedTags: [],
+        excludedTags: [],
+        searchQuery: "",
+      })
+    ).toBe(false);
+
+    expect(
+      requiresDetailedBrowseIndex({
+        selectedFolders: [],
+        excludedFolders: [],
+        selectedTags: ["마법"],
+        excludedTags: [],
+        searchQuery: "",
+      })
+    ).toBe(true);
   });
 });

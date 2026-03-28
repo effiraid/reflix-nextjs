@@ -6,7 +6,6 @@ interface FilterStore {
   excludedFolders: string[];
   selectedTags: string[];
   excludedTags: string[];
-  starFilter: number | null;
   searchQuery: string;
   sortBy: SortBy;
   category: string | null;
@@ -14,7 +13,6 @@ interface FilterStore {
 
   setCategory: (category: string | null) => void;
   setContentMode: (mode: ContentMode | null) => void;
-  setStarFilter: (star: number | null) => void;
   setSearchQuery: (query: string) => void;
   setSortBy: (sort: SortBy) => void;
   clearFilters: () => void;
@@ -28,7 +26,6 @@ export const useFilterStore = create<FilterStore>((set) => ({
   excludedFolders: [],
   selectedTags: [],
   excludedTags: [],
-  starFilter: null,
   searchQuery: "",
   sortBy: "newest",
   category: null,
@@ -37,7 +34,6 @@ export const useFilterStore = create<FilterStore>((set) => ({
   setCategory: (category) => set({ category }),
   setContentMode: (mode) => set({ contentMode: mode }),
 
-  setStarFilter: (star) => set({ starFilter: star }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSortBy: (sort) => set({ sortBy: sort }),
 
@@ -47,7 +43,6 @@ export const useFilterStore = create<FilterStore>((set) => ({
       excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
-      starFilter: null,
       searchQuery: "",
       sortBy: "newest",
       category: null,
