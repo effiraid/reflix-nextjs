@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       },
     ],
     success_url: `${origin}/${lang}/account?checkout=success`,
-    cancel_url: `${origin}/${lang}/pricing?checkout=cancel`,
+    cancel_url: `${origin}/${lang}/browse`,
     metadata: {
       supabase_user_id: user.id,
     },
