@@ -8,6 +8,7 @@ import { getMediaUrl } from "@/lib/mediaUrl";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useClipStore } from "@/stores/clipStore";
+import { useUIStore } from "@/stores/uiStore";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface ClipCardProps {
@@ -34,8 +35,9 @@ export function ClipCard({
   onOpenQuickView,
 }: ClipCardProps) {
   const { ref, stage, isInView } = useIntersectionLoader();
-  const { selectedClipId, setSelectedClipId } = useClipStore();
-  const isSelected = selectedClipId === clip.id;
+  const isSelected = useClipStore((s) => s.selectedClipId === clip.id);
+  const setSelectedClipId = useClipStore((s) => s.setSelectedClipId);
+  const { openPricingModal } = useUIStore();
   const [isHovered, setIsHovered] = useState(false);
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
 
@@ -47,6 +49,7 @@ export function ClipCard({
 
   const handleClick = useCallback(() => {
     if (locked) {
+      openPricingModal();
       return;
     }
 
@@ -56,20 +59,25 @@ export function ClipCard({
     }
 
     setSelectedClipId(clip.id);
-  }, [clip.id, isSelected, locked, onOpenQuickView, setSelectedClipId]);
+  }, [clip.id, isSelected, locked, onOpenQuickView, openPricingModal, setSelectedClipId]);
 
   const handleDoubleClick = useCallback(() => {
     if (locked) {
+      openPricingModal();
       return;
     }
 
     setSelectedClipId(clip.id);
     onOpenQuickView?.(clip.id);
-  }, [clip.id, locked, onOpenQuickView, setSelectedClipId]);
+  }, [clip.id, locked, onOpenQuickView, openPricingModal, setSelectedClipId]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (locked) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openPricingModal();
+        }
         return;
       }
 
@@ -78,7 +86,7 @@ export function ClipCard({
         handleClick();
       }
     },
-    [handleClick, locked]
+    [handleClick, locked, openPricingModal]
   );
 
   const showPreview =
@@ -86,19 +94,17 @@ export function ClipCard({
     stage === "webp" &&
     isInView &&
     (!previewOnHover || isHovered) &&
-    !previewFailed;
+    !previewFailed &&
+    !!previewUrl;
 
   return (
     <div
       ref={ref}
       role="button"
-      tabIndex={locked ? -1 : 0}
+      tabIndex={0}
       aria-label={clip.name}
       aria-pressed={isSelected}
-      aria-disabled={locked || undefined}
-      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-        locked ? "cursor-not-allowed" : "cursor-pointer"
-      } ${
+      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer ${
         isSelected ? "ring-2 ring-accent" : "hover:shadow-lg"
       }`}
       style={{ aspectRatio: THUMBNAIL_ASPECT_RATIO }}
@@ -123,10 +129,10 @@ export function ClipCard({
       )}
 
       {/* Stage 2: Static WebP thumbnail */}
-      {stage !== "lqip" && (
+      {stage !== "lqip" && thumbnailUrl && (
         <Image
           src={thumbnailUrl}
-          alt={clip.name}
+          alt={clip.name ?? ""}
           width={clip.width}
           height={clip.height}
           loading={prioritizeThumbnail ? "eager" : undefined}
@@ -169,7 +175,7 @@ export function ClipCard({
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
           <div className="flex items-center justify-between text-xs text-white/60 transition-colors group-hover:text-white">
             <span className="truncate">{displayTags.join(", ")}</span>
-            <span>{clip.duration.toFixed(1)}s</span>
+            <span>{(clip.duration ?? 0).toFixed(1)}s</span>
           </div>
         </div>
       )}
