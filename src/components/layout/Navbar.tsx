@@ -231,6 +231,7 @@ function UserMenu({
 }) {
   const isKo = lang === "ko";
   const isPro = tier === "pro";
+  const { openPricingModal } = useUIStore();
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -278,14 +279,17 @@ function UserMenu({
               {isKo ? "계정" : "Account"}
             </Link>
             {!isPro ? (
-              <Link
-                href={`/${lang}/pricing`}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs text-accent hover:bg-surface-hover"
-                onClick={() => setUserMenuOpen(false)}
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-accent hover:bg-surface-hover"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  openPricingModal();
+                }}
               >
                 <CrownIcon className="size-3.5" strokeWidth={1.75} />
                 {isKo ? "Pro 업그레이드" : "Upgrade to Pro"}
-              </Link>
+              </button>
             ) : (
               <Link
                 href={`/${lang}/account`}
