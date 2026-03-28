@@ -158,3 +158,38 @@ export function getMediaSessionConfig(env: MediaSessionEnv): MediaSessionConfig 
     ttlSeconds: Number.isNaN(ttlSeconds) ? DEFAULT_TTL_SECONDS : ttlSeconds,
   };
 }
+
+// --- Signed URL for full videos ---
+
+const SIGNED_URL_TTL_MS = 3 * 60 * 1000; // 3분
+
+export async function signMediaUrl(
+  path: string,
+  secret: string,
+  ttlMs: number = SIGNED_URL_TTL_MS
+): Promise<{ tok: string; sig: string }> {
+  const payload = { path, exp: Date.now() + ttlMs };
+  const tok = encodeBase64Url(encoder.encode(JSON.stringify(payload)));
+  const sig = await signBody(tok, secret);
+  return { tok, sig };
+}
+
+export async function verifySignedUrl(
+  tok: string,
+  sig: string,
+  secret: string,
+  requestPath: string,
+  now: number
+): Promise<boolean> {
+  try {
+    const expectedSig = await signBody(tok, secret);
+    if (expectedSig !== sig) return false;
+    const raw = JSON.parse(decoder.decode(decodeBase64Url(tok)));
+    if (typeof raw.path !== "string" || typeof raw.exp !== "number") return false;
+    if (raw.exp <= now) return false;
+    if (raw.path !== requestPath) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}

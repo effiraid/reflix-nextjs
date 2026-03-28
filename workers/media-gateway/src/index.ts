@@ -3,6 +3,7 @@ import {
   getPayloadTier,
   MEDIA_SESSION_COOKIE_NAME,
   verifyMediaSessionToken,
+  verifySignedUrl,
 } from "../../../src/lib/mediaSession";
 
 type R2LikeObject = {
@@ -139,9 +140,10 @@ async function serveR2Object(
   request: Request,
   env: Env,
   key: string,
-  protectedPath: boolean
+  protectedPath: boolean,
+  disableRange: boolean = false,
 ): Promise<Response> {
-  const hasRange = request.headers.has("Range");
+  const hasRange = !disableRange && request.headers.has("Range");
   const object =
     request.method === "HEAD"
       ? await env.MEDIA_BUCKET.head(key)
@@ -154,7 +156,9 @@ async function serveR2Object(
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
-  headers.set("accept-ranges", "bytes");
+  if (!disableRange) {
+    headers.set("accept-ranges", "bytes");
+  }
 
   if (protectedPath) {
     headers.set("cache-control", "private, no-store");
@@ -255,7 +259,39 @@ const worker = {
       );
     }
 
-    const response = await serveR2Object(request, env, url.pathname.replace(/^\/+/, ""), true);
+    // Signed URL verification for /videos/* (grace period: allow if no tok/sig present)
+    const isVideoPath = url.pathname.startsWith("/videos/");
+    if (isVideoPath) {
+      const tok = url.searchParams.get("tok");
+      const sig = url.searchParams.get("sig");
+
+      if (tok && sig) {
+        const valid = await verifySignedUrl(
+          tok,
+          sig,
+          env.MEDIA_SESSION_SECRET,
+          url.pathname,
+          Date.now(),
+        );
+        if (!valid) {
+          const cors = corsHeaders(request);
+          cors.set("Content-Type", "application/json");
+          return new Response(
+            JSON.stringify({ error: "invalid_signature", message: "Invalid or expired signed URL" }),
+            { status: 403, headers: cors },
+          );
+        }
+      }
+      // Grace period: if tok/sig absent, fall through with cookie-only auth
+    }
+
+    const response = await serveR2Object(
+      request,
+      env,
+      url.pathname.replace(/^\/+/, ""),
+      true,
+      isVideoPath,
+    );
 
     // Add CORS headers to protected media responses
     const cors = corsHeaders(request);

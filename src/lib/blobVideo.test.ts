@@ -58,4 +58,23 @@ describe("fetchBlobUrl", () => {
     expect(first).toBe(second);
     expect(mockFetch).toHaveBeenCalledTimes(1);
   });
+
+  it("uses cacheKey for cache lookup when provided", async () => {
+    const mockBlob = new Blob(["data"], { type: "video/mp4" });
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      blob: vi.fn().mockResolvedValue(mockBlob),
+    });
+    globalThis.fetch = mockFetch;
+
+    const signedUrl1 = "https://media.reflix.dev/videos/clip-1.mp4?tok=aaa&sig=bbb";
+    const signedUrl2 = "https://media.reflix.dev/videos/clip-1.mp4?tok=ccc&sig=ddd";
+    const cacheKey = "/videos/clip-1.mp4";
+
+    const first = await fetchBlobUrl(signedUrl1, cacheKey);
+    const second = await fetchBlobUrl(signedUrl2, cacheKey);
+
+    expect(first).toBe(second);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
 });

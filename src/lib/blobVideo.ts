@@ -34,16 +34,19 @@ export function _clearCache() {
 
 export async function fetchBlobUrl(
   videoUrl: string,
+  cacheKey?: string,
 ): Promise<string> {
+  const key = cacheKey ?? videoUrl;
+
   // Return cached blob URL if available
-  const cached = cache.get(videoUrl);
+  const cached = cache.get(key);
   if (cached) {
-    touchEntry(videoUrl);
+    touchEntry(key);
     return cached;
   }
 
   // Deduplicate concurrent requests for the same URL
-  const existing = inflight.get(videoUrl);
+  const existing = inflight.get(key);
   if (existing) return existing;
 
   const promise = (async () => {
@@ -57,13 +60,13 @@ export async function fetchBlobUrl(
     const blobUrl = URL.createObjectURL(blob);
 
     evictOldest();
-    cache.set(videoUrl, blobUrl);
+    cache.set(key, blobUrl);
     return blobUrl;
   })();
 
-  inflight.set(videoUrl, promise);
+  inflight.set(key, promise);
   // Swallow rejection before finally to avoid unhandled rejection from the cleanup chain
-  promise.catch(() => {}).finally(() => inflight.delete(videoUrl));
+  promise.catch(() => {}).finally(() => inflight.delete(key));
 
   return promise;
 }

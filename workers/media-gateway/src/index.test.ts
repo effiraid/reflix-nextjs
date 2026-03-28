@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { MEDIA_SESSION_COOKIE_NAME, signMediaSessionToken } from "@/lib/mediaSession";
+import { MEDIA_SESSION_COOKIE_NAME, signMediaSessionToken, signMediaUrl } from "@/lib/mediaSession";
 import worker from "./index";
 
 function createBucketObject({
@@ -502,5 +502,112 @@ describe("Tier-based access control", () => {
     });
     const previewRes = await worker.fetch(previewReq, env);
     expect(previewRes.status).toBe(200);
+  });
+});
+
+describe("Signed URL verification", () => {
+  it("allows /videos/ with valid signed URL", async () => {
+    const validCookie = await createValidCookie();
+    const { tok, sig } = await signMediaUrl("/videos/clip-1.mp4", "test-secret");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request(
+      `https://media.reflix.dev/videos/clip-1.mp4?tok=${encodeURIComponent(tok)}&sig=${encodeURIComponent(sig)}`,
+      { headers: { Cookie: validCookie, Origin: "https://reflix.dev" } },
+    );
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+
+  it("rejects /videos/ with expired signed URL", async () => {
+    const validCookie = await createValidCookie();
+    const { tok, sig } = await signMediaUrl("/videos/clip-1.mp4", "test-secret", 0);
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request(
+      `https://media.reflix.dev/videos/clip-1.mp4?tok=${encodeURIComponent(tok)}&sig=${encodeURIComponent(sig)}`,
+      { headers: { Cookie: validCookie, Origin: "https://reflix.dev" } },
+    );
+    // Small delay to ensure expiration
+    await new Promise((r) => setTimeout(r, 5));
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body.error).toBe("invalid_signature");
+  });
+
+  it("rejects /videos/ with path-mismatched signed URL", async () => {
+    const validCookie = await createValidCookie();
+    const { tok, sig } = await signMediaUrl("/videos/other.mp4", "test-secret");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request(
+      `https://media.reflix.dev/videos/clip-1.mp4?tok=${encodeURIComponent(tok)}&sig=${encodeURIComponent(sig)}`,
+      { headers: { Cookie: validCookie, Origin: "https://reflix.dev" } },
+    );
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+  });
+
+  it("allows /videos/ without tok/sig during grace period", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: validCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("Range request restriction for /videos/", () => {
+  it("ignores Range header for /videos/ and returns 200", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: {
+        get: vi.fn(async () => createBucketObject({})),
+        head: vi.fn(),
+      },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: {
+        Range: "bytes=0-1023",
+        Cookie: validCookie,
+        Origin: "https://reflix.dev",
+      },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("accept-ranges")).toBeNull();
+    expect(response.headers.get("content-range")).toBeNull();
+    // R2 should be called without range option
+    expect(env.MEDIA_BUCKET.get).toHaveBeenCalledWith("videos/clip-1.mp4", undefined);
+  });
+
+  it("still allows Range for /previews/", async () => {
+    const validCookie = await createValidCookie();
+    const env = createEnv({
+      MEDIA_BUCKET: {
+        get: vi.fn(async () =>
+          createBucketObject({ range: { offset: 0, length: 1024 } }),
+        ),
+        head: vi.fn(),
+      },
+    });
+    const request = new Request("https://media.reflix.dev/previews/clip-1.mp4", {
+      headers: {
+        Range: "bytes=0-1023",
+        Cookie: validCookie,
+        Origin: "https://reflix.dev",
+      },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(206);
+    expect(response.headers.get("accept-ranges")).toBe("bytes");
   });
 });

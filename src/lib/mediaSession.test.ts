@@ -4,7 +4,9 @@ import {
   getPayloadTier,
   isProtectedMediaPath,
   signMediaSessionToken,
+  signMediaUrl,
   verifyMediaSessionToken,
+  verifySignedUrl,
 } from "./mediaSession";
 
 describe("isProtectedMediaPath", () => {
@@ -127,5 +129,41 @@ describe("getMediaSessionConfig", () => {
         MEDIA_SESSION_TTL_SECONDS: "invalid",
       }).ttlSeconds
     ).toBe(21600);
+  });
+});
+
+describe("signed media URLs", () => {
+  const secret = "test-secret";
+  const path = "/videos/clip-1.mp4";
+
+  it("round-trips a valid signed URL", async () => {
+    const { tok, sig } = await signMediaUrl(path, secret);
+    const valid = await verifySignedUrl(tok, sig, secret, path, Date.now());
+    expect(valid).toBe(true);
+  });
+
+  it("rejects expired signed URL", async () => {
+    const { tok, sig } = await signMediaUrl(path, secret, 0);
+    // TTL = 0 means already expired
+    const valid = await verifySignedUrl(tok, sig, secret, path, Date.now() + 1);
+    expect(valid).toBe(false);
+  });
+
+  it("rejects tampered signature", async () => {
+    const { tok } = await signMediaUrl(path, secret);
+    const valid = await verifySignedUrl(tok, "bad-sig", secret, path, Date.now());
+    expect(valid).toBe(false);
+  });
+
+  it("rejects wrong path", async () => {
+    const { tok, sig } = await signMediaUrl(path, secret);
+    const valid = await verifySignedUrl(tok, sig, secret, "/videos/other.mp4", Date.now());
+    expect(valid).toBe(false);
+  });
+
+  it("rejects wrong secret", async () => {
+    const { tok, sig } = await signMediaUrl(path, secret);
+    const valid = await verifySignedUrl(tok, sig, "wrong-secret", path, Date.now());
+    expect(valid).toBe(false);
   });
 });

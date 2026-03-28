@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { fetchBlobUrl } from "@/lib/blobVideo";
+import { getSignedVideoUrl } from "@/lib/signedMedia";
 import { SeekBar } from "./SeekBar";
 import { useVideoKeyboard } from "./useVideoKeyboard";
 import { Watermark } from "./Watermark";
@@ -118,20 +119,32 @@ export function VideoPlayer({
     if (!useBlobUrl) return;
 
     let cancelled = false;
-    fetchBlobUrl(directVideoUrl)
-      .then((url) => {
-        if (cancelled) return;
-        setBlobUrl(url);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setHasPlaybackError(true);
-      });
+    const isFullVideo = videoUrl.startsWith("/videos/");
+
+    const load = async () => {
+      try {
+        let fetchUrl: string;
+        if (isFullVideo) {
+          fetchUrl = await getSignedVideoUrl(videoUrl);
+        } else {
+          fetchUrl = directVideoUrl;
+        }
+        const url = await fetchBlobUrl(
+          fetchUrl,
+          isFullVideo ? videoUrl : undefined,
+        );
+        if (!cancelled) setBlobUrl(url);
+      } catch {
+        if (!cancelled) setHasPlaybackError(true);
+      }
+    };
+
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [directVideoUrl, useBlobUrl]);
+  }, [directVideoUrl, useBlobUrl, videoUrl]);
 
   const resolvedVideoUrl = useBlobUrl ? (blobUrl ?? "") : directVideoUrl;
   const resolvedThumbnailUrl = getMediaUrl(thumbnailUrl);
