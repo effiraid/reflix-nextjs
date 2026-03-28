@@ -81,7 +81,6 @@ describe("HomePage", () => {
           width: 1920,
           height: 1080,
           duration: 2.4,
-          star: 0,
           category: "action",
           aiTags: {
             actionType: ["달리기", "공격", "피하기"],
@@ -107,7 +106,6 @@ describe("HomePage", () => {
           width: 1920,
           height: 1080,
           duration: 2.4,
-          star: 0,
           category: "action",
           aiTags: {
             actionType: ["걷기", "점프", "착지"],

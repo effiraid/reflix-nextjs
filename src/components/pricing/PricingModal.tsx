@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ACCESS_POLICY } from "@/lib/accessPolicy";
 import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -25,12 +24,15 @@ function CheckIcon() {
   );
 }
 
+const ANIMATION_DURATION = 100;
+
 export function PricingModal({ lang }: PricingModalProps) {
   const { pricingModalOpen, pricingModalIntent, closePricingModal } = useUIStore();
   const { user, accessSource } = useAuthStore();
   const router = useRouter();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLElement | null>(null);
 
@@ -53,14 +55,23 @@ export function PricingModal({ lang }: PricingModalProps) {
     }
   }, [pricingModalOpen]);
 
+  const handleClose = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(() => {
+      closePricingModal();
+      setIsClosing(false);
+    }, ANIMATION_DURATION);
+  }, [isClosing, closePricingModal]);
+
   useEffect(() => {
     if (!pricingModalOpen) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closePricingModal();
+      if (e.key === "Escape") handleClose();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [pricingModalOpen, closePricingModal]);
+  }, [pricingModalOpen, handleClose]);
 
   useEffect(() => {
     if (!pricingModalOpen) return;
@@ -70,7 +81,7 @@ export function PricingModal({ lang }: PricingModalProps) {
 
   const handleSubscribe = useCallback(async () => {
     if (!user) {
-      closePricingModal();
+      handleClose();
       router.push(`/${lang}/login`);
       return;
     }
@@ -93,10 +104,10 @@ export function PricingModal({ lang }: PricingModalProps) {
     } catch {
       setLoading(false);
     }
-  }, [user, isPaidPro, loading, lang, billingInterval, closePricingModal, router]);
+  }, [user, isPaidPro, loading, lang, billingInterval, handleClose, router]);
 
   const handleFreeStart = useCallback(() => {
-    closePricingModal();
+    handleClose();
     if (!user) {
       const nextPath =
         pricingModalIntent?.kind === "locked-clip" && pricingModalIntent.nextPath
@@ -104,7 +115,7 @@ export function PricingModal({ lang }: PricingModalProps) {
           : `/${lang}/browse`;
       router.push(`/${lang}/login?next=${encodeURIComponent(nextPath)}`);
     }
-  }, [closePricingModal, lang, pricingModalIntent, router, user]);
+  }, [handleClose, lang, pricingModalIntent, router, user]);
 
   const handleShowPro = useCallback(() => {
     proSectionRef.current?.scrollIntoView({
@@ -113,10 +124,22 @@ export function PricingModal({ lang }: PricingModalProps) {
     });
   }, []);
 
-  if (!pricingModalOpen) return null;
+  if (!pricingModalOpen && !isClosing) return null;
 
-  const freeFeatures = ACCESS_POLICY.recommendedCopy.freeFeatures;
-  const proFeatures = ACCESS_POLICY.recommendedCopy.proFeatures;
+  const backdropAnimation = isClosing
+    ? "motion-safe:animate-[modalBackdropOut_100ms_ease-in_forwards]"
+    : "motion-safe:animate-[modalBackdropIn_100ms_ease-out]";
+
+  const contentAnimation = isClosing
+    ? "motion-safe:animate-[modalContentOut_80ms_ease-in_forwards]"
+    : "motion-safe:animate-[modalContentIn_80ms_cubic-bezier(0.16,1,0.3,1)]";
+
+  const freeFeatures = isKo
+    ? ["원본 영상 재생", "탐색 결과 5개까지", "보드 1개", "태그 검색"]
+    : ["Full video playback", "Up to 5 visible results", "1 board", "Tag search"];
+  const proFeatures = isKo
+    ? ["전체 탐색 결과 보기", "다중 필터 조합", "무제한 보드", "AI 검색"]
+    : ["All browse results", "Multi-filter combinations", "Unlimited boards", "AI search"];
 
   const proPrice = isYearly
     ? (isKo ? "₩99,000" : "$99")
@@ -133,8 +156,8 @@ export function PricingModal({ lang }: PricingModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70"
-      onClick={closePricingModal}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 dark:bg-black/70 will-change-[opacity] ${backdropAnimation}`}
+      onClick={handleClose}
     >
       <section
         ref={dialogRef}
@@ -142,12 +165,12 @@ export function PricingModal({ lang }: PricingModalProps) {
         aria-modal="true"
         aria-label={isKo ? "요금제" : "Pricing"}
         tabIndex={-1}
-        className="relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-background outline-none"
+        className={`relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-background outline-none will-change-[transform,opacity] ${contentAnimation}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          onClick={closePricingModal}
+          onClick={handleClose}
           className="absolute right-4 top-4 z-10 flex size-7 items-center justify-center rounded-full bg-foreground/[0.06] text-sm text-muted transition-colors hover:text-foreground"
           aria-label="Close"
         >
@@ -161,8 +184,8 @@ export function PricingModal({ lang }: PricingModalProps) {
             </h2>
             <p className="mt-1.5 text-[13px] text-muted">
               {isKo
-                ? "Guest는 맛보기, Free는 실제 사용, Pro는 고속 작업"
-                : "Guest samples, Free works, Pro moves faster"}
+                ? "게임 애니메이션 레퍼런스를 자유롭게 탐색"
+                : "Explore game animation references freely"}
             </p>
           </div>
 
@@ -170,8 +193,13 @@ export function PricingModal({ lang }: PricingModalProps) {
             <div className="mt-5 rounded-2xl border border-accent/20 bg-accent/5 p-4">
               <p className="text-sm font-medium text-foreground">
                 {isKo
-                  ? "로그인하면 Free로 원본 영상 재생과 보드 1개를 바로 시작할 수 있어요."
-                  : "Sign in to start Free with full video playback and your first board."}
+                  ? "로그인하면 지금 선택한 클립의 원본 영상을 바로 볼 수 있어요."
+                  : "Sign in to watch the full version of the clip you just selected."}
+              </p>
+              <p className="mt-2 text-xs text-muted">
+                {isKo
+                  ? "검색 결과는 그대로 돌아오고, Free에서 보드 1개도 바로 사용할 수 있어요."
+                  : "You will return to the same search results, and Free also gives you 1 board right away."}
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <button
@@ -232,9 +260,7 @@ export function PricingModal({ lang }: PricingModalProps) {
                 <span className="text-3xl font-bold text-foreground">{isKo ? "₩0" : "$0"}</span>
               </div>
               <p className="mt-1.5 text-[13px] text-muted">
-                {isKo
-                  ? "로그인하면 원본 영상과 저장 기능을 바로 사용"
-                  : "Sign in to unlock full video playback and saved work"}
+                {isKo ? "무료로 시작하세요" : "Start for free"}
               </p>
               <div className="my-5 h-px bg-border" />
               <ul className="flex flex-1 flex-col gap-2.5">
@@ -252,8 +278,8 @@ export function PricingModal({ lang }: PricingModalProps) {
               >
                 {!user
                   ? isKo
-                    ? "로그인하고 Free 시작"
-                    : "Sign in for Free"
+                    ? "무료 시작"
+                    : "Start free"
                   : isKo
                     ? "현재 플랜"
                     : "Current plan"}
@@ -284,8 +310,8 @@ export function PricingModal({ lang }: PricingModalProps) {
               )}
               <p className="mt-1.5 text-[13px] text-muted">
                 {isKo
-                  ? "더 많은 결과를 더 빠르게 찾고 더 잘 정리"
-                  : "Find more results faster and organize work better"}
+                  ? "모든 클립에 무제한 접근"
+                  : "Unlimited access to all clips"}
               </p>
               {!isYearly && (
                 <div

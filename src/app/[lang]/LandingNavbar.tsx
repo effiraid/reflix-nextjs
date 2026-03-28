@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useAuthStore } from "@/stores/authStore";
 import type { Locale } from "@/lib/types";
 
 interface LandingNavbarProps {
@@ -12,27 +11,17 @@ interface LandingNavbarProps {
     [key: string]: string;
   };
   navDict: { browse: string };
-  authDict: { signIn: string; account: string };
   pricingDict: { title: string };
 }
-
-const emptySubscribe = () => () => {};
-const getServerSnapshot = () => false;
-const getClientSnapshot = () => true;
 
 export function LandingNavbar({
   lang,
   dict,
   navDict,
-  authDict,
   pricingDict,
 }: LandingNavbarProps) {
-  const isClient = useSyncExternalStore(
-    emptySubscribe,
-    getClientSnapshot,
-    getServerSnapshot
-  );
-  const user = useAuthStore((s) => s.user);
+  const otherLang = lang === "ko" ? "en" : "ko";
+  const otherLangLabel = lang === "ko" ? "English" : "한국어";
   const [sheetOpen, setSheetOpen] = useState(false);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -164,35 +153,24 @@ export function LandingNavbar({
             }}
           />
 
-          {isClient && user ? (
-            <Link
-              href={`/${lang}/account`}
-              className="hidden md:flex items-center transition-colors hover:text-white rounded-md"
-              style={{
-                minHeight: 36,
-                padding: "8px 12px",
-                fontSize: "13px",
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              {authDict.account}
-            </Link>
-          ) : (
-            <Link
-              href={`/${lang}/login`}
-              className="hidden md:flex items-center transition-colors hover:text-white rounded-md"
-              style={{
-                minHeight: 36,
-                padding: "8px 12px",
-                fontSize: "13px",
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.45)",
-              }}
-            >
-              {authDict.signIn}
-            </Link>
-          )}
+          <Link
+            href={`/${otherLang}`}
+            className="hidden md:flex items-center gap-1.5 transition-colors hover:text-white rounded-md"
+            style={{
+              minHeight: 36,
+              padding: "8px 12px",
+              fontSize: "13px",
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.45)",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            {otherLangLabel}
+          </Link>
 
           {/* Desktop CTA */}
           <Link
@@ -317,37 +295,25 @@ export function LandingNavbar({
 
           <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "8px 0" }} />
 
-          {isClient && user ? (
-            <Link
-              href={`/${lang}/account`}
-              className="flex items-center rounded-xl transition-colors"
-              style={{
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.85)",
-                minHeight: 48,
-              }}
-              onClick={closeSheet}
-            >
-              {authDict.account}
-            </Link>
-          ) : (
-            <Link
-              href={`/${lang}/login`}
-              className="flex items-center rounded-xl transition-colors"
-              style={{
-                padding: "14px 16px",
-                fontSize: 15,
-                fontWeight: 400,
-                color: "rgba(255,255,255,0.85)",
-                minHeight: 48,
-              }}
-              onClick={closeSheet}
-            >
-              {authDict.signIn}
-            </Link>
-          )}
+          <Link
+            href={`/${otherLang}`}
+            className="flex items-center gap-2 rounded-xl transition-colors"
+            style={{
+              padding: "14px 16px",
+              fontSize: 15,
+              fontWeight: 400,
+              color: "rgba(255,255,255,0.85)",
+              minHeight: 48,
+            }}
+            onClick={closeSheet}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            {otherLangLabel}
+          </Link>
 
           <Link
             href={`/${lang}/browse`}

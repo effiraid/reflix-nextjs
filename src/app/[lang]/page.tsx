@@ -61,6 +61,7 @@ export default async function HomePage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
+  const isKo = lang === "ko";
   const [dict, indexData, tagGroupData, tagI18n, landingStats] = await Promise.all([
     getDictionary(lang as Locale),
     getClipIndex(),
@@ -94,13 +95,44 @@ export default async function HomePage({
     margin: "0 48px",
   };
 
+  const websiteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Reflix",
+    url: BASE_URL,
+    description: isKo
+      ? "애니메이터와 개발자를 위한 게임 애니메이션 레퍼런스 라이브러리"
+      : "Game animation reference library for animators and developers",
+    inLanguage: [lang],
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${BASE_URL}/${lang}/browse?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Reflix",
+    url: BASE_URL,
+    logo: `${BASE_URL}/og-default.png`,
+  };
+
   return (
     <div className="dark min-h-screen overflow-hidden bg-[#08090a] text-white" style={{ colorScheme: "dark" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
       <LandingNavbar
         lang={lang as Locale}
         dict={dict.landing}
         navDict={dict.nav}
-        authDict={dict.auth}
         pricingDict={dict.pricing}
       />
       <LandingHero

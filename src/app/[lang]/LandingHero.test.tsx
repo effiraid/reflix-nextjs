@@ -16,7 +16,6 @@ const clip: BrowseClipRecord = {
   width: 1920,
   height: 1080,
   duration: 2.4,
-  star: 5,
   category: "direction",
 };
 
@@ -29,6 +28,19 @@ const dict = {
   heroCta: "무료로 탐색 시작하기",
   heroCtaSub: "가입 없이 바로 시작 — 50개 무료 클립",
   heroPills: "연출,전투,감정",
+};
+
+const enDict = {
+  heroTitle: "A reference engine\nfor animation",
+  heroTitleMobile: "A reference engine\nfor animation",
+  heroTitleMobileCompact: "Animation\nreference\nengine",
+  heroSub:
+    "Curated animation and game clips.\nFind the exact motion with tags, AI analysis, and frame-by-frame playback.",
+  heroSubMobile:
+    "Curated animation and game clips.\nFind the exact motion with tags,\nAI analysis, and frame-by-frame playback.",
+  heroCta: "Browse Now",
+  heroCtaSub: "Start instantly — free clips",
+  heroPills: "Combat,Emotion,Cinematics",
 };
 
 function mockMatchMedia(matchingQueries: string[]) {
@@ -89,7 +101,20 @@ describe("LandingHero", () => {
     );
   });
 
-  it("animates the mock browse thumbnails under the hero CTA", () => {
+  it("keeps the English frame-by-frame phrase together in the hero sub copy", () => {
+    mockMatchMedia([]);
+
+    render(<LandingHero lang="en" clips={[clip]} dict={enDict} />);
+
+    const protectedPhrase = screen.getByText((_, element) => {
+      return element?.textContent === "frame-by-frame playback.";
+    });
+
+    expect(protectedPhrase.tagName).toBe("SPAN");
+    expect(protectedPhrase).toHaveClass("whitespace-nowrap");
+  });
+
+  it("plays looping preview videos in the mock browse UI under the hero CTA", () => {
     mockMatchMedia([]);
 
     render(
@@ -104,14 +129,17 @@ describe("LandingHero", () => {
       />
     );
 
-    const gridPreviews = screen.getAllByTestId("landing-hero-mock-grid-preview");
-    expect(gridPreviews).toHaveLength(3);
-    // MockBrowseUI uses static thumbnails (img) instead of video for performance
-    expect(gridPreviews[0]).toHaveAttribute("src", "/thumb.webp");
+    const gridVideos = screen.getAllByTestId("landing-hero-mock-grid-video");
+    expect(gridVideos).toHaveLength(3);
+    expect(gridVideos[0]).toHaveAttribute("src", "/preview.mp4");
+    expect(gridVideos[0]).toHaveAttribute("autoplay");
+    expect(gridVideos[0]).toHaveAttribute("loop");
+    expect(gridVideos[0]).toHaveAttribute("playsinline");
+    expect((gridVideos[0] as HTMLVideoElement).muted).toBe(true);
 
-    expect(screen.getByTestId("landing-hero-mock-inspector-preview")).toHaveAttribute(
+    expect(screen.getByTestId("landing-hero-mock-inspector-video")).toHaveAttribute(
       "src",
-      "/thumb.webp"
+      "/preview.mp4"
     );
   });
 });

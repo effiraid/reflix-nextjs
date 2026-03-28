@@ -123,13 +123,9 @@ function AiInsightOverlay({
           </span>
         </div>
         <p
-          className="text-[11px] leading-5 text-white/58 md:text-[12px]"
+          className="line-clamp-4 text-[11px] leading-5 text-white/58 md:text-[12px]"
           style={{
             textShadow: "0 1px 12px rgba(0,0,0,0.42)",
-            display: "-webkit-box",
-            WebkitBoxOrient: "vertical",
-            WebkitLineClamp: 4,
-            overflow: "hidden",
           }}
         >
           {text}
@@ -181,6 +177,7 @@ function FeaturePlaybackPlayer({ clip }: { clip: BrowseClipRecord }) {
       thumbnailUrl={clip.thumbnailUrl}
       duration={clip.duration}
       autoPlayMuted
+      enableKeyboardShortcuts={false}
       playbackRate={playbackRate}
       onPlaybackRateChange={setPlaybackRate}
       useBlobUrl

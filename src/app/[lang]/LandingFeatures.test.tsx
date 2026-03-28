@@ -24,6 +24,7 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
     onPlaybackRateChange,
     autoPlayMuted,
     useBlobUrl,
+    enableKeyboardShortcuts,
   }: {
     videoUrl: string;
     thumbnailUrl: string;
@@ -32,6 +33,7 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
     onPlaybackRateChange?: (rate: number) => void;
     autoPlayMuted?: boolean;
     useBlobUrl?: boolean;
+    enableKeyboardShortcuts?: boolean;
   }) => (
     <div
       data-testid="landing-feature-player"
@@ -41,6 +43,7 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
       data-playback-rate={playbackRate}
       data-autoplay-muted={String(autoPlayMuted)}
       data-use-blob-url={String(useBlobUrl)}
+      data-enable-keyboard-shortcuts={String(enableKeyboardShortcuts)}
     >
       <button type="button" onClick={() => onPlaybackRateChange?.(0.5)}>
         cycle-speed
@@ -58,7 +61,6 @@ const baseClip: BrowseClipRecord = {
   width: 1920,
   height: 1080,
   duration: 2.4,
-  star: 5,
   category: "direction",
 };
 
@@ -189,6 +191,7 @@ describe("LandingFeatures", () => {
     expect(player).toHaveAttribute("data-playback-rate", "1");
     expect(player).toHaveAttribute("data-autoplay-muted", "true");
     expect(player).toHaveAttribute("data-use-blob-url", "true");
+    expect(player).toHaveAttribute("data-enable-keyboard-shortcuts", "false");
   });
 
   it("wires playback rate changes for the landing feature player", () => {

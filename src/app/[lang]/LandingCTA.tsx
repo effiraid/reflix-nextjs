@@ -29,7 +29,8 @@ export function LandingCTA({ lang, dict }: LandingCTAProps) {
       <div className="mt-8">
         <Link
           href={`/${lang}/browse`}
-          className="inline-block rounded-full bg-white px-8 py-3 text-[16px] font-semibold text-black transition-opacity hover:opacity-80"
+          className="inline-block bg-white font-semibold text-black transition-opacity hover:opacity-80"
+          style={{ padding: "12px 28px", fontSize: 15, borderRadius: 10 }}
         >
           {dict.ctaButton}
         </Link>

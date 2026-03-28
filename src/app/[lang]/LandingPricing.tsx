@@ -178,7 +178,8 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
 
           <Link
             href={`/${lang}/browse`}
-            className="mt-8 block rounded-full border border-border py-2.5 text-center text-[14px] font-medium text-foreground transition-colors hover:bg-surface-hover"
+            className="mt-8 block border border-border text-center font-semibold text-foreground transition-colors hover:bg-surface-hover"
+            style={{ padding: "12px 28px", fontSize: 15, borderRadius: 10 }}
           >
             {dict.pricingFreeCta}
           </Link>
@@ -246,7 +247,8 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
           <button
             type="button"
             onClick={() => openPricingModal()}
-            className="mt-8 w-full rounded-full bg-foreground py-2.5 text-center text-[14px] font-medium text-background transition-opacity hover:opacity-80"
+            className="mt-8 w-full bg-foreground text-center font-semibold text-background transition-opacity hover:opacity-80"
+            style={{ padding: "12px 28px", fontSize: 15, borderRadius: 10 }}
           >
             {dict.pricingProCta}
           </button>
