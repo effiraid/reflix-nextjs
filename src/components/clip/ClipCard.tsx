@@ -37,7 +37,7 @@ export function ClipCard({
   const { ref, stage, isInView } = useIntersectionLoader();
   const isSelected = useClipStore((s) => s.selectedClipId === clip.id);
   const setSelectedClipId = useClipStore((s) => s.setSelectedClipId);
-  const { openPricingModal } = useUIStore();
+  const openPricingModal = useUIStore((s) => s.openPricingModal);
   const [isHovered, setIsHovered] = useState(false);
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
 
