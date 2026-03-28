@@ -54,10 +54,11 @@ export default function AuthCallbackPage() {
     };
   }, [lang]);
 
-  const splashStart = useRef(Date.now());
+  const splashStart = useRef(0);
 
   useEffect(() => {
     if (handled.current) return;
+    splashStart.current = Date.now();
 
     const supabase = createClient();
     if (!supabase) {

@@ -48,10 +48,10 @@ export function RightPanelInspector({
         <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
           {mediaKind}
         </div>
-        {mediaKindKey === "video" && !previewFailed ? (
+        {mediaKindKey === "video" && !previewFailed && previewUrl ? (
           <video
             src={previewUrl}
-            poster={thumbnailUrl}
+            poster={thumbnailUrl || undefined}
             muted
             loop
             playsInline
@@ -64,7 +64,7 @@ export function RightPanelInspector({
             className="h-full w-full object-cover"
             onError={() => setFailedPreviewUrl(previewUrl)}
           />
-        ) : (
+        ) : thumbnailUrl ? (
           <Image
             src={thumbnailUrl}
             alt={title}
@@ -75,6 +75,8 @@ export function RightPanelInspector({
             sizes="320px"
             className="h-full w-full object-cover"
           />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-surface text-muted text-xs">미리보기 없음</div>
         )}
       </div>
       <InspectorSidebarSections

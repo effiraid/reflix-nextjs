@@ -21,6 +21,8 @@ interface MobileSearchOverlayProps {
   loadingLabel: string;
   onClose: () => void;
   onSelectClip: (clipId: string, query: string) => void;
+  allTags?: string[];
+  popularTags?: string[];
 }
 
 export function MobileSearchOverlay({
@@ -35,6 +37,8 @@ export function MobileSearchOverlay({
   loadingLabel,
   onClose,
   onSelectClip,
+  allTags = [],
+  popularTags = [],
 }: MobileSearchOverlayProps) {
   const [query, setQuery] = useState("");
   const results = useMemo(
@@ -82,6 +86,13 @@ export function MobileSearchOverlay({
             placeholder={placeholder}
             onSearch={setQuery}
             autoFocus
+            allTags={allTags}
+            popularTags={popularTags}
+            lang={lang}
+            recentLabel={lang === "ko" ? "최근 검색어" : "Recent searches"}
+            popularLabel={lang === "ko" ? "인기 태그" : "Popular tags"}
+            suggestionsLabel={lang === "ko" ? "태그 제안" : "Tag suggestions"}
+            clearLabel={lang === "ko" ? "지우기" : "Clear"}
           />
         </div>
         <button

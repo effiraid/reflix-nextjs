@@ -120,7 +120,7 @@ export async function detectCodec(inputPath) {
  * Generate LQIP: tiny 32px first-frame JPEG → base64 string.
  */
 export async function generateLQIP(inputPath) {
-  const tmpPath = path.join("/tmp", `lqip_${Date.now()}.jpg`);
+  const tmpPath = path.join(os.tmpdir(), `lqip_${Date.now()}_${process.pid}_${Math.random().toString(36).slice(2)}.jpg`);
   try {
     await exec("ffmpeg", [
       "-y", "-i", inputPath,
@@ -179,7 +179,7 @@ export async function generatePreview(inputPath, outputPath) {
 export async function processThumbnail(inputPath, outputPath) {
   if (!fs.existsSync(inputPath)) return false;
 
-  const tmpFrame = path.join("/tmp", `thumb_${Date.now()}.webp`);
+  const tmpFrame = path.join(os.tmpdir(), `thumb_${Date.now()}_${process.pid}_${Math.random().toString(36).slice(2)}.webp`);
   try {
     // Extract first frame from animated WebP
     await exec("webpmux", ["-get", "frame", "1", inputPath, "-o", tmpFrame]);

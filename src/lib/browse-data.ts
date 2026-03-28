@@ -71,6 +71,7 @@ export function toBrowseSummaryRecord(
     duration: record.duration,
     star: record.star,
     category: record.category,
+    tags: normalizeStringList(record.tags),
   };
 }
 

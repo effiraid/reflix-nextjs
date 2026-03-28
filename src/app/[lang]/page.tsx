@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getDictionary } from "./dictionaries";
-import { getClipIndex, getTagGroups, getTagI18n } from "@/lib/data";
+import { getClipIndex, getTagGroups, getTagI18n, loadLandingStats } from "@/lib/data";
 import { getStructuredAiTags } from "@/lib/aiTags";
 import { LandingNavbar } from "./LandingNavbar";
 import { LandingHero } from "./LandingHero";
@@ -24,6 +24,8 @@ function getLandingAiRecommendationCount(clips: Awaited<ReturnType<typeof getCli
   return uniqueTags.size;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reflix.dev";
+
 export async function generateMetadata({
   params,
 }: {
@@ -31,9 +33,25 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const dict = await getDictionary(lang as Locale);
+  const title = "Reflix — " + dict.landing.heroTitle.replace("\n", " ");
+  const description = dict.landing.heroSub.replace("\n", " ");
   return {
-    title: "Reflix — " + dict.landing.heroTitle.replace("\n", " "),
-    description: dict.landing.heroSub.replace("\n", " "),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/${lang}`,
+      siteName: "Reflix",
+      type: "website",
+      images: [{ url: `${BASE_URL}/og-default.png`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${BASE_URL}/og-default.png`],
+    },
   };
 }
 
@@ -43,11 +61,12 @@ export default async function HomePage({
   params: Promise<{ lang: string }>;
 }) {
   const { lang } = await params;
-  const [dict, indexData, tagGroupData, tagI18n] = await Promise.all([
+  const [dict, indexData, tagGroupData, tagI18n, landingStats] = await Promise.all([
     getDictionary(lang as Locale),
     getClipIndex(),
     getTagGroups(),
     getTagI18n(),
+    loadLandingStats(),
   ]);
 
   const allClips = indexData.clips;
@@ -62,8 +81,9 @@ export default async function HomePage({
     .filter((c) => c != null)
     .slice(0, 3);
 
-  const clipCount = indexData.totalCount;
-  const aiRecommendationCount = getLandingAiRecommendationCount(allClips);
+  // Use pre-computed landing stats when available, fall back to computing from index
+  const clipCount = landingStats?.totalClips ?? indexData.totalCount;
+  const aiRecommendationCount = landingStats?.aiRecommendationCount ?? getLandingAiRecommendationCount(allClips);
   const tagCount = tagGroupData.groups.reduce(
     (sum, g) => sum + g.tags.length,
     0
@@ -75,7 +95,7 @@ export default async function HomePage({
   };
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#08090a] text-white">
+    <div className="dark min-h-screen overflow-hidden bg-[#08090a] text-white" style={{ colorScheme: "dark" }}>
       <LandingNavbar
         lang={lang as Locale}
         dict={dict.landing}

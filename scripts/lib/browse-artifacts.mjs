@@ -16,7 +16,7 @@ function toSummaryRecord(entry) {
   };
 }
 
-function getStructuredAiTags(aiTags) {
+export function getStructuredAiTags(aiTags) {
   if (!aiTags) {
     return [];
   }
@@ -76,16 +76,46 @@ function buildSearchTokens(entry, aiStructuredTags) {
   return tokens;
 }
 
+function buildLightSearchTokens(entry, tags) {
+  const seen = new Set();
+  const tokens = [];
+  for (const value of [entry.name, ...tags]) {
+    for (const token of tokenizeText(value)) {
+      if (seen.has(token)) continue;
+      seen.add(token);
+      tokens.push(token);
+    }
+  }
+  return tokens;
+}
+
 export function buildBrowseArtifacts(entries) {
   const summary = entries.map((entry) => toSummaryRecord(entry));
-  const projection = entries.map((entry, index) => {
+
+  // cards = summary fields for card rendering (lightweight)
+  const cards = entries.map((entry, index) => ({
+    ...summary[index],
+    previewUrl: entry.previewUrl || "",
+  }));
+
+  // filterIndex = tag/folder/AI tag mapping for client-side filtering
+  const filterIndex = entries.map((entry) => {
+    const tags = Array.isArray(entry.tags) ? entry.tags : [];
     const aiStructuredTags = getStructuredAiTags(entry.aiTags);
+    const folders = Array.isArray(entry.folders) ? entry.folders : [];
+    const lightTokens = buildLightSearchTokens(entry, tags);
+    return { id: entry.id, tags, aiStructuredTags, folders, lightTokens };
+  });
+
+  // Keep projection for backward compatibility during transition
+  const projection = entries.map((entry, index) => {
+    const aiStructuredTags = filterIndex[index].aiStructuredTags;
 
     return {
-      ...summary[index],
-      tags: Array.isArray(entry.tags) ? entry.tags : [],
+      ...cards[index],
+      tags: filterIndex[index].tags,
       aiStructuredTags,
-      folders: Array.isArray(entry.folders) ? entry.folders : [],
+      folders: filterIndex[index].folders,
       searchTokens: buildSearchTokens(entry, aiStructuredTags),
     };
   });
@@ -93,6 +123,8 @@ export function buildBrowseArtifacts(entries) {
   return {
     summary,
     projection,
+    cards,
+    filterIndex,
   };
 }
 
@@ -107,4 +139,16 @@ export function writeBrowseArtifacts(artifacts, outputDir) {
     path.join(browseDir, "projection.json"),
     JSON.stringify(artifacts.projection, null, 2)
   );
+  if (artifacts.cards) {
+    fs.writeFileSync(
+      path.join(browseDir, "cards.json"),
+      JSON.stringify(artifacts.cards, null, 2)
+    );
+  }
+  if (artifacts.filterIndex) {
+    fs.writeFileSync(
+      path.join(browseDir, "filter-index.json"),
+      JSON.stringify(artifacts.filterIndex, null, 2)
+    );
+  }
 }

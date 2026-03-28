@@ -85,6 +85,7 @@ describe("browse-data", () => {
       expect.objectContaining({
         id: "clip-3",
         name: "Arcane Clash",
+        tags: ["magic"],
       })
     );
     expect(projection[0].aiStructuredTags).toEqual([

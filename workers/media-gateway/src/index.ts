@@ -241,14 +241,16 @@ const worker = {
     }
 
     // Tier-based access control:
-    // /videos/* requires pro tier
+    // /videos/* requires an authenticated session (free/pro)
     // /previews/* allows all tiers
     const tier = getPayloadTier(session);
-    if (url.pathname.startsWith("/videos/") && tier !== "pro") {
+    const canAccessFullVideo =
+      session.v === 2 && (Boolean(session.userId) || tier === "pro");
+    if (url.pathname.startsWith("/videos/") && !canAccessFullVideo) {
       const cors = corsHeaders(request);
       cors.set("Content-Type", "application/json");
       return new Response(
-        JSON.stringify({ error: "pro_required", message: "Pro subscription required for full videos" }),
+        JSON.stringify({ error: "sign_in_required", message: "Sign in required for full videos" }),
         { status: 403, headers: cors }
       );
     }

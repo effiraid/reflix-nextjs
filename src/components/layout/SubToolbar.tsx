@@ -21,6 +21,7 @@ import {
   getOverflowBadgeLabel,
   getVisibleBadgeCount,
 } from "@/lib/toolbarFilterBadges";
+import { hasProAccess } from "@/lib/accessPolicy";
 import { useAuthStore } from "@/stores/authStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -81,7 +82,7 @@ export function SubToolbar({
   const shuffleLabel = lang === "ko" ? "무작위로 섞기" : "Shuffle clips";
   const filterLabel = lang === "ko" ? "태그 필터" : "Tag filters";
 
-  const isProUser = Boolean(user) && tier === "pro";
+  const isProUser = hasProAccess(user, tier);
   const filterBadges = useMemo(
     () =>
       buildFilterBadges({

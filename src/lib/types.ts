@@ -53,6 +53,7 @@ export interface BrowseSummaryRecord {
   duration: number;
   star: number;
   category: string;
+  tags?: string[];
 }
 
 export interface BrowseClipRecord extends BrowseSummaryRecord {
@@ -71,6 +72,22 @@ export interface ClipIndex extends BrowseClipRecord {
 export interface BrowseProjectionRecord extends BrowseClipRecord {
   aiStructuredTags: string[];
   searchTokens: string[];
+}
+
+export type BrowseCardRecord = BrowseSummaryRecord;
+
+export interface BrowseFilterIndexRecord {
+  id: string;
+  tags: string[];
+  aiStructuredTags: string[];
+  folders: string[];
+  lightTokens: string[];
+}
+
+export interface LandingStats {
+  totalClips: number;
+  aiRecommendationCount: number;
+  generatedAt: string;
 }
 
 export interface ClipIndexData {

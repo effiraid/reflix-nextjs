@@ -54,7 +54,7 @@ export function filterClips<T extends FilterableClipRecord>(
 
   if (filters.contentMode) {
     const keyword = CONTENT_MODE_KEYWORD[filters.contentMode];
-    result = result.filter((c) => c.name.includes(keyword));
+    result = result.filter((c) => c.name?.includes(keyword));
   }
 
   if (filters.selectedFolders.length > 0) {
@@ -75,18 +75,14 @@ export function filterClips<T extends FilterableClipRecord>(
     );
   }
 
-  // Tag filter: AND logic — clip must have ALL selected tags
-  if (filters.selectedTags.length > 0) {
-    result = result.filter((c) =>
-      filters.selectedTags.every((t) => getAllClipTags(c).includes(t))
-    );
-  }
-
-  // Exclude filter: OR logic — clip with ANY excluded tag is hidden
-  if (filters.excludedTags.length > 0) {
-    result = result.filter((c) =>
-      !filters.excludedTags.some((t) => getAllClipTags(c).includes(t))
-    );
+  // Tag filter: AND (selected) + OR (excluded) — single pass with one getAllClipTags call per clip
+  if (filters.selectedTags.length > 0 || filters.excludedTags.length > 0) {
+    result = result.filter((c) => {
+      const allTags = getAllClipTags(c);
+      if (filters.selectedTags.length > 0 && !filters.selectedTags.every((t) => allTags.includes(t))) return false;
+      if (filters.excludedTags.length > 0 && filters.excludedTags.some((t) => allTags.includes(t))) return false;
+      return true;
+    });
   }
 
   if (filters.starFilter !== null) {
@@ -126,6 +122,6 @@ function sortClips<T extends Pick<FilterableClipRecord, "name" | "star">>(
     case "rating":
       return sorted.sort((a, b) => b.star - a.star);
     case "name":
-      return sorted.sort((a, b) => a.name.localeCompare(b.name, "ko"));
+      return sorted.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "ko"));
   }
 }

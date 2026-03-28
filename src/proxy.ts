@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { LOCALES, DEFAULT_LOCALE } from "@/lib/constants";
+import { loadEffectiveAccess } from "@/lib/supabase/access";
 import {
   getMediaSessionConfig,
   MEDIA_SESSION_COOKIE_NAME,
   signMediaSessionToken,
 } from "@/lib/mediaSession";
 
-async function getSessionTier(request: NextRequest): Promise<{
+async function getSessionAccess(request: NextRequest): Promise<{
   userId?: string;
-  tier: "free" | "pro";
+  effectiveTier: "free" | "pro";
+  accessSource: "free" | "paid" | "beta";
 }> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return { tier: "free" };
+    return { effectiveTier: "free", accessSource: "free" };
   }
 
   try {
@@ -30,20 +32,19 @@ async function getSessionTier(request: NextRequest): Promise<{
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) return { tier: "free" };
+    if (!user) {
+      return { effectiveTier: "free", accessSource: "free" };
+    }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tier")
-      .eq("id", user.id)
-      .single();
+    const access = await loadEffectiveAccess(supabase as never, user.id);
 
     return {
       userId: user.id,
-      tier: profile?.tier === "pro" ? "pro" : "free",
+      effectiveTier: access.effectiveTier,
+      accessSource: access.accessSource,
     };
   } catch {
-    return { tier: "free" };
+    return { effectiveTier: "free", accessSource: "free" };
   }
 }
 
@@ -56,7 +57,7 @@ async function withMediaSession(
     return response;
   }
 
-  const { userId, tier } = await getSessionTier(request);
+  const { userId, effectiveTier, accessSource } = await getSessionAccess(request);
 
   const now = Date.now();
   const token = await signMediaSessionToken(
@@ -65,7 +66,8 @@ async function withMediaSession(
       host: request.nextUrl.hostname,
       exp: now + config.ttlSeconds * 1000,
       userId,
-      tier,
+      tier: effectiveTier,
+      accessSource,
     },
     config.secret
   );
@@ -114,7 +116,7 @@ export async function proxy(request: NextRequest) {
     }
 
     if (pathname.match(/^\/[a-z]{2}\/account(?:\/|$)/)) {
-      const { userId } = await getSessionTier(request);
+      const { userId } = await getSessionAccess(request);
       if (!userId) {
         const lang = pathname.split("/")[1] || "ko";
         return NextResponse.redirect(new URL(`/${lang}/login`, request.url));

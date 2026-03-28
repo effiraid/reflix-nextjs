@@ -39,12 +39,14 @@ function buildIndexes(clips) {
   };
 }
 
+const MAX_TAG_FANOUT = 500;
+
 function scoreClipNeighbors(clip, indexes, topN) {
   const { tagIndex, folderIndex } = indexes;
   const tagScores = new Map();
   for (const tag of clip.tags) {
     const peers = tagIndex.get(tag);
-    if (!peers) continue;
+    if (!peers || peers.length > MAX_TAG_FANOUT) continue;
     for (const peerId of peers) {
       if (peerId === clip.id) continue;
       tagScores.set(peerId, (tagScores.get(peerId) || 0) + 1);

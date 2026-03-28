@@ -9,13 +9,13 @@ const dict = {
   pricingFreePrice: "₩0",
   pricingFreePeriod: "",
   pricingFreeDesc: "가입 없이 바로 시작",
-  pricingFreeFeatures: "50 무료 클립,일 20회 조회,보드 1개,태그 검색",
+  pricingFreeHighlights: "원본 영상 재생,탐색 결과 5개,보드 1개,태그 검색",
   pricingFreeCta: "무료로 시작",
   pricingProName: "Pro",
   pricingProPrice: "₩9,900",
   pricingProPeriod: "/월",
   pricingProDesc: "전체 라이브러리, AI 분석, 무제한",
-  pricingProFeatures: "전체 라이브러리,무제한 조회,무제한 보드,AI 분석,프레임 재생",
+  pricingProHighlights: "전체 결과 보기,다중 필터,무제한 보드,AI 검색",
   pricingProCta: "Pro 시작하기",
   pricingProBadge: "추천",
   pricingToggleMonthly: "월간",
@@ -45,9 +45,7 @@ describe("LandingPricing", () => {
     const discountCapsule = within(yearlyButton).getByText("-17%");
     expect(discountCapsule).toBeInTheDocument();
     expect(discountCapsule).toHaveClass("py-1");
-    expect(discountCapsule).toHaveStyle({
-      background: "rgba(22,101,52,0.12)",
-      color: "#166534",
-    });
+    expect(discountCapsule).toHaveClass("bg-green-500/15");
+    expect(discountCapsule).toHaveClass("dark:text-green-700");
   });
 });

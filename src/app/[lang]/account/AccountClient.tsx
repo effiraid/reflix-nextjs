@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CrownIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { hasProAccess } from "@/lib/accessPolicy";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -22,6 +23,7 @@ export function AccountClient({ lang }: AccountClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isKo = lang === "ko";
+  const isPro = hasProAccess(user, tier);
   const [identitiesLoading, setIdentitiesLoading] = useState(true);
   const [identitiesError, setIdentitiesError] = useState("");
   const [isGoogleLinked, setIsGoogleLinked] = useState(false);
@@ -155,14 +157,14 @@ export function AccountClient({ lang }: AccountClientProps) {
               <p className="text-sm font-medium">
                 {isKo ? "구독" : "Subscription"}
               </p>
-              {tier === "pro" ? (
+              {isPro ? (
                 <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
                   PRO
                 </span>
               ) : null}
             </div>
             <p className="mt-1 text-sm text-muted">
-              {tier === "pro"
+              {isPro
                 ? isKo
                   ? "Pro 구독 활성"
                   : "Pro subscription active"
@@ -171,7 +173,7 @@ export function AccountClient({ lang }: AccountClientProps) {
                   : "Free tier"}
             </p>
 
-            {tier === "pro" ? (
+            {isPro ? (
               <p className="mt-2 text-xs text-muted">
                 {isKo
                   ? "구독 관리는 Stripe Customer Portal에서 할 수 있습니다."

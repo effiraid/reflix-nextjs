@@ -25,10 +25,13 @@ vi.mock("@/hooks/useIntersectionLoader", () => ({
 }));
 
 vi.mock("@/stores/clipStore", () => ({
-  useClipStore: () => ({
-    selectedClipId: clipStoreState.selectedClipId,
-    setSelectedClipId: setSelectedClipIdMock,
-  }),
+  useClipStore: (selector?: (s: Record<string, unknown>) => unknown) => {
+    const store = {
+      selectedClipId: clipStoreState.selectedClipId,
+      setSelectedClipId: setSelectedClipIdMock,
+    };
+    return selector ? selector(store) : store;
+  },
 }));
 
 vi.mock("@/lib/mediaUrl", () => ({

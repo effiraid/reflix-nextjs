@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface LandingStatsProps {
   clipCount: number;
@@ -15,47 +15,46 @@ interface LandingStatsProps {
 }
 
 function useCountUp(target: number, duration = 1000) {
-  const [value, setValue] = useState(0);
-  const [started, setStarted] = useState(false);
+  const [value, setValue] = useState(target);
   const ref = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
-
-  const start = useCallback(() => {
-    if (started) return;
-    setStarted(true);
-
-    const startTime = performance.now();
-    function tick(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOut cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(eased * target));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    }
-    rafRef.current = requestAnimationFrame(tick);
-  }, [target, duration, started]);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Reset to 0 on mount to prepare for animation
+    setValue(0);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          start();
+        if (entry.isIntersecting && !startedRef.current) {
+          startedRef.current = true;
           observer.disconnect();
+
+          const startTime = performance.now();
+          function tick(now: number) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // easeOut cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setValue(Math.round(eased * target));
+            if (progress < 1) {
+              rafRef.current = requestAnimationFrame(tick);
+            }
+          }
+          rafRef.current = requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     );
     observer.observe(el);
     return () => {
       observer.disconnect();
       cancelAnimationFrame(rafRef.current);
     };
-  }, [start]);
+  }, [target, duration]);
 
   return { ref, value };
 }

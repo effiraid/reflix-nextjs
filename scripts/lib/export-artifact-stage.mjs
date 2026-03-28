@@ -8,7 +8,7 @@ import {
   buildFullClip,
   mergeClipIndexEntries,
 } from "./index-builder.mjs";
-import { buildBrowseArtifacts } from "./browse-artifacts.mjs";
+import { buildBrowseArtifacts, getStructuredAiTags } from "./browse-artifacts.mjs";
 import { buildRelatedInput } from "./similarity.mjs";
 
 function loadOptionalJson(filePath) {
@@ -84,18 +84,36 @@ export async function runArtifactStage(items, { projectRoot, runId } = {}) {
     indexEntries.push(clipIndex);
   }
 
-  const indexPath = path.join(projectRoot, "src", "data", "index.json");
-  const existingIndex = loadOptionalJson(indexPath);
+  const publicIndexPath = path.join(projectRoot, "public", "data", "index.json");
+  const legacyIndexPath = path.join(projectRoot, "src", "data", "index.json");
+  const existingIndex = loadOptionalJson(publicIndexPath) ?? loadOptionalJson(legacyIndexPath);
   const mergedEntries = mergeClipIndexEntries(existingIndex?.clips ?? [], indexEntries);
-  writeAtomicJson(indexPath, {
+  const indexPayload = {
     clips: mergedEntries,
     totalCount: mergedEntries.length,
     generatedAt: new Date().toISOString(),
-  });
+  };
+  writeAtomicJson(publicIndexPath, indexPayload);
+  // Keep legacy path in sync during transition
+  writeAtomicJson(legacyIndexPath, indexPayload);
 
   const browseArtifacts = buildBrowseArtifacts(mergedEntries);
   writeAtomicJson(path.join(projectRoot, "public", "data", "browse", "summary.json"), browseArtifacts.summary);
   writeAtomicJson(path.join(projectRoot, "public", "data", "browse", "projection.json"), browseArtifacts.projection);
+  writeAtomicJson(path.join(projectRoot, "public", "data", "browse", "cards.json"), browseArtifacts.cards);
+  writeAtomicJson(path.join(projectRoot, "public", "data", "browse", "filter-index.json"), browseArtifacts.filterIndex);
+
+  // Pre-compute landing stats
+  const aiTagSet = new Set();
+  for (const entry of mergedEntries) {
+    const aiTags = entry.aiStructuredTags || getStructuredAiTags(entry.aiTags);
+    for (const tag of aiTags) aiTagSet.add(tag);
+  }
+  writeAtomicJson(path.join(projectRoot, "public", "data", "landing-stats.json"), {
+    totalClips: mergedEntries.length,
+    aiRecommendationCount: aiTagSet.size,
+    generatedAt: new Date().toISOString(),
+  });
 
   return {
     writtenClips: clips.length,

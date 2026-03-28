@@ -122,7 +122,8 @@ function MasonryColumn({
   onOpenQuickView?: (clipId: string) => void;
 }) {
   // TanStack Virtual intentionally returns imperative helpers.
-  // React Compiler skips memoization here, which is acceptable for this grid.
+  // In React 19 + Next dev, direct getVirtualItems() reads can be compiler-hoisted
+  // and stay stuck at the initial empty range. Always read through a mutable ref.
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: clips.length,
@@ -135,18 +136,22 @@ function MasonryColumn({
       return el.getBoundingClientRect().height;
     },
   });
+  const virtualizerRef = useRef(virtualizer);
+  virtualizerRef.current = virtualizer;
+  const totalSize = virtualizerRef.current.getTotalSize();
+  const virtualItems = virtualizerRef.current.getVirtualItems();
 
   return (
     <div className="flex-1 min-w-0">
       <div
-        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+        style={{ height: totalSize, position: "relative" }}
       >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
+        {virtualItems.map((virtualItem) => {
           const clip = clips[virtualItem.index];
           return (
             <div
               key={clip.id}
-              ref={virtualizer.measureElement}
+              ref={virtualizerRef.current.measureElement}
               data-index={virtualItem.index}
               data-clip-id={clip.id}
               style={{

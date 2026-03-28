@@ -1,6 +1,8 @@
 import fs from "node:fs";
+import fsPromises from "node:fs/promises";
 import path from "node:path";
 
+import { mapWithConcurrency } from "./bounded-pool.mjs";
 import { writeAtomicJson } from "./release-approval-state.mjs";
 import { loadItemState, saveItemState } from "./export-run-state.mjs";
 import {
@@ -8,17 +10,20 @@ import {
   computeRelatedClipsForSubset,
 } from "./similarity.mjs";
 
-function loadAllClips(projectRoot) {
+async function loadAllClips(projectRoot) {
   const indexPath = path.join(projectRoot, "src", "data", "index.json");
   const index = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
 
-  return index.clips.map((entry) =>
-    JSON.parse(
-      fs.readFileSync(
-        path.join(projectRoot, "public", "data", "clips", `${entry.id}.json`),
-        "utf-8"
-      )
-    )
+  return mapWithConcurrency(
+    index.clips,
+    async (entry) =>
+      JSON.parse(
+        await fsPromises.readFile(
+          path.join(projectRoot, "public", "data", "clips", `${entry.id}.json`),
+          "utf-8"
+        )
+      ),
+    { concurrency: 50 }
   );
 }
 
@@ -91,7 +96,7 @@ export async function runRelatedStage(items, {
     throw new Error("runRelatedStage requires a runId");
   }
 
-  const allClips = loadAllClips(projectRoot);
+  const allClips = await loadAllClips(projectRoot);
   let mode = forceFullRebuild ? "full" : "partial";
   const changedItems = [];
 

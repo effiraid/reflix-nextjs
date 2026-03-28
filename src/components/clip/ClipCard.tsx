@@ -101,10 +101,13 @@ export function ClipCard({
     <div
       ref={ref}
       role="button"
-      tabIndex={0}
+      tabIndex={locked ? -1 : 0}
       aria-label={clip.name}
       aria-pressed={isSelected}
-      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer ${
+      aria-disabled={locked ? "true" : undefined}
+      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+        locked ? "cursor-not-allowed" : "cursor-pointer"
+      } ${
         isSelected ? "ring-2 ring-accent" : "hover:shadow-lg"
       }`}
       style={{ aspectRatio: THUMBNAIL_ASPECT_RATIO }}

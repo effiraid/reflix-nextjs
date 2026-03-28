@@ -2,7 +2,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getClip, loadBrowseProjection, loadBrowseSummary } from "./data";
+import {
+  getClip,
+  getClipIndex,
+  loadBrowseCards,
+  loadBrowseFilterIndex,
+  loadBrowseProjection,
+  loadBrowseSummary,
+  loadLandingStats,
+} from "./data";
 
 const remoteClip = {
   id: "REMOTE_CLIP_123",
@@ -120,5 +128,109 @@ describe("getClip", () => {
         aiStructuredTags: ["attack"],
       }),
     ]);
+  });
+
+  it("getClipIndex reads from public/data/index.json", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-index-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "index.json"),
+      JSON.stringify({
+        clips: [{ id: "A", name: "Clip A" }],
+        totalCount: 1,
+        generatedAt: "2026-03-28T00:00:00.000Z",
+      })
+    );
+
+    process.chdir(tempDir);
+
+    const result = await getClipIndex();
+    expect(result.totalCount).toBe(1);
+    expect(result.clips[0].id).toBe("A");
+  });
+
+  it("loadBrowseCards reads from cards.json with fallback to projection", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-cards-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "browse", "cards.json"),
+      JSON.stringify([
+        {
+          id: "A",
+          name: "Arcane",
+          thumbnailUrl: "/thumbnails/A.webp",
+          previewUrl: "/previews/A.mp4",
+          lqipBase64: "",
+          width: 640,
+          height: 360,
+          duration: 1,
+          star: 3,
+          category: "direction-video",
+        },
+      ])
+    );
+
+    process.chdir(tempDir);
+
+    const cards = await loadBrowseCards();
+    expect(cards).toHaveLength(1);
+    expect(cards[0].id).toBe("A");
+    expect("searchTokens" in cards[0]).toBe(false);
+  });
+
+  it("loadBrowseFilterIndex reads from filter-index.json", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-filter-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data", "browse"), {
+      recursive: true,
+    });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "browse", "filter-index.json"),
+      JSON.stringify([
+        {
+          id: "A",
+          tags: ["magic"],
+          aiStructuredTags: ["attack"],
+          folders: ["f1"],
+          lightTokens: ["arcane", "magic"],
+        },
+      ])
+    );
+
+    process.chdir(tempDir);
+
+    const index = await loadBrowseFilterIndex();
+    expect(index).toHaveLength(1);
+    expect(index[0].tags).toEqual(["magic"]);
+    expect(index[0].lightTokens).toEqual(["arcane", "magic"]);
+  });
+
+  it("loadLandingStats reads from landing-stats.json", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-stats-"));
+    fs.mkdirSync(path.join(tempDir, "public", "data"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tempDir, "public", "data", "landing-stats.json"),
+      JSON.stringify({
+        totalClips: 42,
+        aiRecommendationCount: 100,
+        generatedAt: "2026-03-28T00:00:00.000Z",
+      })
+    );
+
+    process.chdir(tempDir);
+
+    const stats = await loadLandingStats();
+    expect(stats).not.toBeNull();
+    expect(stats!.totalClips).toBe(42);
+    expect(stats!.aiRecommendationCount).toBe(100);
+  });
+
+  it("loadLandingStats returns null when file is missing", async () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "reflix-no-stats-"));
+    process.chdir(tempDir);
+
+    const stats = await loadLandingStats();
+    expect(stats).toBeNull();
   });
 });

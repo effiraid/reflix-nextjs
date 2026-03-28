@@ -1,5 +1,13 @@
 import type { MetadataRoute } from "next";
-import indexData from "@/data/index.json";
+import fs from "fs";
+import path from "path";
+
+// Read at build time (sitemap is generated during build)
+const raw = fs.readFileSync(
+  path.join(process.cwd(), "public", "data", "index.json"),
+  "utf-8"
+);
+const indexData = JSON.parse(raw) as { clips: Array<{ id: string }> };
 
 const BASE_URL = "https://reflix.dev";
 const LANGS = ["ko", "en"] as const;

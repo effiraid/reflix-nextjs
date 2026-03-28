@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PlusIcon, TrashIcon, FolderIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { FREE_BOARD_LIMIT, hasProAccess } from "@/lib/accessPolicy";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore, type Board } from "@/stores/boardStore";
 import type { Locale } from "@/lib/types";
@@ -11,8 +12,6 @@ interface BoardPanelProps {
   lang: Locale;
   selectedClipId?: string | null;
 }
-
-const BOARD_LIMIT_FREE = 1;
 
 export function BoardPanel({ lang, selectedClipId }: BoardPanelProps) {
   const { user, tier } = useAuthStore();
@@ -46,7 +45,7 @@ export function BoardPanel({ lang, selectedClipId }: BoardPanelProps) {
   }
 
   const canCreateBoard =
-    tier === "pro" || boards.length < BOARD_LIMIT_FREE;
+    hasProAccess(user, tier) || boards.length < FREE_BOARD_LIMIT;
 
   async function handleCreateBoard(e: React.FormEvent) {
     e.preventDefault();

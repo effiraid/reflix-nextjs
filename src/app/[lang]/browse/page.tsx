@@ -5,6 +5,7 @@ import {
   getCategories,
   getTagGroups,
   getTagI18n,
+  loadBrowseCards,
   loadBrowseProjection,
   loadBrowseSummary,
 } from "@/lib/data";
@@ -42,6 +43,8 @@ function toURLSearchParams(
   return params;
 }
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reflix.dev";
+
 export async function generateMetadata({
   params,
 }: {
@@ -49,9 +52,25 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { lang } = await params;
   const dict = await getDictionary(lang as Locale);
+  const title = `${dict.nav.browse} | Reflix`;
+  const description = dict.landing.heroSub;
   return {
-    title: `${dict.nav.browse} | Reflix`,
-    description: dict.landing.heroSub,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/${lang}/browse`,
+      siteName: "Reflix",
+      type: "website",
+      images: [{ url: `${BASE_URL}/og-default.png`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${BASE_URL}/og-default.png`],
+    },
   };
 }
 
@@ -88,6 +107,7 @@ function BrowsePageContent({
     categories,
     tagGroups,
     tagI18n,
+    browseCards,
     browseSummary,
     browseProjection,
   ] = use(
@@ -96,6 +116,7 @@ function BrowsePageContent({
       getCategories(),
       getTagGroups(),
       getTagI18n(),
+      loadBrowseCards(),
       loadBrowseSummary(),
       loadBrowseProjection(),
     ])
@@ -108,6 +129,7 @@ function BrowsePageContent({
       categories={categories}
       tagGroups={tagGroups}
       tagI18n={tagI18n}
+      browseCards={browseCards}
       browseSummary={browseSummary}
       browseProjection={browseProjection}
       rawSearchParams={rawSearchParams}
@@ -121,6 +143,7 @@ export function BrowsePageShell({
   categories,
   tagGroups,
   tagI18n,
+  browseCards,
   browseSummary,
   browseProjection,
   rawSearchParams,
@@ -130,12 +153,14 @@ export function BrowsePageShell({
   categories: Awaited<ReturnType<typeof getCategories>>;
   tagGroups: Awaited<ReturnType<typeof getTagGroups>>;
   tagI18n: Awaited<ReturnType<typeof getTagI18n>>;
+  browseCards?: Awaited<ReturnType<typeof loadBrowseCards>>;
   browseSummary: Awaited<ReturnType<typeof loadBrowseSummary>>;
   browseProjection: Awaited<ReturnType<typeof loadBrowseProjection>>;
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
   const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
   const initialBrowseResults = listBrowseResults({
+    cards: browseCards,
     summary: browseSummary,
     projection: browseProjection,
     filters,
@@ -148,7 +173,7 @@ export function BrowsePageShell({
     <ClipDataProvider
       clips={initialBrowseResults.items}
       initialTotalCount={initialBrowseResults.totalCount}
-      totalClipCount={browseSummary.length}
+      totalClipCount={browseCards?.length ?? browseSummary.length}
     >
       <div className="h-screen flex flex-col">
         <Suspense>

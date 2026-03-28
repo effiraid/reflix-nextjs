@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { ACCESS_POLICY, hasProAccess } from "@/lib/accessPolicy";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { Locale } from "@/lib/types";
@@ -13,11 +14,11 @@ interface PricingModalProps {
 function CheckIcon() {
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full"
-      style={{ width: 15, height: 15, background: "#333" }}
+      className="inline-flex shrink-0 items-center justify-center rounded-full bg-foreground/20 text-foreground"
+      style={{ width: 15, height: 15 }}
     >
       <svg width="9" height="7" viewBox="0 0 9 7" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M1 3.5L3.5 6L8 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </span>
   );
@@ -34,7 +35,7 @@ export function PricingModal({ lang }: PricingModalProps) {
 
   const isKo = lang === "ko";
   const isYearly = billingInterval === "yearly";
-  const isPro = tier === "pro";
+  const isPro = hasProAccess(user, tier);
 
   useEffect(() => {
     if (pricingModalOpen) {
@@ -88,14 +89,17 @@ export function PricingModal({ lang }: PricingModalProps) {
     }
   }, [user, isPro, loading, lang, billingInterval, closePricingModal, router]);
 
+  const handleFreeStart = useCallback(() => {
+    closePricingModal();
+    if (!user) {
+      router.push(`/${lang}/login`);
+    }
+  }, [closePricingModal, lang, router, user]);
+
   if (!pricingModalOpen) return null;
 
-  const freeFeatures = isKo
-    ? ["50개 무료 클립", "20회/일 조회", "보드 1개"]
-    : ["50 free clips", "20 views/day", "1 board"];
-  const proFeatures = isKo
-    ? ["전체 라이브러리", "무제한 조회", "무제한 보드"]
-    : ["Full library", "Unlimited views", "Unlimited boards"];
+  const freeFeatures = ACCESS_POLICY.recommendedCopy.freeFeatures;
+  const proFeatures = ACCESS_POLICY.recommendedCopy.proFeatures;
 
   const proPrice = isYearly
     ? (isKo ? "₩99,000" : "$99")
@@ -103,10 +107,16 @@ export function PricingModal({ lang }: PricingModalProps) {
   const proPeriod = isYearly
     ? (isKo ? "/년" : "/yr")
     : (isKo ? "/월" : "/mo");
+  const yearlySavingsNote = (
+    <>
+      <span className="text-muted/60 line-through">{isKo ? "₩9,900" : "$9.90"}</span>{" "}
+      <span className="text-muted">{isKo ? "₩8,250/월" : "$8.25/mo"}</span>
+    </>
+  );
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70"
       onClick={closePricingModal}
     >
       <section
@@ -115,15 +125,13 @@ export function PricingModal({ lang }: PricingModalProps) {
         aria-modal="true"
         aria-label={isKo ? "요금제" : "Pricing"}
         tabIndex={-1}
-        className="relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl outline-none"
-        style={{ background: "#0a0a0a" }}
+        className="relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-background outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={closePricingModal}
-          className="absolute right-4 top-4 z-10 flex size-7 items-center justify-center rounded-full text-sm text-[#888] transition-colors hover:text-white"
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          className="absolute right-4 top-4 z-10 flex size-7 items-center justify-center rounded-full bg-foreground/[0.06] text-sm text-muted transition-colors hover:text-foreground"
           aria-label="Close"
         >
           ✕
@@ -131,41 +139,42 @@ export function PricingModal({ lang }: PricingModalProps) {
 
         <div className="px-6 pb-6 pt-8 md:px-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white" style={{ letterSpacing: "-0.5px" }}>
+            <h2 className="text-2xl font-bold text-foreground" style={{ letterSpacing: "-0.5px" }}>
               {isKo ? "요금제" : "Pricing"}
             </h2>
-            <p className="mt-1.5 text-[13px] text-[#777]">
-              {isKo ? "게임 애니메이션 레퍼런스를 자유롭게 탐색" : "Explore game animation references freely"}
+            <p className="mt-1.5 text-[13px] text-muted">
+              {isKo
+                ? "Guest는 맛보기, Free는 실제 사용, Pro는 고속 작업"
+                : "Guest samples, Free works, Pro moves faster"}
             </p>
           </div>
 
           <div className="mt-6 flex items-center justify-center">
-            <div
-              className="inline-flex rounded-full p-1"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
-            >
+            <div className="inline-flex rounded-full border border-foreground/[0.08] bg-foreground/[0.04] p-1">
               <button
                 type="button"
                 onClick={() => setBillingInterval("monthly")}
-                className="rounded-full px-4 py-1.5 text-[13px] font-medium transition-all"
-                style={{ background: !isYearly ? "white" : "transparent", color: !isYearly ? "black" : "#666" }}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-all ${
+                  !isYearly ? "bg-foreground text-background" : "text-muted"
+                }`}
               >
                 {isKo ? "월간" : "Monthly"}
               </button>
               <button
                 type="button"
                 onClick={() => setBillingInterval("yearly")}
-                className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all"
-                style={{ background: isYearly ? "white" : "transparent", color: isYearly ? "black" : "#666" }}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-medium transition-all ${
+                  isYearly ? "bg-foreground text-background" : "text-muted"
+                }`}
               >
                 <span>{isKo ? "연간" : "Yearly"}</span>
                 <span
                   aria-hidden="true"
-                  className="whitespace-nowrap rounded-full px-1.5 py-1 text-[10px] font-semibold leading-none"
-                  style={{
-                    background: isYearly ? "rgba(22,101,52,0.12)" : "rgba(34,197,94,0.12)",
-                    color: isYearly ? "#166534" : "#22c55e",
-                  }}
+                  className={`whitespace-nowrap rounded-full px-1.5 py-1 text-[10px] font-semibold leading-none ${
+                    isYearly
+                      ? "bg-green-500/15 text-green-300 dark:text-green-700"
+                      : "bg-green-500/12 text-green-600 dark:text-green-400"
+                  }`}
                 >
                   -17%
                 </span>
@@ -175,15 +184,19 @@ export function PricingModal({ lang }: PricingModalProps) {
 
           <div className="mt-8 flex flex-col md:flex-row">
             <div className="flex flex-1 flex-col p-6">
-              <h3 className="text-lg font-semibold text-white">Free</h3>
+              <h3 className="text-lg font-semibold text-foreground">Free</h3>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-white">{isKo ? "₩0" : "$0"}</span>
+                <span className="text-3xl font-bold text-foreground">{isKo ? "₩0" : "$0"}</span>
               </div>
-              <p className="mt-1.5 text-[13px] text-[#777]">{isKo ? "무료로 시작하세요" : "Start for free"}</p>
-              <div className="my-5" style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
+              <p className="mt-1.5 text-[13px] text-muted">
+                {isKo
+                  ? "로그인하면 원본 영상과 저장 기능을 바로 사용"
+                  : "Sign in to unlock full video playback and saved work"}
+              </p>
+              <div className="my-5 h-px bg-border" />
               <ul className="flex flex-1 flex-col gap-2.5">
                 {freeFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-[13px] text-[#999]">
+                  <li key={f} className="flex items-center gap-2 text-[13px] text-muted">
                     <CheckIcon />
                     {f}
                   </li>
@@ -191,42 +204,58 @@ export function PricingModal({ lang }: PricingModalProps) {
               </ul>
               <button
                 type="button"
-                onClick={closePricingModal}
-                className="mt-6 block rounded-full py-2 text-center text-[13px] font-medium text-white transition-colors hover:bg-white/10"
-                style={{ border: "1px solid rgba(255,255,255,0.12)" }}
+                onClick={handleFreeStart}
+                className="mt-6 block rounded-full border border-border py-2 text-center text-[13px] font-medium text-foreground transition-colors hover:bg-surface-hover"
               >
-                {isKo ? "무료 시작" : "Start free"}
+                {!user
+                  ? isKo
+                    ? "로그인하고 Free 시작"
+                    : "Sign in for Free"
+                  : isKo
+                    ? "현재 플랜"
+                    : "Current plan"}
               </button>
             </div>
 
-            <div className="hidden md:block" style={{ width: 1, background: "rgba(255,255,255,0.06)", marginTop: 24, marginBottom: 24 }} />
-            <div className="md:hidden" style={{ height: 1, background: "rgba(255,255,255,0.06)", marginLeft: 24, marginRight: 24 }} />
+            <div className="hidden w-px bg-border md:block" style={{ marginTop: 24, marginBottom: 24 }} />
+            <div className="h-px bg-border md:hidden" style={{ marginLeft: 24, marginRight: 24 }} />
 
             <div className="flex flex-1 flex-col p-6">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold text-white">Pro</h3>
-                <span
-                  className="rounded-full px-2 py-0.5 text-[11px] font-medium text-white"
-                  style={{ background: "rgba(99,102,241,0.25)", border: "1px solid rgba(99,102,241,0.3)" }}
-                >
+                <h3 className="text-lg font-semibold text-foreground">Pro</h3>
+                <span className="rounded-full border border-brand/30 bg-brand/25 px-2 py-0.5 text-[11px] font-medium text-foreground">
                   {isKo ? "★ 추천" : "★ Best"}
                 </span>
               </div>
               <div className="mt-2">
-                <span className="text-3xl font-bold text-white">{proPrice}</span>
-                <span className="text-[13px] text-[#777]">{proPeriod}</span>
+                <span className="text-3xl font-bold text-foreground">{proPrice}</span>
+                <span className="text-[13px] text-muted">{proPeriod}</span>
               </div>
               {isYearly && (
-                <p className="mt-1 text-[12px] text-[#999]">
-                  <span style={{ textDecoration: "line-through", color: "#555" }}>{isKo ? "₩9,900" : "$9.90"}</span>{" "}
-                  {isKo ? "₩8,250/월" : "$8.25/mo"}
+                <p
+                  data-testid="pricing-modal-pro-billing-note"
+                  className="mt-1 text-[12px]"
+                >
+                  {yearlySavingsNote}
                 </p>
               )}
-              <p className="mt-1.5 text-[13px] text-[#777]">{isKo ? "모든 클립에 무제한 접근" : "Unlimited access to all clips"}</p>
-              <div className="my-5" style={{ height: 1, background: "rgba(255,255,255,0.06)" }} />
+              <p className="mt-1.5 text-[13px] text-muted">
+                {isKo
+                  ? "더 많은 결과를 더 빠르게 찾고 더 잘 정리"
+                  : "Find more results faster and organize work better"}
+              </p>
+              {!isYearly && (
+                <div
+                  aria-hidden="true"
+                  data-testid="pricing-modal-pro-billing-spacer"
+                  className="mt-1"
+                  style={{ height: 18 }}
+                />
+              )}
+              <div className="my-5 h-px bg-border" />
               <ul className="flex flex-1 flex-col gap-2.5">
                 {proFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-[13px] text-[#999]">
+                  <li key={f} className="flex items-center gap-2 text-[13px] text-muted">
                     <CheckIcon />
                     {f}
                   </li>
@@ -236,7 +265,7 @@ export function PricingModal({ lang }: PricingModalProps) {
                 type="button"
                 onClick={handleSubscribe}
                 disabled={isPro || loading}
-                className="mt-6 block rounded-full bg-white py-2 text-center text-[13px] font-medium text-black transition-opacity hover:opacity-80 disabled:opacity-50"
+                className="mt-6 block rounded-full bg-foreground py-2 text-center text-[13px] font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-50"
               >
                 {loading
                   ? (isKo ? "결제 준비 중..." : "Preparing...")

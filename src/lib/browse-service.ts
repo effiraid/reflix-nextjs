@@ -1,5 +1,6 @@
 import { filterClips, type FilterState } from "./filter";
 import type {
+  BrowseCardRecord,
   BrowseProjectionRecord,
   BrowseSummaryRecord,
   CategoryTree,
@@ -8,6 +9,7 @@ import type {
 } from "./types";
 
 interface ListBrowseResultsOptions {
+  cards?: BrowseCardRecord[];
   summary: BrowseSummaryRecord[];
   projection: BrowseProjectionRecord[];
   filters: FilterState;
@@ -50,6 +52,7 @@ export function parseBrowsePageQuery(
 }
 
 export function listBrowseResults({
+  cards,
   summary,
   projection,
   filters,
@@ -59,7 +62,6 @@ export function listBrowseResults({
   offset = 0,
   pageSize = 60,
 }: ListBrowseResultsOptions): BrowseResultsPage {
-  const summaryById = new Map(summary.map((record) => [record.id, record]));
   const filtered = filterClips(
     projection,
     filters,
@@ -67,9 +69,15 @@ export function listBrowseResults({
     tagI18n,
     lang
   );
+
+  // When cards are provided, use them for output (lighter weight)
+  const lookup = cards
+    ? new Map(cards.map((record) => [record.id, record]))
+    : new Map(summary.map((record) => [record.id, record]));
+
   const page = filtered
     .slice(offset, offset + pageSize)
-    .map((record) => summaryById.get(record.id))
+    .map((record) => lookup.get(record.id))
     .filter((record): record is BrowseSummaryRecord => Boolean(record));
   const nextOffset =
     offset + pageSize < filtered.length ? offset + pageSize : null;

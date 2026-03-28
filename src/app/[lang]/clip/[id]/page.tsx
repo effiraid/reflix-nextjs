@@ -13,6 +13,8 @@ import {
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "../../dictionaries";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reflix.dev";
+
 type ClipDetailPageProps = {
   params: Promise<{ lang: string; id: string }>;
 };
@@ -44,12 +46,10 @@ export async function generateMetadata({
     clip.aiTags?.description.ko ||
     `${clip.category} · ${clip.tags.join(", ")}`;
 
-  const origin = getDeploymentOrigin();
+  const origin = getDeploymentOrigin() ?? BASE_URL;
   const thumbnailUrl = clip.thumbnailUrl.startsWith("http")
     ? clip.thumbnailUrl
-    : origin
-      ? `${origin}${clip.thumbnailUrl}`
-      : null;
+    : `${origin}${clip.thumbnailUrl}`;
 
   return {
     title: `${title} | Reflix`,
@@ -57,18 +57,16 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: origin ? `${origin}/${locale}/clip/${id}` : undefined,
+      url: `${origin}/${locale}/clip/${id}`,
       siteName: "Reflix",
       type: "video.other",
-      images: thumbnailUrl
-        ? [{ url: thumbnailUrl, width: clip.width, height: clip.height }]
-        : undefined,
+      images: [{ url: thumbnailUrl, width: clip.width, height: clip.height }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: thumbnailUrl ? [thumbnailUrl] : undefined,
+      images: [thumbnailUrl],
     },
   };
 }
@@ -79,6 +77,13 @@ export default async function ClipDetailPage({ params }: ClipDetailPageProps) {
       <ClipDetailPageContent params={params} />
     </Suspense>
   );
+}
+
+function toISO8601Duration(seconds: number): string {
+  const s = Math.round(seconds);
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return m > 0 ? `PT${m}M${rem}S` : `PT${rem}S`;
 }
 
 async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
@@ -95,8 +100,77 @@ async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
     notFound();
   }
 
+  const clipTitle = clip.i18n.title[locale] || clip.name;
+  const clipDescription =
+    clip.annotation ||
+    clip.aiTags?.description[locale] ||
+    clip.aiTags?.description.ko ||
+    `${clip.category} · ${clip.tags.join(", ")}`;
+
+  const origin = getDeploymentOrigin() ?? BASE_URL;
+  const thumbnailUrl = clip.thumbnailUrl.startsWith("http")
+    ? clip.thumbnailUrl
+    : `${origin}${clip.thumbnailUrl}`;
+  const videoUrl = clip.videoUrl.startsWith("http")
+    ? clip.videoUrl
+    : `${origin}${clip.videoUrl}`;
+
+  const keywords = [
+    ...(clip.aiTags?.actionType ?? []),
+    ...(clip.aiTags?.emotion ?? []),
+    ...(clip.aiTags?.effects ?? []),
+    ...clip.tags,
+  ];
+
+  const videoObjectLd = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: clipTitle,
+    description: clipDescription,
+    thumbnailUrl,
+    contentUrl: videoUrl,
+    duration: toISO8601Duration(clip.duration),
+    uploadDate: new Date(clip.btime).toISOString(),
+    width: clip.width,
+    height: clip.height,
+    ...(keywords.length > 0 && { keywords: keywords.join(", ") }),
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: locale === "ko" ? "홈" : "Home",
+        item: `${origin}/${locale}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: locale === "ko" ? "탐색" : "Browse",
+        item: `${origin}/${locale}/browse`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: clipTitle,
+        item: `${origin}/${locale}/clip/${id}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoObjectLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Suspense>
         <Navbar lang={locale} dict={dict} />
       </Suspense>

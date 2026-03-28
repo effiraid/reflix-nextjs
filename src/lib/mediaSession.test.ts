@@ -44,7 +44,14 @@ describe("media session tokens", () => {
 
     const now = Date.now();
     const token = await signMediaSessionToken(
-      { v: 2, host: "reflix.dev", exp: now + 60_000, userId: "user-123", tier: "pro" },
+      {
+        v: 2,
+        host: "reflix.dev",
+        exp: now + 60_000,
+        userId: "user-123",
+        tier: "pro",
+        accessSource: "beta",
+      },
       "test-secret"
     );
 
@@ -55,6 +62,7 @@ describe("media session tokens", () => {
       exp: now + 60_000,
       userId: "user-123",
       tier: "pro",
+      accessSource: "beta",
     });
     expect(getPayloadTier(payload!)).toBe("pro");
   });

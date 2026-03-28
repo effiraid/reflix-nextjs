@@ -4,6 +4,12 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+## Collaboration Preference
+
+- 시각 자료나 브라우저 프리뷰가 도움이 될 것 같아도 visual companion 사용 여부를 묻는 확인 질문을 따로 하지 말고 바로 진행한다.
+- 이 저장소에서는 브라우저 기반 설명, 목업, HTML 프리뷰, 다이어그램이 기본 허용된 것으로 간주한다.
+- 사용자가 명시적으로 텍스트만 원한다고 말한 경우에만 브라우저/시각 프리뷰를 생략한다.
+
 ## Eagle Thumbnail Ops
 
 When the user asks to process uncategorized Eagle thumbnails, treat it as the animated thumbnail workflow for the Eagle library.

@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reflix Access Policy Preview</title>
+    <style>
+      :root {
+        --bg: #f3efe7;
+        --surface: rgba(255, 255, 255, 0.8);
+        --surface-strong: #fffdf8;
+        --border: rgba(32, 27, 20, 0.12);
+        --text: #241c15;
+        --muted: #6c6258;
+        --accent: #0f766e;
+        --accent-soft: rgba(15, 118, 110, 0.12);
+        --warning: #b45309;
+        --warning-soft: rgba(180, 83, 9, 0.12);
+        --danger: #b91c1c;
+        --danger-soft: rgba(185, 28, 28, 0.12);
+        --shadow: 0 24px 60px rgba(36, 28, 21, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Pretendard", "Noto Sans KR", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 30%),
+          radial-gradient(circle at top right, rgba(180, 83, 9, 0.12), transparent 28%),
+          linear-gradient(180deg, #f7f3eb 0%, var(--bg) 100%);
+      }
+
+      .page {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+        padding: 48px 0 64px;
+      }
+
+      .hero {
+        padding: 40px;
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,250,242,0.72));
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 16px 0 12px;
+        font-size: clamp(34px, 5vw, 56px);
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+      }
+
+      .hero p {
+        max-width: 780px;
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.7;
+        color: var(--muted);
+      }
+
+      .section {
+        margin-top: 28px;
+        padding: 32px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        background: var(--surface);
+        backdrop-filter: blur(14px);
+        box-shadow: var(--shadow);
+      }
+
+      .section h2 {
+        margin: 0 0 14px;
+        font-size: 26px;
+        letter-spacing: -0.03em;
+      }
+
+      .section-intro {
+        margin: 0 0 20px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.tiers {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .grid.copy {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tier-card,
+      .copy-card,
+      .note-card,
+      .priority-card {
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: var(--surface-strong);
+      }
+
+      .tier-eyebrow,
+      .copy-eyebrow {
+        margin-bottom: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+      }
+
+      .tier-card h3,
+      .copy-card h3,
+      .priority-card h4 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        letter-spacing: -0.03em;
+      }
+
+      .tier-card p,
+      .copy-card p,
+      .priority-card p,
+      .note-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      ul {
+        margin: 12px 0 0;
+        padding-left: 20px;
+        color: var(--text);
+        line-height: 1.7;
+      }
+
+      .decision-list {
+        margin-top: 18px;
+      }
+
+      .matrix-wrap {
+        overflow-x: auto;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 760px;
+        background: var(--surface-strong);
+      }
+
+      thead th {
+        padding: 16px;
+        text-align: left;
+        font-size: 13px;
+        color: var(--muted);
+        background: rgba(36, 28, 21, 0.03);
+      }
+
+      tbody th,
+      tbody td {
+        padding: 16px;
+        vertical-align: top;
+        border-top: 1px solid var(--border);
+      }
+
+      .row-label {
+        font-weight: 700;
+      }
+
+      .row-note {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 96px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .badge.yes {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+
+      .badge.no {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .badge.limited {
+        background: var(--warning-soft);
+        color: var(--warning);
+      }
+
+      .badge.neutral {
+        background: rgba(36, 28, 21, 0.06);
+        color: var(--text);
+      }
+
+      .priority-pill {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(36, 28, 21, 0.06);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .footer {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .grid.tiers,
+        .grid.copy {
+          grid-template-columns: 1fr;
+        }
+
+        .page {
+          width: min(100% - 24px, 1180px);
+          padding-top: 24px;
+        }
+
+        .hero,
+        .section {
+          padding: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="eyebrow">Source of Truth</div>
+        <h1>Free / Pro 진실표 프리뷰</h1>
+        <p>
+          이 프리뷰는 문구가 아니라 현재 코드 기준의 실제 동작을 한 곳에 모아 보여줍니다.
+          사용자가 확정한 기준은 "현재 코드가 진실의 원천", "로그인한 사람은 free, 구독자만 pro",
+          "상세 페이지는 비로그인도 공개"입니다.
+        </p>
+        <ul class="decision-list">
+          <li>로그인하지 않은 사용자는 guest로 본다.</li><li>로그인한 비구독자는 free로 본다.</li><li>구독자만 pro로 본다.</li><li>상세 페이지는 로그인하지 않은 사용자도 조회할 수 있다.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2>Tier 정의</h2>
+        <p class="section-intro">
+          앱 안에서는 auth tier가 free/pro 두 단계지만, 제품 설명에서는 guest를 따로 보여줘야
+          비로그인 상태와 로그인 무료 상태를 구분하기 쉽습니다.
+        </p>
+        <div class="grid tiers">
+          
+      <article class="tier-card">
+        <div class="tier-eyebrow">guest</div>
+        <h3>Guest</h3>
+        <p>비로그인 사용자</p>
+      </article>
+    
+      <article class="tier-card">
+        <div class="tier-eyebrow">free</div>
+        <h3>Free</h3>
+        <p>로그인했지만 구독하지 않은 사용자</p>
+      </article>
+    
+      <article class="tier-card">
+        <div class="tier-eyebrow">pro</div>
+        <h3>Pro</h3>
+        <p>구독자</p>
+      </article>
+    
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>현재 코드 기준 기능 표</h2>
+        <p class="section-intro">
+          아래 표가 앞으로 Free / Pro 논의의 기준표입니다. 숫자와 잠금 조건도 여기에 맞춥니다.
+        </p>
+        <div class="matrix-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>기능</th>
+                <th>Guest</th>
+                <th>Free</th>
+                <th>Pro</th>
+              </tr>
+            </thead>
+            <tbody>
+              
+      <tr>
+        <th scope="row">
+          <div class="row-label">랜딩 페이지 접근</div>
+          <div class="row-note">모든 사용자가 접근 가능</div>
+        </th>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">브라우즈 페이지 접근</div>
+          <div class="row-note">browse 자체는 로그인으로 막지 않음</div>
+        </th>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">상세 페이지 접근</div>
+          <div class="row-note">상세 페이지는 공개</div>
+        </th>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">클립 메타데이터 / AI 설명 보기</div>
+          <div class="row-note">현재 코드는 AI 설명을 Pro로 막지 않음</div>
+        </th>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">카드 / 프리뷰 영상 보기</div>
+          <div class="row-note">/previews/* 는 전 티어 허용</div>
+        </th>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">원본 영상 재생</div>
+          <div class="row-note">로그인 사용자(free/pro)는 허용, guest는 차단</div>
+        </th>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge yes">yes</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">검색 / 태그 탐색</div>
+          <div class="row-note">guest/free 모두 가능하지만 잠금 결과가 생길 수 있음</div>
+        </th>
+        <td><span class="badge limited">limited</span></td>
+        <td><span class="badge limited">limited</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">필터 2축 이상 조합</div>
+          <div class="row-note">guest/free 는 1축까지만 허용</div>
+        </th>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">브라우즈 결과 잠금 해제 범위</div>
+          <div class="row-note">guest 3개, free 5개, pro 전체</div>
+        </th>
+        <td><span class="badge neutral">3 results</span></td>
+        <td><span class="badge limited">5 results</span></td>
+        <td><span class="badge neutral">all results</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">보드 기능</div>
+          <div class="row-note">guest 는 로그인 필요, free 는 1개, pro 는 무제한</div>
+        </th>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge neutral">1 board</span></td>
+        <td><span class="badge limited">unlimited</span></td>
+      </tr>
+    
+      <tr>
+        <th scope="row">
+          <div class="row-label">셔플 버튼</div>
+          <div class="row-note">현재 UI에서 Pro에만 노출</div>
+        </th>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge no">no</span></td>
+        <td><span class="badge yes">yes</span></td>
+      </tr>
+    
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>추천 문구 초안</h2>
+        <p class="section-intro">
+          현재 코드와 맞는 문구만 남기고, 아직 구현되지 않았거나 실제 동작과 다른 숫자는 전면에서 뺍니다.
+        </p>
+        <div class="grid copy">
+          <article class="copy-card">
+            <div class="copy-eyebrow">Hero / Free</div>
+            <h3>가입 없이 바로 탐색</h3>
+            <p>로그인하면 원본 영상과 저장 기능을 바로 사용</p>
+            <ul><li>원본 영상 재생</li><li>태그 검색</li><li>탐색 결과 5개까지</li><li>보드 1개</li></ul>
+          </article>
+          <article class="copy-card">
+            <div class="copy-eyebrow">Pro</div>
+            <h3>더 빨리 찾고 더 잘 정리하는 작업 모드</h3>
+            <p>지금 코드에서 실제로 Pro가 풀어주는 혜택만 적었습니다.</p>
+            <ul><li>전체 결과 보기</li><li>다중 필터 조합</li><li>무제한 보드</li><li>셔플</li></ul>
+          </article>
+        </div>
+        <div class="grid copy" style="margin-top: 16px;">
+          <article class="note-card">
+            <div class="copy-eyebrow">제거 권장</div>
+            <ul><li>50개 무료 클립</li><li>일 20회 조회</li></ul>
+          </article>
+          <article class="note-card">
+            <div class="copy-eyebrow">주의 권장</div>
+            <ul><li>AI 분석을 Pro 전용 혜택처럼 쓰는 문구</li><li>프레임 재생을 Pro 전용 혜택처럼 쓰는 문구</li></ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>우선순위</h2>
+        <p class="section-intro">
+          당장 혼선을 줄이는 순서대로 정리했습니다. 문구 정렬과 기준 중앙화가 먼저입니다.
+        </p>
+        <div class="stack">
+          
+      <article class="priority-card">
+        <div class="priority-pill">P0</div>
+        <h4>Guest / Free / Pro 문구를 새 기준으로 정렬</h4>
+        <p>guest는 맛보기, free는 원본 영상 + 저장, pro는 검색 깊이 + 정리 효율이라는 메시지로 다시 쓴다.</p>
+      </article>
+    
+      <article class="priority-card">
+        <div class="priority-pill">P1</div>
+        <h4>Free / Pro 기준을 한 곳에서 읽게 만들기</h4>
+        <p>브라우즈 잠금, 보드 제한, Pro 판별용 헬퍼를 공통 모듈에서 가져오게 한다.</p>
+      </article>
+    
+      <article class="priority-card">
+        <div class="priority-pill">P1</div>
+        <h4>오래된 테스트 기대값 정리</h4>
+        <p>로그인한 사람을 모두 Pro로 보던 예전 테스트 기대값을 현재 정책에 맞게 고친다.</p>
+      </article>
+    
+      <article class="priority-card">
+        <div class="priority-pill">P2</div>
+        <h4>상세 페이지 공개 정책을 문서화</h4>
+        <p>상세 페이지는 공개지만 원본 영상은 Pro 전용이라는 점을 제품 문구와 내부 문서에 함께 남긴다.</p>
+      </article>
+    
+        </div>
+      </section>
+
+      <p class="footer">
+        Last updated: 2026-03-28 · Truth source: 현재 코드가 진실의 원천
+      </p>
+    </main>
+  </body>
+</html>

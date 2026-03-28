@@ -11,6 +11,10 @@ const { authHarness, routerReplaceMock } = vi.hoisted(() => ({
   routerReplaceMock: vi.fn(),
 }));
 
+const { loadEffectiveAccessMock } = vi.hoisted(() => ({
+  loadEffectiveAccessMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: routerReplaceMock,
@@ -31,6 +35,7 @@ vi.mock("@/lib/supabase/client", () => ({
           },
         };
       },
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
     },
     from: (table: string) => {
       authHarness.queriedTables.push(table);
@@ -66,17 +71,31 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
+vi.mock("@/lib/supabase/access", () => ({
+  loadEffectiveAccess: loadEffectiveAccessMock,
+}));
+
 describe("AuthProvider", () => {
   beforeEach(() => {
     authHarness.callback = null;
     authHarness.queriedTables = [];
     routerReplaceMock.mockReset();
+    loadEffectiveAccessMock.mockReset();
     localStorage.clear();
     sessionStorage.clear();
     sessionStorage.setItem("reflix-auth-tab-id", "tab-self");
+    loadEffectiveAccessMock.mockResolvedValue({
+      planTier: "pro",
+      effectiveTier: "pro",
+      accessSource: "paid",
+      betaEndsAt: null,
+    });
     useAuthStore.setState({
       user: null,
       tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
       isLoading: true,
     });
   });
@@ -139,5 +158,39 @@ describe("AuthProvider", () => {
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().tier).toBe("free");
     expect(authHarness.queriedTables).toEqual([]);
+  });
+
+  it("stores beta access metadata while keeping tier as effective pro", async () => {
+    loadEffectiveAccessMock.mockResolvedValue({
+      planTier: "free",
+      effectiveTier: "pro",
+      accessSource: "beta",
+      betaEndsAt: "2026-04-30T00:00:00.000Z",
+    });
+
+    render(
+      <AuthProvider>
+        <div>child</div>
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(authHarness.callback).not.toBeNull();
+    });
+
+    await act(async () => {
+      authHarness.callback?.("SIGNED_IN", {
+        user: { id: "user-1" },
+      });
+    });
+
+    await waitFor(() => {
+      expect(useAuthStore.getState()).toMatchObject({
+        tier: "pro",
+        planTier: "free",
+        accessSource: "beta",
+        betaEndsAt: "2026-04-30T00:00:00.000Z",
+      });
+    });
   });
 });

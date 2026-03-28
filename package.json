@@ -7,6 +7,8 @@
     "build": "node scripts/prepare-protected-public-build.mjs && next build",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:browse": "playwright test tests/e2e/browse-regression.spec.ts",
     "worker:media:dev": "wrangler dev --config workers/media-gateway/wrangler.toml",
     "worker:media:deploy": "wrangler deploy --config workers/media-gateway/wrangler.toml",
     "export:batch": "node scripts/export.mjs",
@@ -52,7 +54,9 @@
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1015.0",
     "@cloudflare/workers-types": "^4.20260317.1",
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@playwright/test": "^1.56.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",

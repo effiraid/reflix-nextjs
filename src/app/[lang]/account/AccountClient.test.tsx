@@ -51,7 +51,17 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
-const dict = {} as Dictionary;
+const dict = {
+  account: {
+    proActive: "Pro 구독 활성",
+    freeTier: "무료 티어",
+    manageViaStripe: "구독 관리는 Stripe Customer Portal에서 할 수 있습니다.",
+    upgradeToPro: "Pro로 업그레이드",
+    betaActive: "Pro 체험 중",
+    betaEndsOn: "베타 종료일",
+    betaRevertsToFree: "종료 후 무료 티어로 전환됩니다.",
+  },
+} as Dictionary;
 
 describe("AccountClient", () => {
   beforeEach(() => {
@@ -65,6 +75,9 @@ describe("AccountClient", () => {
         email: "user@example.com",
       } as never,
       tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
       isLoading: false,
     });
 
@@ -140,6 +153,27 @@ describe("AccountClient", () => {
 
     expect(
       await screen.findByText("Google 연결을 완료하지 못했습니다. 다시 시도해주세요.")
+    ).toBeInTheDocument();
+  });
+
+  it("shows beta status and beta end date for a trial user", async () => {
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "pro",
+      planTier: "free",
+      accessSource: "beta",
+      betaEndsAt: "2026-04-30T00:00:00.000Z",
+      isLoading: false,
+    });
+
+    render(<AccountClient lang="ko" dict={dict} />);
+
+    expect(await screen.findByText("Pro 체험 중")).toBeInTheDocument();
+    expect(
+      screen.getByText("종료 후 무료 티어로 전환됩니다.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Pro로 업그레이드" })
     ).toBeInTheDocument();
   });
 });

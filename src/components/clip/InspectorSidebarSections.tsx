@@ -206,14 +206,18 @@ export function InspectorSidebarSections({
                   onClick={() => onSelectRelatedClip?.(relatedClip.id)}
                   className="relative block h-16 w-16 overflow-hidden rounded-md transition hover:ring-2 hover:ring-accent"
                 >
-                  <Image
-                    src={getMediaUrl(relatedClip.thumbnailUrl)}
-                    alt={relatedClip.name}
-                    width={relatedClip.width}
-                    height={relatedClip.height}
-                    sizes="64px"
-                    className="h-full w-full object-cover"
-                  />
+                  {getMediaUrl(relatedClip.thumbnailUrl) ? (
+                    <Image
+                      src={getMediaUrl(relatedClip.thumbnailUrl)}
+                      alt={relatedClip.name ?? ""}
+                      width={relatedClip.width}
+                      height={relatedClip.height}
+                      sizes="64px"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-surface" />
+                  )}
                 </button>
               </div>
             ))}

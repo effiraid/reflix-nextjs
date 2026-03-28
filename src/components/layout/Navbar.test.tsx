@@ -2,6 +2,7 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Navbar } from "./Navbar";
+import { useAuthStore } from "@/stores/authStore";
 
 const push = vi.fn();
 const setTheme = vi.fn();
@@ -97,6 +98,14 @@ describe("Navbar", () => {
     setLeftPanelOpen.mockReset();
     setRightPanelOpen.mockReset();
     setSelectedClipId.mockReset();
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
+      isLoading: false,
+    });
     uiState = {
       leftPanelOpen: true,
       rightPanelOpen: true,
@@ -175,5 +184,22 @@ describe("Navbar", () => {
     fireEvent.click(screen.getByRole("button", { name: "모바일 검색 열기" }));
 
     expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
+  });
+
+  it("shows Upgrade to Pro for beta users instead of Manage subscription", () => {
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "pro",
+      planTier: "free",
+      accessSource: "beta",
+      betaEndsAt: "2026-04-30T00:00:00.000Z",
+      isLoading: false,
+    });
+
+    render(<Navbar lang="ko" dict={dict} />);
+    fireEvent.click(screen.getByRole("button", { name: "사용자 메뉴" }));
+
+    expect(screen.getByText("Pro 업그레이드")).toBeInTheDocument();
+    expect(screen.queryByText("구독 관리")).toBeNull();
   });
 });

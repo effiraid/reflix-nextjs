@@ -6,7 +6,7 @@ import { filterCategoriesByMode } from "@/lib/categories";
 import { useFilterStore } from "@/stores/filterStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
 import { useUIStore } from "@/stores/uiStore";
-import { useClipData } from "./ClipDataProvider";
+import { useBrowseData } from "./ClipDataProvider";
 import { FeedCategorySection } from "./FeedCategorySection";
 import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 
@@ -17,7 +17,9 @@ interface FeedViewProps {
 }
 
 export function FeedView({ categories, lang, onOpenQuickView }: FeedViewProps) {
-  const clips = useClipData();
+  // Use initialClips for feed grouping — projection data lacks `category` field,
+  // which causes all clips to be grouped as "uncategorized" after fetch completes.
+  const { initialClips: clips } = useBrowseData();
   const contentMode = useFilterStore((s) => s.contentMode);
   const { updateURL } = useFilterSync();
   const setViewMode = useUIStore((s) => s.setViewMode);

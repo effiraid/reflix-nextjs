@@ -1,8 +1,11 @@
 import type {
+  BrowseCardRecord,
+  BrowseFilterIndexRecord,
   BrowseProjectionRecord,
   BrowseSummaryRecord,
   ClipIndexData,
   CategoryTree,
+  LandingStats,
   TagGroupData,
   Clip,
 } from "./types";
@@ -46,8 +49,7 @@ async function readPublicJson<T>(...segments: string[]): Promise<T> {
 }
 
 export async function getClipIndex(): Promise<ClipIndexData> {
-  const data = await import("@/data/index.json");
-  return data.default as ClipIndexData;
+  return readPublicJson<ClipIndexData>("data", "index.json");
 }
 
 export async function loadBrowseSummary(): Promise<BrowseSummaryRecord[]> {
@@ -73,6 +75,52 @@ export async function loadBrowseProjection(): Promise<BrowseProjectionRecord[]> 
   } catch {
     const clipIndex = await getClipIndex();
     return buildBrowseArtifactsFromClipIndex(clipIndex.clips).projection;
+  }
+}
+
+export async function loadBrowseCards(): Promise<BrowseCardRecord[]> {
+  try {
+    return await readPublicJson<BrowseCardRecord[]>(
+      "data",
+      "browse",
+      "cards.json"
+    );
+  } catch {
+    // Fallback: derive from projection if cards.json doesn't exist yet
+    const projection = await loadBrowseProjection();
+    return projection.map(
+      ({ tags, aiStructuredTags, folders, searchTokens, ...card }) => card
+    );
+  }
+}
+
+export async function loadBrowseFilterIndex(): Promise<
+  BrowseFilterIndexRecord[]
+> {
+  try {
+    return await readPublicJson<BrowseFilterIndexRecord[]>(
+      "data",
+      "browse",
+      "filter-index.json"
+    );
+  } catch {
+    // Fallback: derive from projection if filter-index.json doesn't exist yet
+    const projection = await loadBrowseProjection();
+    return projection.map((p) => ({
+      id: p.id,
+      tags: p.tags ?? [],
+      aiStructuredTags: p.aiStructuredTags,
+      folders: p.folders ?? [],
+      lightTokens: p.searchTokens,
+    }));
+  }
+}
+
+export async function loadLandingStats(): Promise<LandingStats | null> {
+  try {
+    return await readPublicJson<LandingStats>("data", "landing-stats.json");
+  } catch {
+    return null;
   }
 }
 

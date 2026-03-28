@@ -34,7 +34,7 @@ describe("English dictionary", () => {
         "Curated animation and game clips.\nFind the exact motion with tags,\nAI analysis, and frame-by-frame playback.",
       heroPills: "Combat,Emotion,Cinematics,Running,Effects,Arcane,Magic",
       featureTagDesc:
-        "37 tag groups. Hundreds of tags.\nFind the exact clip with one keyword.\nSupports initial-consonant search and English-keyboard-to-Korean input correction.",
+        "37 tag groups. Hundreds of tags.\nFind the exact clip with one keyword.",
       featureTagBadges: "Arcane,Running,Exhausted",
     });
 

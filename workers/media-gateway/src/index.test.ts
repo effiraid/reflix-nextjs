@@ -38,12 +38,16 @@ function createEnv(overrides: Record<string, unknown> = {}) {
   };
 }
 
-async function createValidCookie(tier: "free" | "pro" = "pro") {
+async function createValidCookie(
+  tier: "free" | "pro" = "pro",
+  userId = "user-123"
+) {
   const token = await signMediaSessionToken(
     {
       v: 2,
       host: "reflix.dev",
       exp: Date.now() + 60_000,
+      userId,
       tier,
     },
     "test-secret"
@@ -425,7 +429,21 @@ describe("Anti-embedding headers", () => {
 });
 
 describe("Tier-based access control", () => {
-  it("rejects /videos/ for free tier users", async () => {
+  it("rejects /videos/ for guest users", async () => {
+    const guestCookie = await createValidCookie("free", "");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request("https://media.reflix.dev/videos/clip-1.mp4", {
+      headers: { Cookie: guestCookie, Origin: "https://reflix.dev" },
+    });
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(403);
+    const body = await response.json();
+    expect(body).toEqual({ error: "sign_in_required", message: expect.any(String) });
+  });
+
+  it("allows /videos/ for authenticated free tier users", async () => {
     const freeCookie = await createValidCookie("free");
     const env = createEnv({
       MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
@@ -434,9 +452,7 @@ describe("Tier-based access control", () => {
       headers: { Cookie: freeCookie, Origin: "https://reflix.dev" },
     });
     const response = await worker.fetch(request, env);
-    expect(response.status).toBe(403);
-    const body = await response.json();
-    expect(body).toEqual({ error: "pro_required", message: expect.any(String) });
+    expect(response.status).toBe(200);
   });
 
   it("allows /videos/ for pro tier users", async () => {

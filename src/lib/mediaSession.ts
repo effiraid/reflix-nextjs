@@ -15,6 +15,7 @@ type MediaSessionPayloadV2 = {
   exp: number;
   userId?: string;
   tier: "free" | "pro";
+  accessSource?: "free" | "paid" | "beta";
 };
 
 export type MediaSessionPayload = MediaSessionPayloadV1 | MediaSessionPayloadV2;

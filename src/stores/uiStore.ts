@@ -35,7 +35,7 @@ export const useUIStore = create<UIStore>()(
     (set) => ({
       leftPanelOpen: true,
       rightPanelOpen: true,
-      viewMode: "masonry",
+      viewMode: "feed",
       quickViewOpen: false,
       filterBarOpen: false,
       thumbnailSize: 2,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { MasonryGrid } from "@/components/clip/MasonryGrid";
 import { useFilterSync } from "@/hooks/useFilterSync";
@@ -17,7 +17,14 @@ import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
 import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
+import { BrandSplash } from "@/components/splash/BrandSplash";
 import { useSplashGate } from "@/components/splash/useSplashGate";
+import {
+  FREE_MAX_FILTER_AXES,
+  getBrowseVisibleResultsLimit,
+  getViewerTier,
+  hasProAccess,
+} from "@/lib/accessPolicy";
 
 const QuickViewModal = dynamic(
   () =>
@@ -31,8 +38,6 @@ function scrollToClip(clipId: string) {
     el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   });
 }
-
-const FREE_SEARCH_LIMIT = 5;
 
 function countActiveFilterAxes(filters: FilterState): number {
   return [
@@ -144,23 +149,27 @@ export function BrowseClient({
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
-  const isProUser = Boolean(user) && tier === "pro";
+  const viewerTier = getViewerTier(user, tier);
+  const isProUser = hasProAccess(user, tier);
+  const browseVisibleResultsLimit = getBrowseVisibleResultsLimit(viewerTier);
   const activeFilterAxes = countActiveFilterAxes(filters);
-  const isFilterCombinationLimited = activeFilterAxes > 1 && !isProUser;
+  const isFilterCombinationLimited =
+    activeFilterAxes > FREE_MAX_FILTER_AXES && !isProUser;
   const effectiveFilters = useMemo(
     () => (isFilterCombinationLimited ? limitFiltersToSingleAxis(filters) : filters),
     [filters, isFilterCombinationLimited]
   );
 
-  // Mark first visit complete (splash gate)
-  const { markComplete: markSplashComplete } = useSplashGate("intro");
-  const splashMarked = useRef(false);
+  const {
+    shouldShow: shouldShowSplash,
+    markComplete: markSplashComplete,
+  } = useSplashGate("intro");
+  const splashDismissed = useRef(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
   useEffect(() => {
-    if (!splashMarked.current) {
-      splashMarked.current = true;
-      markSplashComplete();
-    }
-  }, [markSplashComplete]);
+    setHasHydrated(true);
+  }, []);
 
   // Sync URL → Zustand filters
   useFilterSync();
@@ -221,7 +230,7 @@ export function BrowseClient({
             ? initialDisplayClips
             : shuffleClips(initialDisplayClips);
         const lockedClipIds = isAllTabLimited
-          ? new Set(clips.slice(FREE_SEARCH_LIMIT).map((c) => c.id))
+          ? new Set(clips.slice(browseVisibleResultsLimit).map((c) => c.id))
           : new Set<string>();
         return {
           clips,
@@ -250,7 +259,7 @@ export function BrowseClient({
       const orderedResults =
         shuffleSeed === 0 ? allResults : shuffleClips(allResults);
       const lockedClipIds = isLimited
-        ? new Set(orderedResults.slice(FREE_SEARCH_LIMIT).map((clip) => clip.id))
+        ? new Set(orderedResults.slice(browseVisibleResultsLimit).map((clip) => clip.id))
         : new Set<string>();
 
       return {
@@ -270,6 +279,7 @@ export function BrowseClient({
       isProUser,
       isAllTabLimited,
       categories,
+      browseVisibleResultsLimit,
       tagI18n,
       shuffleSeed,
       lang,
@@ -482,17 +492,31 @@ export function BrowseClient({
     [lockedClipIds, setSelectedClipId, setQuickViewOpen]
   );
 
+  const splashOverlay =
+    hasHydrated && shouldShowSplash && !splashDismissed.current ? (
+      <BrandSplash
+        onComplete={() => {
+          splashDismissed.current = true;
+          markSplashComplete();
+        }}
+      />
+    ) : null;
+
   if (filtered.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8 text-muted">
-        {emptyStateLabel}
-      </div>
+      <>
+        {splashOverlay}
+        <div className="flex flex-1 items-center justify-center p-8 text-muted">
+          {emptyStateLabel}
+        </div>
+      </>
     );
   }
 
   if (showFeed) {
     return (
       <>
+        {splashOverlay}
         <FeedView
           categories={categories}
           lang={lang}
@@ -513,6 +537,7 @@ export function BrowseClient({
 
   return (
     <>
+      {splashOverlay}
       {hasSearchOrFilter || lockedCount > 0 || isFilterCombinationLimited ? (
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <p className="text-xs text-muted" aria-live="polite">

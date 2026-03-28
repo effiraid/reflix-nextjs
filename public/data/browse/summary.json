@@ -9,7 +9,22 @@
     "height": 720,
     "duration": 8.555,
     "star": 3,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "일어나기",
+      "힘듦",
+      "아픔",
+      "비틀비틀",
+      "비몽사몽",
+      "지침",
+      "힘겨움",
+      "연출",
+      "일어서기",
+      "다침",
+      "고통",
+      "괴로움"
+    ]
   },
   {
     "id": "L3TR52T27B2VL",
@@ -21,7 +36,17 @@
     "height": 720,
     "duration": 6.917,
     "star": 3,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "거침",
+      "숨",
+      "지침",
+      "힘겨움",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T2A751G",
@@ -33,7 +58,17 @@
     "height": 720,
     "duration": 4.843,
     "star": 3,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "거침",
+      "숨",
+      "지침",
+      "힘겨움",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T2BJCOW",
@@ -45,7 +80,15 @@
     "height": 720,
     "duration": 3.733334,
     "star": 3,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "심호흡",
+      "지침",
+      "힘겨움",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T2F47S1",
@@ -57,7 +100,19 @@
     "height": 720,
     "duration": 3.157334,
     "star": 3,
-    "category": "run"
+    "category": "run",
+    "tags": [
+      "아케인",
+      "달리기",
+      "힘듦",
+      "올리기",
+      "올라가기",
+      "지침",
+      "힘겨움",
+      "오르기",
+      "연출",
+      "뛰기"
+    ]
   },
   {
     "id": "L3TR52T2K3FY9",
@@ -69,7 +124,16 @@
     "height": 720,
     "duration": 3.477334,
     "star": 3,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "지침",
+      "힘겨움",
+      "연출",
+      "충격"
+    ]
   },
   {
     "id": "L3TR52T2RH4G6",
@@ -81,7 +145,25 @@
     "height": 720,
     "duration": 6.336,
     "star": 3,
-    "category": "run"
+    "category": "run",
+    "tags": [
+      "아케인",
+      "달리기",
+      "힘듦",
+      "호흡",
+      "발차기",
+      "지침",
+      "힘겨움",
+      "연출",
+      "뛰기",
+      "공격",
+      "날라차기",
+      "점프",
+      "전투",
+      "게임",
+      "교전",
+      "일대일"
+    ]
   },
   {
     "id": "L3TR52T2S1A9X",
@@ -93,7 +175,26 @@
     "height": 720,
     "duration": 13.209,
     "star": 3,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "괴로움",
+      "고뇌",
+      "지침",
+      "힘겨움",
+      "걱정",
+      "고민",
+      "연출",
+      "한숨",
+      "불안",
+      "두려움",
+      "무서움",
+      "공포",
+      "겁먹음",
+      "고통",
+      "아픔"
+    ]
   },
   {
     "id": "L3TR52T2VXUHO",
@@ -105,7 +206,19 @@
     "height": 720,
     "duration": 5.292,
     "star": 3,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "고통",
+      "힘듦",
+      "올라가기",
+      "지침",
+      "힘겨움",
+      "오르기",
+      "연출",
+      "아픔",
+      "괴로움"
+    ]
   },
   {
     "id": "L3TR52T302BJZ",
@@ -117,7 +230,14 @@
     "height": 804,
     "duration": 2.601,
     "star": 3,
-    "category": "emotion"
+    "category": "emotion",
+    "tags": [
+      "소울",
+      "감동",
+      "연출",
+      "와우",
+      "표정"
+    ]
   },
   {
     "id": "L3TR52T30ATKO",
@@ -129,7 +249,12 @@
     "height": 720,
     "duration": 5.2,
     "star": 4,
-    "category": "sit-lie-stand"
+    "category": "sit-lie-stand",
+    "tags": [
+      "호라이즌",
+      "눕기",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T30EFY6",
@@ -141,7 +266,13 @@
     "height": 720,
     "duration": 2.979773,
     "star": 4,
-    "category": "dialogue-cinematic"
+    "category": "dialogue-cinematic",
+    "tags": [
+      "호라이즌",
+      "대화",
+      "제스처",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T30GME3",
@@ -153,7 +284,12 @@
     "height": 720,
     "duration": 3.179773,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "내리기",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T30LHZT",
@@ -165,7 +301,12 @@
     "height": 720,
     "duration": 4.737,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "원신",
+      "궁금",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T30RO73",
@@ -177,7 +318,14 @@
     "height": 720,
     "duration": 12.1,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "물건",
+      "목걸이",
+      "걸기",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T30WFY5",
@@ -189,7 +337,13 @@
     "height": 720,
     "duration": 5.134,
     "star": 4,
-    "category": "sit-lie-stand"
+    "category": "sit-lie-stand",
+    "tags": [
+      "호라이즌",
+      "앉기",
+      "의자",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T310BLE",
@@ -201,7 +355,19 @@
     "height": 720,
     "duration": 42.582,
     "star": 3,
-    "category": "combat-ready"
+    "category": "combat-ready",
+    "tags": [
+      "연출",
+      "교전",
+      "아케인",
+      "싸움",
+      "격투",
+      "전투",
+      "주먹",
+      "무기",
+      "일대일",
+      "공격"
+    ]
   },
   {
     "id": "L3TR52T313IMH",
@@ -213,7 +379,13 @@
     "height": 720,
     "duration": 3.579773,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "침",
+      "뱉기",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T318DTE",
@@ -225,7 +397,14 @@
     "height": 720,
     "duration": 4.179773,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "올라가기",
+      "계단",
+      "오르기",
+      "연출"
+    ]
   },
   {
     "id": "L3TR52T31CFQ9",
@@ -237,6 +416,14 @@
     "height": 720,
     "duration": 2.530975,
     "star": 4,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "요정",
+      "원신",
+      "아이",
+      "팔짱",
+      "페이몬",
+      "연출"
+    ]
   }
 ]

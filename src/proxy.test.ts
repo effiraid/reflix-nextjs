@@ -10,6 +10,7 @@ const { authState } = vi.hoisted(() => ({
   authState: {
     user: null as { id: string } | null,
     profileTier: "free" as "free" | "pro",
+    betaGrant: null as Record<string, unknown> | null,
   },
 }));
 
@@ -20,15 +21,41 @@ vi.mock("@supabase/ssr", () => ({
         data: { user: authState.user },
       })),
     },
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(async () => ({
-            data: authState.user ? { tier: authState.profileTier } : null,
+    from: vi.fn((table: string) => {
+      if (table === "profiles") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              single: vi.fn(async () => ({
+                data: authState.user ? { tier: authState.profileTier } : null,
+              })),
+            })),
           })),
-        })),
-      })),
-    })),
+        };
+      }
+
+      if (table === "beta_access_grants") {
+        return {
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              is: vi.fn(() => ({
+                lte: vi.fn(() => ({
+                  gt: vi.fn(() => ({
+                    order: vi.fn(() => ({
+                      limit: vi.fn(async () => ({
+                        data: authState.betaGrant ? [authState.betaGrant] : [],
+                      })),
+                    })),
+                  })),
+                })),
+              })),
+            })),
+          })),
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    }),
   })),
 }));
 
@@ -36,6 +63,7 @@ describe("proxy media session cookie", () => {
   beforeEach(() => {
     authState.user = null;
     authState.profileTier = "free";
+    authState.betaGrant = null;
   });
 
   afterEach(() => {
@@ -80,7 +108,7 @@ describe("proxy media session cookie", () => {
     expect(response.headers.get("location")).toBe("https://reflix.dev/ko/login");
   });
 
-  it("treats any authenticated user as pro in the media session token", async () => {
+  it("treats a free user with an active beta grant as pro in the media session token", async () => {
     vi.stubEnv("NEXT_PUBLIC_MEDIA_URL", "https://media.reflix.dev");
     vi.stubEnv("MEDIA_SESSION_SECRET", "test-secret");
     vi.stubEnv("MEDIA_SESSION_COOKIE_DOMAIN", ".reflix.dev");
@@ -88,6 +116,16 @@ describe("proxy media session cookie", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
     authState.user = { id: "user-123" };
     authState.profileTier = "free";
+    authState.betaGrant = {
+      id: "grant-1",
+      user_id: "user-123",
+      source: "manual",
+      campaign_key: "cohort-1",
+      starts_at: "2026-03-28T00:00:00.000Z",
+      ends_at: "2026-04-30T00:00:00.000Z",
+      revoked_at: null,
+      note: null,
+    };
 
     const response = await proxy(new NextRequest("https://reflix.dev/ko/browse"));
     const token = response.cookies.get(MEDIA_SESSION_COOKIE_NAME)?.value;
@@ -97,6 +135,7 @@ describe("proxy media session cookie", () => {
       v: 2,
       userId: "user-123",
       tier: "pro",
+      accessSource: "beta",
     });
   });
 });

@@ -98,6 +98,13 @@ function AuthProviderEffects() {
 
     // Single listener: handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT
     // Avoids lock contention from concurrent getSession() + onAuthStateChange
+    // Clear stale refresh token cookies to prevent console AuthApiError
+    client.auth.getSession().then(({ error }) => {
+      if (error?.message?.includes("Refresh Token")) {
+        client.auth.signOut({ scope: "local" });
+      }
+    });
+
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {

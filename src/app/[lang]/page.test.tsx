@@ -24,6 +24,7 @@ vi.mock("@/lib/data", () => ({
   getClipIndex,
   getTagGroups,
   getTagI18n,
+  loadLandingStats: () => Promise.resolve(null),
 }));
 
 vi.mock("./LandingNavbar", () => ({

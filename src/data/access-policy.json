@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "title": "Reflix Access Policy",
+    "lastUpdated": "2026-03-28",
+    "truthSource": "current-code",
+    "truthSourceLabel": "현재 코드가 진실의 원천",
+    "ownerDecisions": [
+      "로그인하지 않은 사용자는 guest로 본다.",
+      "로그인한 비구독자는 free로 본다.",
+      "구독자만 pro로 본다.",
+      "상세 페이지는 로그인하지 않은 사용자도 조회할 수 있다."
+    ]
+  },
+  "rules": {
+    "guestBrowseVisibleResults": 3,
+    "freeBrowseVisibleResults": 5,
+    "freeBoardLimit": 1,
+    "freeMaxFilterAxes": 1,
+    "detailPagesPublic": true,
+    "fullVideoRequiresAuthentication": true,
+    "previewVideoRequiresPro": false,
+    "shuffleRequiresPro": true,
+    "aiAnalysisPaywalled": false,
+    "dailyViewLimitEnforced": false,
+    "freeClipCountClaimEnforced": false
+  },
+  "tiers": [
+    {
+      "id": "guest",
+      "label": "Guest",
+      "summary": "비로그인 사용자"
+    },
+    {
+      "id": "free",
+      "label": "Free",
+      "summary": "로그인했지만 구독하지 않은 사용자"
+    },
+    {
+      "id": "pro",
+      "label": "Pro",
+      "summary": "구독자"
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "landing",
+      "label": "랜딩 페이지 접근",
+      "guest": "yes",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "모든 사용자가 접근 가능"
+    },
+    {
+      "id": "browse",
+      "label": "브라우즈 페이지 접근",
+      "guest": "yes",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "browse 자체는 로그인으로 막지 않음"
+    },
+    {
+      "id": "detail-page",
+      "label": "상세 페이지 접근",
+      "guest": "yes",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "상세 페이지는 공개"
+    },
+    {
+      "id": "detail-metadata",
+      "label": "클립 메타데이터 / AI 설명 보기",
+      "guest": "yes",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "현재 코드는 AI 설명을 Pro로 막지 않음"
+    },
+    {
+      "id": "preview-video",
+      "label": "카드 / 프리뷰 영상 보기",
+      "guest": "yes",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "/previews/* 는 전 티어 허용"
+    },
+    {
+      "id": "full-video",
+      "label": "원본 영상 재생",
+      "guest": "no",
+      "free": "yes",
+      "pro": "yes",
+      "notes": "로그인 사용자(free/pro)는 허용, guest는 차단"
+    },
+    {
+      "id": "search",
+      "label": "검색 / 태그 탐색",
+      "guest": "limited",
+      "free": "limited",
+      "pro": "yes",
+      "notes": "guest/free 모두 가능하지만 잠금 결과가 생길 수 있음"
+    },
+    {
+      "id": "multi-axis-filters",
+      "label": "필터 2축 이상 조합",
+      "guest": "no",
+      "free": "no",
+      "pro": "yes",
+      "notes": "guest/free 는 1축까지만 허용"
+    },
+    {
+      "id": "unlocked-results",
+      "label": "브라우즈 결과 잠금 해제 범위",
+      "guest": "3 results",
+      "free": "5 results",
+      "pro": "all results",
+      "notes": "guest 3개, free 5개, pro 전체"
+    },
+    {
+      "id": "boards",
+      "label": "보드 기능",
+      "guest": "no",
+      "free": "1 board",
+      "pro": "unlimited",
+      "notes": "guest 는 로그인 필요, free 는 1개, pro 는 무제한"
+    },
+    {
+      "id": "shuffle",
+      "label": "셔플 버튼",
+      "guest": "no",
+      "free": "no",
+      "pro": "yes",
+      "notes": "현재 UI에서 Pro에만 노출"
+    }
+  ],
+  "recommendedCopy": {
+    "heroSub": "가입 없이 바로 탐색",
+    "freeDescription": "로그인하면 원본 영상과 저장 기능을 바로 사용",
+    "freeFeatures": [
+      "원본 영상 재생",
+      "태그 검색",
+      "탐색 결과 5개까지",
+      "보드 1개"
+    ],
+    "proDescription": "더 빨리 찾고 더 잘 정리하는 작업 모드",
+    "proFeatures": [
+      "전체 결과 보기",
+      "다중 필터 조합",
+      "무제한 보드",
+      "셔플"
+    ],
+    "removeClaims": [
+      "50개 무료 클립",
+      "일 20회 조회"
+    ],
+    "cautionClaims": [
+      "AI 분석을 Pro 전용 혜택처럼 쓰는 문구",
+      "프레임 재생을 Pro 전용 혜택처럼 쓰는 문구"
+    ]
+  },
+  "priorities": [
+    {
+      "priority": "P0",
+      "title": "Guest / Free / Pro 문구를 새 기준으로 정렬",
+      "detail": "guest는 맛보기, free는 원본 영상 + 저장, pro는 검색 깊이 + 정리 효율이라는 메시지로 다시 쓴다."
+    },
+    {
+      "priority": "P1",
+      "title": "Free / Pro 기준을 한 곳에서 읽게 만들기",
+      "detail": "브라우즈 잠금, 보드 제한, Pro 판별용 헬퍼를 공통 모듈에서 가져오게 한다."
+    },
+    {
+      "priority": "P1",
+      "title": "오래된 테스트 기대값 정리",
+      "detail": "로그인한 사람을 모두 Pro로 보던 예전 테스트 기대값을 현재 정책에 맞게 고친다."
+    },
+    {
+      "priority": "P2",
+      "title": "상세 페이지 공개 정책을 문서화",
+      "detail": "상세 페이지는 공개지만 원본 영상은 Pro 전용이라는 점을 제품 문구와 내부 문서에 함께 남긴다."
+    }
+  ]
+}

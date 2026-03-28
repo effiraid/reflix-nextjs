@@ -185,9 +185,16 @@ export async function runUploadStage(clipIds, {
     { concurrency }
   );
 
+  const resultsByClipId = new Map();
+  for (const entry of results) {
+    const arr = resultsByClipId.get(entry.clipId) || [];
+    arr.push(entry);
+    resultsByClipId.set(entry.clipId, arr);
+  }
+
   for (const clipId of clipIds) {
     const itemState = itemStates.get(clipId) || { id: clipId };
-    const clipEntries = results.filter((entry) => entry.clipId === clipId);
+    const clipEntries = resultsByClipId.get(clipId) || [];
     const mergedEntries = mergeUploadEntries(itemState.upload?.entries, clipEntries);
 
     saveItemState({

@@ -8,18 +8,17 @@ export function useIntersectionLoader() {
   const ref = useRef<HTMLDivElement>(null);
   const supportsIntersectionObserver =
     typeof IntersectionObserver !== "undefined";
-  const [stage, setStage] = useState<LoadStage>(
-    supportsIntersectionObserver ? "lqip" : "thumbnail"
-  );
-  const [isInView, setIsInView] = useState(!supportsIntersectionObserver);
+  const [stage, setStage] = useState<LoadStage>("lqip");
+  const [isInView, setIsInView] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    // SSR guard (eng review critical gap #2)
     if (!supportsIntersectionObserver) {
+      setIsInView(true);
+      setStage("thumbnail");
       return;
     }
 

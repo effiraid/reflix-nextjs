@@ -7,6 +7,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
 import { useBrowseData } from "@/app/[lang]/browse/ClipDataProvider";
+import { hasProAccess } from "@/lib/accessPolicy";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
@@ -23,7 +24,7 @@ interface NavbarProps {
 
 export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const { theme, setTheme } = useTheme();
-  const { projectionClips, projectionStatus } = useBrowseData();
+  const { projectionClips, projectionStatus, allTags, popularTags } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
   const { user, tier, isLoading: authLoading } = useAuthStore();
   const mounted = useSyncExternalStore(
@@ -129,6 +130,13 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
             initialQuery={currentSearchQuery}
             placeholder={dict.nav.searchPlaceholder}
             onSearch={handleSearch}
+            allTags={allTags}
+            popularTags={popularTags}
+            lang={lang}
+            recentLabel={lang === "ko" ? "최근 검색어" : "Recent searches"}
+            popularLabel={lang === "ko" ? "인기 태그" : "Popular tags"}
+            suggestionsLabel={lang === "ko" ? "태그 제안" : "Tag suggestions"}
+            clearLabel={lang === "ko" ? "지우기" : "Clear"}
           />
         </div>
 
@@ -178,7 +186,7 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
             user ? (
               <UserMenu
                 lang={lang}
-                tier={tier}
+                isPro={hasProAccess(user, tier)}
                 userMenuOpen={userMenuOpen}
                 setUserMenuOpen={setUserMenuOpen}
               />
@@ -213,6 +221,8 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
           setMobileSearchOpen(false);
           handleSearch(query);
         }}
+        allTags={allTags}
+        popularTags={popularTags}
       />
     </>
   );
@@ -220,17 +230,16 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
 
 function UserMenu({
   lang,
-  tier,
+  isPro,
   userMenuOpen,
   setUserMenuOpen,
 }: {
   lang: Locale;
-  tier: "free" | "pro";
+  isPro: boolean;
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
 }) {
   const isKo = lang === "ko";
-  const isPro = tier === "pro";
   const { openPricingModal } = useUIStore();
 
   async function handleSignOut() {

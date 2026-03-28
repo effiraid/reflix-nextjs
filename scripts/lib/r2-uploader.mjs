@@ -1,7 +1,5 @@
 import fs from "node:fs";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
+import { S3Client, PutObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 
 const REQUIRED_R2_ENV_KEYS = [
   "R2_ACCOUNT_ID",
@@ -37,7 +35,6 @@ function getRequiredR2Config(env = process.env) {
 
 export function createR2ClientFromEnv(env = process.env) {
   const config = getRequiredR2Config(env);
-  const { S3Client } = require("@aws-sdk/client-s3");
 
   return new S3Client({
     region: "auto",
@@ -65,8 +62,7 @@ export async function uploadFile(
 
   const resolvedBucketName = bucketName ?? getRequiredR2Config(env).bucketName;
   const resolvedClient = client ?? createR2ClientFromEnv(env);
-  const { PutObjectCommand } = require("@aws-sdk/client-s3");
-  const body = fs.readFileSync(localPath);
+  const body = fs.createReadStream(localPath);
 
   await resolvedClient.send(
     new PutObjectCommand({
@@ -87,7 +83,6 @@ export async function uploadFile(
 }
 
 export async function checkR2ObjectExists(client, bucketName, key) {
-  const { HeadObjectCommand } = require("@aws-sdk/client-s3");
   try {
     await client.send(new HeadObjectCommand({ Bucket: bucketName, Key: key }));
     return true;

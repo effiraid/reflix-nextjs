@@ -125,6 +125,18 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
   ),
 }));
 
+vi.mock("@/components/splash/BrandSplash", () => ({
+  BrandSplash: ({ onComplete }: { onComplete?: () => void }) => (
+    <button
+      type="button"
+      data-testid="brand-splash"
+      onClick={onComplete}
+    >
+      Splash
+    </button>
+  ),
+}));
+
 const clips: ClipIndex[] = [
   {
     id: "clip-a",
@@ -230,6 +242,7 @@ describe("BrowseClient", () => {
     useUIStore.setState({
       shuffleSeed: 0,
       quickViewOpen: false,
+      viewMode: "masonry",
     });
     useAuthStore.setState({
       user: null,
@@ -262,6 +275,23 @@ describe("BrowseClient", () => {
     expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-b,clip-c,clip-a");
 
     randomSpy.mockRestore();
+  });
+
+  it("shows the intro splash when the visitor has not opened browse before", async () => {
+    localStorage.removeItem("reflix-visited");
+    useUIStore.setState({
+      viewMode: "feed",
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(await screen.findByTestId("brand-splash")).toBeInTheDocument();
   });
 
   it("opens quick view on Space and closes it on Escape", async () => {

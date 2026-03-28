@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Geist_Mono } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -5,6 +6,12 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { shouldEnableSpeedInsights } from "@/lib/speedInsights";
 import "./globals.css";
+
+export const metadata: Metadata = {
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION ?? "",
+  },
+};
 
 const pretendard = localFont({
   src: "../fonts/PretendardVariable.woff2",

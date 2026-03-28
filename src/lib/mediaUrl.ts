@@ -7,6 +7,7 @@ export function getConfiguredMediaBase(): string {
 }
 
 export function getMediaUrl(path: string): string {
+  if (!path) return "";
   const normalizedPath = path.trim();
   if (!normalizedPath || isAbsoluteUrl(normalizedPath)) {
     return normalizedPath;

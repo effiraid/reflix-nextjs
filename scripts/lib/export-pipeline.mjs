@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { mapWithConcurrency } from "./bounded-pool.mjs";
 import { resolveEagleLibraryPath } from "./eagle-library-path.mjs";
 import { readEagleLibrary } from "./eagle-reader.mjs";
 import { loadCategoryMap } from "./index-builder.mjs";
@@ -71,11 +72,16 @@ function saveManifestWithStage(manifest, projectRoot, stageName, stageStatus) {
   saveRunManifest({ projectRoot, manifest });
 }
 
-function getCompletedItems(items, projectRoot, runId) {
-  return items.filter(
-    (item) =>
-      loadItemState({ projectRoot, runId, clipId: item.id })?.media?.status === "completed"
+async function getCompletedItems(items, projectRoot, runId) {
+  const states = await mapWithConcurrency(
+    items,
+    async (item) => {
+      const state = loadItemState({ projectRoot, runId, clipId: item.id });
+      return { item, completed: state?.media?.status === "completed" };
+    },
+    { concurrency: 50 }
   );
+  return states.filter((s) => s.completed).map((s) => s.item);
 }
 
 export async function runExportPipeline(flags, {
@@ -182,7 +188,7 @@ export async function runExportPipeline(flags, {
     `미디어 처리 단계: 완료 ${mediaSummary.completed}개 / 실패 ${mediaSummary.failed}개 / 재사용 ${mediaSummary.reused}개`
   );
 
-  const completedItems = getCompletedItems(items, projectRoot, manifest.runId);
+  const completedItems = await getCompletedItems(items, projectRoot, manifest.runId);
 
   const artifactSummary = await runArtifactStageImpl(completedItems, {
     projectRoot,
