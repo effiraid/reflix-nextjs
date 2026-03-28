@@ -20,6 +20,7 @@ describe("PricingModal", () => {
 
     useUIStore.setState({
       pricingModalOpen: true,
+      pricingModalIntent: null,
     });
 
     useAuthStore.setState({
@@ -90,5 +91,29 @@ describe("PricingModal", () => {
     expect(
       screen.getByRole("button", { name: "구독 시작" })
     ).toBeEnabled();
+  });
+
+  it("prioritizes the Free login CTA for guests who clicked a locked result", () => {
+    useUIStore.setState({
+      pricingModalOpen: true,
+      pricingModalIntent: {
+        kind: "locked-clip",
+        viewerTier: "guest",
+        clipId: "clip-7",
+        nextPath: "/ko/browse?q=arcane&resumeClip=clip-7&resumeOpen=1",
+      },
+    });
+
+    render(<PricingModal lang="ko" />);
+
+    expect(
+      screen.getByRole("button", { name: "로그인해서 Free 시작" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "로그인해서 Free 시작" }));
+
+    expect(routerPushMock).toHaveBeenCalledWith(
+      "/ko/login?next=%2Fko%2Fbrowse%3Fq%3Darcane%26resumeClip%3Dclip-7%26resumeOpen%3D1"
+    );
   });
 });

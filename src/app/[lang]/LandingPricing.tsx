@@ -245,7 +245,7 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
 
           <button
             type="button"
-            onClick={openPricingModal}
+            onClick={() => openPricingModal()}
             className="mt-8 w-full rounded-full bg-foreground py-2.5 text-center text-[14px] font-medium text-background transition-opacity hover:opacity-80"
           >
             {dict.pricingProCta}

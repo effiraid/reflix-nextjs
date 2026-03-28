@@ -201,42 +201,49 @@ export function LandingHero({ lang, clips, dict }: LandingHeroProps) {
       />
 
       {/* Content */}
-      <div className="relative z-10 mx-auto max-w-3xl text-center">
+      <div className="relative z-10 mx-auto text-center" style={{ maxWidth: 600 }}>
         <h1
-          className="whitespace-pre-line font-bold leading-tight tracking-tight text-white"
+          className="whitespace-pre-line font-bold tracking-tight"
           style={{
             fontSize: isMobile ? "clamp(20px, 6.5vw, 26px)" : 52,
-            letterSpacing: isMobile ? "-0.6px" : "-1.5px",
+            letterSpacing: isMobile ? "-0.6px" : "-0.03em",
+            lineHeight: 1.12,
             textWrap: isMobile ? "wrap" : "balance",
             wordBreak: "keep-all",
+            background: "linear-gradient(180deg, #fff 30%, rgba(255,255,255,0.45) 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
           }}
         >
           {heroTitleText}
         </h1>
 
         <p
-          className="mx-auto mt-4 max-w-xl whitespace-pre-line text-[16px] leading-relaxed text-[#777] md:mt-5 md:max-w-2xl"
-          style={{ wordBreak: "keep-all" }}
+          className="mx-auto whitespace-pre-line"
+          style={{ wordBreak: "keep-all", color: "rgba(255,255,255,0.45)", fontSize: "clamp(14px, 2vw, 16px)", maxWidth: 440, marginTop: 20, lineHeight: 1.65 }}
         >
           {heroSubText}
         </p>
 
-        <div className="mt-6 flex flex-col items-center gap-2.5 md:mt-7">
+        <div className="flex flex-col items-center" style={{ gap: 10, marginTop: 8 }}>
           <Link
             href={`/${lang}/browse`}
             className="inline-block rounded-full bg-white px-8 py-3 text-[16px] font-semibold text-black transition-opacity hover:opacity-80"
           >
             {dict.heroCta}
           </Link>
-          <span className="text-[12px] text-[#555]">{dict.heroCtaSub}</span>
+          <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.3)" }}>{dict.heroCtaSub}</span>
         </div>
 
         {/* Category pills */}
-        <div className="mx-auto mt-6 flex max-w-2xl flex-wrap justify-center gap-2.5 md:mt-7">
+        <div className="mx-auto flex flex-wrap justify-center" style={{ gap: 8, marginTop: 12, maxWidth: 600 }}>
           {pills.map((pill) => (
             <span
               key={pill}
-              className="rounded-full px-3 py-1 text-[12px] text-[#777]"
+              className="rounded-full px-3 py-1 text-[12px] font-medium"
+              style={{
+                color: "rgba(255,255,255,0.5)",
               style={{
                 background: "rgba(255,255,255,0.04)",
                 border: "1px solid rgba(255,255,255,0.06)",

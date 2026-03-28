@@ -2,6 +2,14 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ViewMode } from "@/lib/types";
 import { clampThumbnailSize } from "@/lib/thumbnailSize";
+import type { ViewerTier } from "@/lib/accessPolicy";
+
+export interface PricingModalIntent {
+  kind: "locked-clip";
+  viewerTier: ViewerTier;
+  clipId: string;
+  nextPath?: string;
+}
 
 interface UIStore {
   leftPanelOpen: boolean;
@@ -13,6 +21,7 @@ interface UIStore {
   activeFilterTab: string | null;
   shuffleSeed: number;
   pricingModalOpen: boolean;
+  pricingModalIntent: PricingModalIntent | null;
 
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -26,7 +35,7 @@ interface UIStore {
   stepThumbnailSize: (delta: number) => void;
   setActiveFilterTab: (tab: string | null) => void;
   reshuffleClips: () => void;
-  openPricingModal: () => void;
+  openPricingModal: (intent?: PricingModalIntent) => void;
   closePricingModal: () => void;
 }
 
@@ -42,6 +51,7 @@ export const useUIStore = create<UIStore>()(
       activeFilterTab: null,
       shuffleSeed: 0,
       pricingModalOpen: false,
+      pricingModalIntent: null,
 
       toggleLeftPanel: () =>
         set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
@@ -61,8 +71,16 @@ export const useUIStore = create<UIStore>()(
       setActiveFilterTab: (tab) => set({ activeFilterTab: tab }),
       reshuffleClips: () =>
         set((state) => ({ shuffleSeed: state.shuffleSeed + 1 })),
-      openPricingModal: () => set({ pricingModalOpen: true }),
-      closePricingModal: () => set({ pricingModalOpen: false }),
+      openPricingModal: (intent) =>
+        set({
+          pricingModalOpen: true,
+          pricingModalIntent: intent ?? null,
+        }),
+      closePricingModal: () =>
+        set({
+          pricingModalOpen: false,
+          pricingModalIntent: null,
+        }),
     }),
     {
       name: "reflix-ui",

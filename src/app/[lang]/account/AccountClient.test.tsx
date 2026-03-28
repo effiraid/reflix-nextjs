@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountClient } from "./AccountClient";
 import { useAuthStore } from "@/stores/authStore";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 
 const {
@@ -52,16 +53,8 @@ vi.mock("@/lib/supabase/client", () => ({
 }));
 
 const dict = {
-  account: {
-    proActive: "Pro 구독 활성",
-    freeTier: "무료 티어",
-    manageViaStripe: "구독 관리는 Stripe Customer Portal에서 할 수 있습니다.",
-    upgradeToPro: "Pro로 업그레이드",
-    betaActive: "Pro 체험 중",
-    betaEndsOn: "베타 종료일",
-    betaRevertsToFree: "종료 후 무료 티어로 전환됩니다.",
-  },
-} as Dictionary;
+  auth: koDict.auth,
+} satisfies Pick<Dictionary, "auth">;
 
 describe("AccountClient", () => {
   beforeEach(() => {

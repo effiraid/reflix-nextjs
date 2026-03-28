@@ -243,6 +243,8 @@ describe("BrowseClient", () => {
       shuffleSeed: 0,
       quickViewOpen: false,
       viewMode: "masonry",
+      pricingModalOpen: false,
+      pricingModalIntent: null,
     });
     useAuthStore.setState({
       user: null,
@@ -403,6 +405,12 @@ describe("BrowseClient", () => {
       contentMode: null,
     });
 
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
     render(
       <BrowseClient
         categories={{}}
@@ -422,6 +430,139 @@ describe("BrowseClient", () => {
     expect(statusBar).toHaveTextContent(/7개 클립/);
     expect(statusBar).toHaveTextContent(/2개 결과는 Pro 전용/);
     expect(screen.getByRole("button", { name: "Pro로 잠금 해제" })).toBeInTheDocument();
+  });
+
+  it("re-opens the requested clip after login when the free tier can now access it", async () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      star: index,
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = {
+      initialClips: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: ["match"],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: manyClips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "match",
+      sortBy: "newest",
+      starFilter: null,
+      contentMode: null,
+    });
+
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    window.history.replaceState(
+      null,
+      "",
+      "/ko/browse?q=match&resumeClip=clip-4&resumeOpen=1"
+    );
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(await screen.findByRole("dialog", { name: "Match 4" })).toBeInTheDocument();
+    expect(useClipStore.getState().selectedClipId).toBe("clip-4");
+    expect(window.location.search).toBe("?q=match");
+  });
+
+  it("re-opens the pricing modal after login when the resumed clip is still locked for free", async () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      star: index,
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = {
+      initialClips: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: ["match"],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: manyClips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "match",
+      sortBy: "newest",
+      starFilter: null,
+      contentMode: null,
+    });
+
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    window.history.replaceState(
+      null,
+      "",
+      "/ko/browse?q=match&resumeClip=clip-6&resumeOpen=1"
+    );
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await waitFor(() => {
+      expect(useUIStore.getState().pricingModalOpen).toBe(true);
+    });
+    expect(useUIStore.getState().pricingModalIntent).toMatchObject({
+      kind: "locked-clip",
+      viewerTier: "free",
+      clipId: "clip-6",
+    });
+    expect(useClipStore.getState().selectedClipId).toBe("clip-6");
+    expect(window.location.search).toBe("?q=match");
   });
 
   it("blocks free users from combining multiple filter axes", () => {

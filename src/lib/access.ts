@@ -44,7 +44,7 @@ export function resolveEffectiveAccess({
     };
   }
 
-  if (isGrantActive(betaGrant, nowIso)) {
+  if (betaGrant && isGrantActive(betaGrant, nowIso)) {
     return {
       planTier,
       effectiveTier: "pro",

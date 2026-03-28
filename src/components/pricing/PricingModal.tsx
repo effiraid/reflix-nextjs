@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ACCESS_POLICY } from "@/lib/accessPolicy";
+import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { Locale } from "@/lib/types";
@@ -25,7 +26,7 @@ function CheckIcon() {
 }
 
 export function PricingModal({ lang }: PricingModalProps) {
-  const { pricingModalOpen, closePricingModal } = useUIStore();
+  const { pricingModalOpen, pricingModalIntent, closePricingModal } = useUIStore();
   const { user, accessSource } = useAuthStore();
   const router = useRouter();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
@@ -36,6 +37,11 @@ export function PricingModal({ lang }: PricingModalProps) {
   const isKo = lang === "ko";
   const isYearly = billingInterval === "yearly";
   const isPaidPro = accessSource === "paid";
+  const isGuestLockedFlow =
+    !user &&
+    pricingModalIntent?.kind === "locked-clip" &&
+    pricingModalIntent.viewerTier === "guest";
+  const proSectionRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (pricingModalOpen) {
@@ -92,9 +98,20 @@ export function PricingModal({ lang }: PricingModalProps) {
   const handleFreeStart = useCallback(() => {
     closePricingModal();
     if (!user) {
-      router.push(`/${lang}/login`);
+      const nextPath =
+        pricingModalIntent?.kind === "locked-clip" && pricingModalIntent.nextPath
+          ? sanitizePostAuthRedirect(pricingModalIntent.nextPath, `/${lang}/browse`)
+          : `/${lang}/browse`;
+      router.push(`/${lang}/login?next=${encodeURIComponent(nextPath)}`);
     }
-  }, [closePricingModal, lang, router, user]);
+  }, [closePricingModal, lang, pricingModalIntent, router, user]);
+
+  const handleShowPro = useCallback(() => {
+    proSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
+  }, []);
 
   if (!pricingModalOpen) return null;
 
@@ -149,6 +166,32 @@ export function PricingModal({ lang }: PricingModalProps) {
             </p>
           </div>
 
+          {isGuestLockedFlow ? (
+            <div className="mt-5 rounded-2xl border border-accent/20 bg-accent/5 p-4">
+              <p className="text-sm font-medium text-foreground">
+                {isKo
+                  ? "로그인하면 Free로 원본 영상 재생과 보드 1개를 바로 시작할 수 있어요."
+                  : "Sign in to start Free with full video playback and your first board."}
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleFreeStart}
+                  className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-85"
+                >
+                  {isKo ? "로그인해서 Free 시작" : "Sign in for Free"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleShowPro}
+                  className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-hover"
+                >
+                  {isKo ? "Pro 플랜 보기" : "See Pro plan"}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-6 flex items-center justify-center">
             <div className="inline-flex rounded-full border border-foreground/[0.08] bg-foreground/[0.04] p-1">
               <button
@@ -183,7 +226,7 @@ export function PricingModal({ lang }: PricingModalProps) {
           </div>
 
           <div className="mt-8 flex flex-col md:flex-row">
-            <div className="flex flex-1 flex-col p-6">
+            <div ref={proSectionRef} className="flex flex-1 flex-col p-6">
               <h3 className="text-lg font-semibold text-foreground">Free</h3>
               <div className="mt-2">
                 <span className="text-3xl font-bold text-foreground">{isKo ? "₩0" : "$0"}</span>

@@ -4,9 +4,12 @@ import { useCallback, useState } from "react";
 import Image from "next/image";
 import { LockIcon } from "lucide-react";
 import { useIntersectionLoader } from "@/hooks/useIntersectionLoader";
+import { getViewerTier } from "@/lib/accessPolicy";
+import { buildGuestResumeNextPath } from "@/lib/guestResume";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
 import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
+import { useAuthStore } from "@/stores/authStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
@@ -37,6 +40,10 @@ export function ClipCard({
   const { ref, stage, isInView } = useIntersectionLoader();
   const isSelected = useClipStore((s) => s.selectedClipId === clip.id);
   const setSelectedClipId = useClipStore((s) => s.setSelectedClipId);
+  const { user, tier } = useAuthStore((s) => ({
+    user: s.user,
+    tier: s.tier,
+  }));
   const openPricingModal = useUIStore((s) => s.openPricingModal);
   const [isHovered, setIsHovered] = useState(false);
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
@@ -46,10 +53,32 @@ export function ClipCard({
   const previewFailed = failedPreviewUrl === previewUrl;
   const displayTags = getTagDisplayLabels(clip.tags ?? [], lang, tagI18n);
   const lockedMediaClass = locked ? " blur-lg scale-110" : "";
+  const viewerTier = getViewerTier(user, tier);
+
+  const buildLockedClipIntent = useCallback(() => {
+    if (viewerTier === "guest") {
+      return {
+        kind: "locked-clip" as const,
+        viewerTier,
+        clipId: clip.id,
+        nextPath: buildGuestResumeNextPath(
+          window.location.pathname,
+          window.location.search,
+          clip.id
+        ),
+      };
+    }
+
+    return {
+      kind: "locked-clip" as const,
+      viewerTier,
+      clipId: clip.id,
+    };
+  }, [clip.id, viewerTier]);
 
   const handleClick = useCallback(() => {
     if (locked) {
-      openPricingModal();
+      openPricingModal(buildLockedClipIntent());
       return;
     }
 
@@ -59,24 +88,39 @@ export function ClipCard({
     }
 
     setSelectedClipId(clip.id);
-  }, [clip.id, isSelected, locked, onOpenQuickView, openPricingModal, setSelectedClipId]);
+  }, [
+    buildLockedClipIntent,
+    clip.id,
+    isSelected,
+    locked,
+    onOpenQuickView,
+    openPricingModal,
+    setSelectedClipId,
+  ]);
 
   const handleDoubleClick = useCallback(() => {
     if (locked) {
-      openPricingModal();
+      openPricingModal(buildLockedClipIntent());
       return;
     }
 
     setSelectedClipId(clip.id);
     onOpenQuickView?.(clip.id);
-  }, [clip.id, locked, onOpenQuickView, openPricingModal, setSelectedClipId]);
+  }, [
+    buildLockedClipIntent,
+    clip.id,
+    locked,
+    onOpenQuickView,
+    openPricingModal,
+    setSelectedClipId,
+  ]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (locked) {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          openPricingModal();
+          openPricingModal(buildLockedClipIntent());
         }
         return;
       }
@@ -86,7 +130,7 @@ export function ClipCard({
         handleClick();
       }
     },
-    [handleClick, locked, openPricingModal]
+    [buildLockedClipIntent, handleClick, locked, openPricingModal]
   );
 
   const showPreview =

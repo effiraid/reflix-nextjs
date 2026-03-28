@@ -60,4 +60,16 @@ describe("auth redirect helpers", () => {
       "http://localhost:3000/en/auth/callback?next=%2Fen%2Fbrowse"
     );
   });
+
+  it("keeps safe browse resume params in the next callback path", () => {
+    expect(
+      buildAuthCallbackUrl(
+        "ko",
+        "http://localhost:3000",
+        "/ko/browse?q=arcane&resumeClip=L3TR52T22TPVR&resumeOpen=1"
+      )
+    ).toBe(
+      "http://localhost:3000/ko/auth/callback?next=%2Fko%2Fbrowse%3Fq%3Darcane%26resumeClip%3DL3TR52T22TPVR%26resumeOpen%3D1"
+    );
+  });
 });

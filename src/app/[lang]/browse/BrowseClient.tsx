@@ -25,6 +25,7 @@ import {
   getViewerTier,
   hasProAccess,
 } from "@/lib/accessPolicy";
+import { clearGuestResumeParams, readGuestResume } from "@/lib/guestResume";
 
 const QuickViewModal = dynamic(
   () =>
@@ -123,10 +124,11 @@ export function BrowseClient({
       contentMode: s.contentMode,
     }))
   );
-  const { user, tier } = useAuthStore(
+  const { user, tier, isLoading: authLoading } = useAuthStore(
     useShallow((s) => ({
       user: s.user,
       tier: s.tier,
+      isLoading: s.isLoading,
     }))
   );
   const {
@@ -312,6 +314,7 @@ export function BrowseClient({
   const selectedClipLocked = selectedClip
     ? lockedClipIds.has(selectedClip.id)
     : false;
+  const hasHandledResumeRef = useRef(false);
   const visibleResultCount =
     projectionClips && projectionStatus === "ready" && hasActiveBrowseFilters
       ? browseResults.totalResultCount
@@ -480,6 +483,54 @@ export function BrowseClient({
     [setQuickViewOpen]
   );
 
+  useEffect(() => {
+    if (authLoading || !user || hasHandledResumeRef.current) {
+      return;
+    }
+
+    if (!projectionClips || projectionStatus !== "ready") {
+      return;
+    }
+
+    const { clipId, shouldOpen } = readGuestResume(window.location.search);
+    if (!clipId) {
+      hasHandledResumeRef.current = true;
+      return;
+    }
+
+    const cleanedUrl = clearGuestResumeParams(
+      window.location.pathname,
+      window.location.search
+    );
+    window.history.replaceState(null, "", cleanedUrl);
+    hasHandledResumeRef.current = true;
+
+    setSelectedClipId(clipId);
+
+    if (lockedClipIds.has(clipId)) {
+      openPricingModal({
+        kind: "locked-clip",
+        viewerTier,
+        clipId,
+      });
+      return;
+    }
+
+    if (shouldOpen) {
+      setQuickViewOpen(true);
+    }
+  }, [
+    authLoading,
+    lockedClipIds,
+    openPricingModal,
+    projectionClips,
+    projectionStatus,
+    setQuickViewOpen,
+    setSelectedClipId,
+    user,
+    viewerTier,
+  ]);
+
   const openQuickViewForClip = useCallback(
     (clipId: string) => {
       if (lockedClipIds.has(clipId)) {
@@ -561,7 +612,7 @@ export function BrowseClient({
           {(lockedCount > 0 || isFilterCombinationLimited) ? (
             <button
               type="button"
-              onClick={openPricingModal}
+              onClick={() => openPricingModal()}
               className="text-xs font-medium text-primary hover:underline"
             >
               {lang === "ko" ? "Pro로 잠금 해제" : "Unlock with Pro"}

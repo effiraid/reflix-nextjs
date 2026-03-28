@@ -16,11 +16,12 @@ import type { Locale } from "@/lib/types";
 interface LoginFormProps {
   lang: Locale;
   dict: Dictionary;
+  nextPath: string;
 }
 
 type FormState = "idle" | "loading" | "sent" | "error";
 
-export function LoginForm({ lang }: LoginFormProps) {
+export function LoginForm({ lang, nextPath }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<FormState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -43,7 +44,11 @@ export function LoginForm({ lang }: LoginFormProps) {
       return;
     }
 
-    const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
+    const redirectTo = buildAuthCallbackUrl(
+      lang,
+      window.location.origin,
+      nextPath
+    );
     if (!redirectTo) {
       setState("error");
       setErrorMsg(
@@ -87,7 +92,11 @@ export function LoginForm({ lang }: LoginFormProps) {
       return;
     }
 
-    const redirectTo = buildAuthCallbackUrl(lang, window.location.origin);
+    const redirectTo = buildAuthCallbackUrl(
+      lang,
+      window.location.origin,
+      nextPath
+    );
     if (!redirectTo) {
       setState("error");
       setErrorMsg(
@@ -105,7 +114,7 @@ export function LoginForm({ lang }: LoginFormProps) {
   }
 
   if (state === "sent") {
-    return <WaitingForLogin lang={lang} />;
+    return <WaitingForLogin lang={lang} nextPath={nextPath} />;
   }
 
   return (
@@ -168,7 +177,13 @@ export function LoginForm({ lang }: LoginFormProps) {
   );
 }
 
-function WaitingForLogin({ lang }: { lang: Locale }) {
+function WaitingForLogin({
+  lang,
+  nextPath,
+}: {
+  lang: Locale;
+  nextPath: string;
+}) {
   const isKo = lang === "ko";
   const router = useRouter();
 
@@ -188,14 +203,14 @@ function WaitingForLogin({ lang }: { lang: Locale }) {
           return;
         }
 
-        router.replace(`/${lang}/browse`);
+        router.replace(nextPath);
       }
     }, 2000);
 
     return () => {
       clearInterval(interval);
     };
-  }, [lang, router]);
+  }, [lang, nextPath, router]);
 
   return (
     <div className="rounded-lg border border-border bg-surface p-6 text-center">

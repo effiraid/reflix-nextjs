@@ -2,16 +2,17 @@ import { Suspense } from "react";
 
 import type { Locale } from "@/lib/types";
 import { getDictionary } from "@/app/[lang]/dictionaries";
+import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
 import { LoginForm } from "./LoginForm";
 
 function AuthErrorBanner({
   searchParams,
   isKo,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
   isKo: boolean;
 }) {
-  const sp = searchParams as Promise<{ error?: string }>;
+  const sp = searchParams as Promise<{ error?: string; next?: string }>;
   return (
     <Suspense>
       <AuthErrorBannerInner searchParams={sp} isKo={isKo} />
@@ -23,7 +24,7 @@ async function AuthErrorBannerInner({
   searchParams,
   isKo,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
   isKo: boolean;
 }) {
   const { error } = await searchParams;
@@ -62,10 +63,12 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ lang: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const { lang } = await params;
   const dict = await getDictionary(lang as Locale);
+  const { next } = await searchParams;
+  const nextPath = sanitizePostAuthRedirect(next, `/${lang}/browse`);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -81,7 +84,11 @@ export default async function LoginPage({
 
         <AuthErrorBanner searchParams={searchParams} isKo={lang === "ko"} />
 
-        <LoginForm lang={lang as Locale} dict={dict} />
+        <LoginForm
+          lang={lang as Locale}
+          dict={dict}
+          nextPath={nextPath}
+        />
 
         <p className="mt-6 text-center text-xs text-muted">
           {lang === "ko"

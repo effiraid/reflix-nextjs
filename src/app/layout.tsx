@@ -10,6 +10,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION ?? "",
+    other: {
+      "naver-site-verification": ["afc03764065e625bf0d5757f0060d532b9854641"],
+    },
   },
 };
 

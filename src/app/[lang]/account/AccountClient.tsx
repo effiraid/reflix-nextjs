@@ -13,10 +13,11 @@ import { BrandSplash } from "@/components/splash/BrandSplash";
 
 interface AccountClientProps {
   lang: Locale;
-  dict: Dictionary;
+  dict: Pick<Dictionary, "auth">;
 }
 
 export function AccountClient({ lang, dict }: AccountClientProps) {
+  const authDict = dict.auth;
   const { user, accessSource, betaEndsAt, isLoading } = useAuthStore();
   const { openPricingModal } = useUIStore();
   const router = useRouter();
@@ -42,24 +43,27 @@ export function AccountClient({ lang, dict }: AccountClientProps) {
 
   useEffect(() => {
     if (!user) return;
-
-    const client = createClient();
-    if (!client) {
-      setIdentitiesError(
-        isKo
-          ? "로그인 연결 기능이 아직 설정되지 않았습니다."
-          : "Sign-in linking is not configured yet."
-      );
-      setIdentitiesLoading(false);
-      return;
-    }
-
-    const supabase = client;
+    let isActive = true;
 
     async function loadIdentities() {
+      const supabase = createClient();
+
+      if (!supabase) {
+        if (!isActive) return;
+        setIdentitiesError(
+          isKo
+            ? "로그인 연결 기능이 아직 설정되지 않았습니다."
+            : "Sign-in linking is not configured yet."
+        );
+        setIdentitiesLoading(false);
+        return;
+      }
+
       setIdentitiesLoading(true);
 
       const { data, error } = await supabase.auth.getUserIdentities();
+
+      if (!isActive) return;
 
       if (error) {
         setIdentitiesError(
@@ -79,6 +83,10 @@ export function AccountClient({ lang, dict }: AccountClientProps) {
     }
 
     void loadIdentities();
+
+    return () => {
+      isActive = false;
+    };
   }, [isKo, user]);
 
   async function handleConnectGoogle() {
@@ -144,14 +152,14 @@ export function AccountClient({ lang, dict }: AccountClientProps) {
     <div className="flex min-h-screen flex-col items-center px-4 py-16">
       <div className="w-full max-w-md">
         <h1 className="text-2xl font-bold">
-          {isKo ? "계정" : "Account"}
+          {authDict.account}
         </h1>
 
         <div className="mt-6 space-y-4">
           {/* Profile info */}
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm font-medium">
-              {dict.account.email}
+              {authDict.email}
             </p>
             <p className="mt-1 text-sm text-muted">{user.email}</p>
           </div>
@@ -160,7 +168,7 @@ export function AccountClient({ lang, dict }: AccountClientProps) {
           <div className="rounded-lg border border-border bg-surface p-4">
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium">
-                {dict.account.subscription}
+                {authDict.subscription}
               </p>
               {isPaidPro ? (
                 <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
@@ -168,41 +176,41 @@ export function AccountClient({ lang, dict }: AccountClientProps) {
                 </span>
               ) : isBetaPro ? (
                 <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/70">
-                  {dict.account.betaBadge}
+                  {authDict.betaBadge}
                 </span>
               ) : null}
             </div>
             <p className="mt-1 text-sm text-muted">
               {isPaidPro
-                ? dict.account.proActive
+                ? authDict.proActive
                 : isBetaPro
-                  ? dict.account.betaActive
-                  : dict.account.freeTier}
+                  ? authDict.betaActive
+                  : authDict.freeTier}
             </p>
 
             {isBetaPro ? (
               <div className="mt-2 space-y-1 text-xs text-muted">
                 {betaDateLabel ? (
                   <p>
-                    {dict.account.betaEndsOn}: {betaDateLabel}
+                    {authDict.betaEndsOn}: {betaDateLabel}
                   </p>
                 ) : null}
-                <p>{dict.account.betaRevertsToFree}</p>
+                <p>{authDict.betaRevertsToFree}</p>
               </div>
             ) : null}
 
             {isPaidPro ? (
               <p className="mt-2 text-xs text-muted">
-                {dict.account.manageViaStripe}
+                {authDict.manageViaStripe}
               </p>
             ) : (
               <button
                 type="button"
-                onClick={openPricingModal}
+                onClick={() => openPricingModal()}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
               >
                 <CrownIcon className="size-3.5" strokeWidth={2} />
-                {dict.account.upgradeToPro}
+                {authDict.upgradeToPro}
               </button>
             )}
           </div>
