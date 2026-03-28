@@ -129,6 +129,10 @@
     "email": "이메일",
     "subscription": "구독",
     "proActive": "Pro 구독 활성",
+    "betaActive": "Pro 체험 중",
+    "betaEndsOn": "베타 종료일",
+    "betaRevertsToFree": "종료 후 무료 티어로 전환됩니다.",
+    "betaBadge": "BETA",
     "freeTier": "무료 티어",
     "manageViaStripe": "구독 관리는 Stripe Customer Portal에서 할 수 있습니다.",
     "upgradeToPro": "Pro로 업그레이드"

@@ -23,6 +23,7 @@ npm run lint     # ESLint (flat config, eslint.config.mjs)
 npx vitest                           # Watch mode
 npx vitest run                       # Single run (CI)
 npx vitest run src/lib/filter.test.ts  # Single test file
+npm run beta:grant -- --email test@reflix.dev --days 14 --note "cohort-1"
 
 # Export pipeline (Eagle → local JSON/media → optional R2 upload)
 npm run export:batch           # Export active release batch, merge into existing index

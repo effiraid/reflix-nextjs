@@ -100,7 +100,7 @@ describe("AuthProvider", () => {
     });
   });
 
-  it("loads the profile tier without querying daily usage on sign-in", async () => {
+  it("loads the effective access on sign-in", async () => {
     render(
       <AuthProvider>
         <div>child</div>
@@ -120,10 +120,11 @@ describe("AuthProvider", () => {
     await waitFor(() => {
       expect(useAuthStore.getState().user?.id).toBe("user-1");
       expect(useAuthStore.getState().tier).toBe("pro");
+      expect(useAuthStore.getState().accessSource).toBe("paid");
     });
 
     expect(localStorage.getItem("reflix-active-auth-tab")).toContain("\"tabId\":\"tab-self\"");
-    expect(authHarness.queriedTables).toEqual(["profiles"]);
+    expect(loadEffectiveAccessMock).toHaveBeenCalledWith(expect.anything(), "user-1");
   });
 
   it("redirects a superseded tab back to login instead of accepting a shared session", async () => {
@@ -157,7 +158,8 @@ describe("AuthProvider", () => {
 
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().tier).toBe("free");
-    expect(authHarness.queriedTables).toEqual([]);
+    expect(useAuthStore.getState().accessSource).toBe("free");
+    expect(loadEffectiveAccessMock).not.toHaveBeenCalled();
   });
 
   it("stores beta access metadata while keeping tier as effective pro", async () => {

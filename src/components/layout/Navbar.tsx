@@ -7,7 +7,6 @@ import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
 import { useBrowseData } from "@/app/[lang]/browse/ClipDataProvider";
-import { hasProAccess } from "@/lib/accessPolicy";
 import type { Locale } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
@@ -26,7 +25,7 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
   const { theme, setTheme } = useTheme();
   const { projectionClips, projectionStatus, allTags, popularTags } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
-  const { user, tier, isLoading: authLoading } = useAuthStore();
+  const { user, tier, accessSource, isLoading: authLoading } = useAuthStore();
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -186,7 +185,8 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
             user ? (
               <UserMenu
                 lang={lang}
-                isPro={hasProAccess(user, tier)}
+                tier={tier}
+                accessSource={accessSource}
                 userMenuOpen={userMenuOpen}
                 setUserMenuOpen={setUserMenuOpen}
               />
@@ -230,16 +230,20 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
 
 function UserMenu({
   lang,
-  isPro,
+  tier,
+  accessSource,
   userMenuOpen,
   setUserMenuOpen,
 }: {
   lang: Locale;
-  isPro: boolean;
+  tier: "free" | "pro";
+  accessSource: "free" | "paid" | "beta";
   userMenuOpen: boolean;
   setUserMenuOpen: (open: boolean) => void;
 }) {
   const isKo = lang === "ko";
+  const isPaidPro = accessSource === "paid";
+  const isBetaPro = accessSource === "beta";
   const { openPricingModal } = useUIStore();
 
   async function handleSignOut() {
@@ -259,12 +263,21 @@ function UserMenu({
       <button
         type="button"
         onClick={() => setUserMenuOpen(!userMenuOpen)}
+        aria-label={isKo ? "사용자 메뉴" : "User menu"}
         className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium hover:bg-surface-hover"
         aria-expanded={userMenuOpen}
         aria-haspopup="true"
       >
         <UserIcon className="size-3.5" strokeWidth={1.75} />
-        {isPro ? (
+        {isPaidPro ? (
+          <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
+            PRO
+          </span>
+        ) : isBetaPro ? (
+          <span className="rounded bg-foreground/10 px-1 py-0.5 text-[10px] font-semibold leading-none text-foreground/70">
+            BETA
+          </span>
+        ) : tier === "pro" ? (
           <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
             PRO
           </span>
@@ -287,7 +300,7 @@ function UserMenu({
               <UserIcon className="size-3.5" strokeWidth={1.75} />
               {isKo ? "계정" : "Account"}
             </Link>
-            {!isPro ? (
+            {!isPaidPro ? (
               <button
                 type="button"
                 className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-accent hover:bg-surface-hover"

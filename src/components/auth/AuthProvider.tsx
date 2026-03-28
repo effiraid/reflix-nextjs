@@ -3,6 +3,7 @@
 import { Suspense, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { loadEffectiveAccess } from "@/lib/supabase/access";
 import {
   buildSessionReplacedLoginPath,
   claimActiveAuthTab,
@@ -16,7 +17,7 @@ import {
 import { useAuthStore } from "@/stores/authStore";
 
 function AuthProviderEffects() {
-  const { setUser, setTier, setLoading } = useAuthStore();
+  const { setUser, setAccess, resetAccess, setLoading } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -26,7 +27,7 @@ function AuthProviderEffects() {
 
     if (!supabase) {
       setUser(null);
-      setTier("free");
+      resetAccess();
       setLoading(false);
       return;
     }
@@ -51,19 +52,15 @@ function AuthProviderEffects() {
       }, 5000);
     }
 
-    async function loadProfile(userId: string) {
+    async function loadAccess(userId: string) {
       try {
-        const { data: profile } = await client
-          .from("profiles")
-          .select("tier")
-          .eq("id", userId)
-          .single();
-
-        if (profile) {
-          setTier(profile.tier as "free" | "pro");
-        }
+        const access = await loadEffectiveAccess(
+          client as Parameters<typeof loadEffectiveAccess>[0],
+          userId,
+        );
+        setAccess(access);
       } catch {
-        // Profile table may not exist yet — ignore
+        resetAccess();
       }
     }
 
@@ -81,7 +78,7 @@ function AuthProviderEffects() {
       stopHeartbeat();
       markTabSessionRevoked();
       setUser(null);
-      setTier("free");
+      resetAccess();
       setLoading(false);
       redirectSupersededTab();
     }
@@ -93,7 +90,7 @@ function AuthProviderEffects() {
 
       setUser(user);
       setLoading(false);
-      loadProfile(user.id);
+      void loadAccess(user.id);
     }
 
     // Single listener: handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT
@@ -126,7 +123,7 @@ function AuthProviderEffects() {
         stopHeartbeat();
         clearActiveAuthTab(tabId);
         setUser(null);
-        setTier("free");
+        resetAccess();
         setLoading(false);
       }
     });
@@ -151,7 +148,7 @@ function AuthProviderEffects() {
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
     };
-  }, [pathname, router, setUser, setTier, setLoading]);
+  }, [pathname, resetAccess, router, setAccess, setLoading, setUser]);
 
   return null;
 }

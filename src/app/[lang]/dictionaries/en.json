@@ -129,6 +129,10 @@
     "email": "Email",
     "subscription": "Subscription",
     "proActive": "Pro subscription active",
+    "betaActive": "Pro beta access",
+    "betaEndsOn": "Beta ends",
+    "betaRevertsToFree": "This account will return to the free tier when beta ends.",
+    "betaBadge": "BETA",
     "freeTier": "Free tier",
     "manageViaStripe": "You can manage your subscription in the Stripe Customer Portal.",
     "upgradeToPro": "Upgrade to Pro"

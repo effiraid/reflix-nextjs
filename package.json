@@ -16,6 +16,7 @@
     "export:batch:r2": "node scripts/export.mjs --r2",
     "export:prune": "node scripts/export.mjs --prune",
     "export:prune:dry": "node scripts/export.mjs --prune --dry-run",
+    "beta:grant": "node scripts/grant-beta-access.mjs",
     "export:full": "node scripts/export.mjs --full --confirm-full-export",
     "export:local": "node scripts/export.mjs --local",
     "export:r2": "node scripts/export.mjs --local --r2",

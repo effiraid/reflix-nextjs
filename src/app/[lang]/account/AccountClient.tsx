@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CrownIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { hasProAccess } from "@/lib/accessPolicy";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -17,13 +16,19 @@ interface AccountClientProps {
   dict: Dictionary;
 }
 
-export function AccountClient({ lang }: AccountClientProps) {
-  const { user, tier, isLoading } = useAuthStore();
+export function AccountClient({ lang, dict }: AccountClientProps) {
+  const { user, accessSource, betaEndsAt, isLoading } = useAuthStore();
   const { openPricingModal } = useUIStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isKo = lang === "ko";
-  const isPro = hasProAccess(user, tier);
+  const isPaidPro = accessSource === "paid";
+  const isBetaPro = accessSource === "beta";
+  const betaDateLabel = betaEndsAt
+    ? new Intl.DateTimeFormat(isKo ? "ko-KR" : "en-US", {
+        dateStyle: "medium",
+      }).format(new Date(betaEndsAt))
+    : null;
   const [identitiesLoading, setIdentitiesLoading] = useState(true);
   const [identitiesError, setIdentitiesError] = useState("");
   const [isGoogleLinked, setIsGoogleLinked] = useState(false);
@@ -146,7 +151,7 @@ export function AccountClient({ lang }: AccountClientProps) {
           {/* Profile info */}
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm font-medium">
-              {isKo ? "이메일" : "Email"}
+              {dict.account.email}
             </p>
             <p className="mt-1 text-sm text-muted">{user.email}</p>
           </div>
@@ -155,29 +160,40 @@ export function AccountClient({ lang }: AccountClientProps) {
           <div className="rounded-lg border border-border bg-surface p-4">
             <div className="flex items-center gap-2">
               <p className="text-sm font-medium">
-                {isKo ? "구독" : "Subscription"}
+                {dict.account.subscription}
               </p>
-              {isPro ? (
+              {isPaidPro ? (
                 <span className="rounded bg-accent/20 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
                   PRO
+                </span>
+              ) : isBetaPro ? (
+                <span className="rounded bg-foreground/10 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/70">
+                  {dict.account.betaBadge}
                 </span>
               ) : null}
             </div>
             <p className="mt-1 text-sm text-muted">
-              {isPro
-                ? isKo
-                  ? "Pro 구독 활성"
-                  : "Pro subscription active"
-                : isKo
-                  ? "무료 티어"
-                  : "Free tier"}
+              {isPaidPro
+                ? dict.account.proActive
+                : isBetaPro
+                  ? dict.account.betaActive
+                  : dict.account.freeTier}
             </p>
 
-            {isPro ? (
+            {isBetaPro ? (
+              <div className="mt-2 space-y-1 text-xs text-muted">
+                {betaDateLabel ? (
+                  <p>
+                    {dict.account.betaEndsOn}: {betaDateLabel}
+                  </p>
+                ) : null}
+                <p>{dict.account.betaRevertsToFree}</p>
+              </div>
+            ) : null}
+
+            {isPaidPro ? (
               <p className="mt-2 text-xs text-muted">
-                {isKo
-                  ? "구독 관리는 Stripe Customer Portal에서 할 수 있습니다."
-                  : "Manage your subscription via Stripe Customer Portal."}
+                {dict.account.manageViaStripe}
               </p>
             ) : (
               <button
@@ -186,7 +202,7 @@ export function AccountClient({ lang }: AccountClientProps) {
                 className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
               >
                 <CrownIcon className="size-3.5" strokeWidth={2} />
-                {isKo ? "Pro로 업그레이드" : "Upgrade to Pro"}
+                {dict.account.upgradeToPro}
               </button>
             )}
           </div>

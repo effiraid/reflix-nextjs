@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ACCESS_POLICY, hasProAccess } from "@/lib/accessPolicy";
+import { ACCESS_POLICY } from "@/lib/accessPolicy";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
 import type { Locale } from "@/lib/types";
@@ -26,7 +26,7 @@ function CheckIcon() {
 
 export function PricingModal({ lang }: PricingModalProps) {
   const { pricingModalOpen, closePricingModal } = useUIStore();
-  const { user, tier } = useAuthStore();
+  const { user, accessSource } = useAuthStore();
   const router = useRouter();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ export function PricingModal({ lang }: PricingModalProps) {
 
   const isKo = lang === "ko";
   const isYearly = billingInterval === "yearly";
-  const isPro = hasProAccess(user, tier);
+  const isPaidPro = accessSource === "paid";
 
   useEffect(() => {
     if (pricingModalOpen) {
@@ -68,7 +68,7 @@ export function PricingModal({ lang }: PricingModalProps) {
       router.push(`/${lang}/login`);
       return;
     }
-    if (isPro || loading) return;
+    if (isPaidPro || loading) return;
 
     setLoading(true);
     try {
@@ -87,7 +87,7 @@ export function PricingModal({ lang }: PricingModalProps) {
     } catch {
       setLoading(false);
     }
-  }, [user, isPro, loading, lang, billingInterval, closePricingModal, router]);
+  }, [user, isPaidPro, loading, lang, billingInterval, closePricingModal, router]);
 
   const handleFreeStart = useCallback(() => {
     closePricingModal();
@@ -264,12 +264,12 @@ export function PricingModal({ lang }: PricingModalProps) {
               <button
                 type="button"
                 onClick={handleSubscribe}
-                disabled={isPro || loading}
+                disabled={isPaidPro || loading}
                 className="mt-6 block rounded-full bg-foreground py-2 text-center text-[13px] font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-50"
               >
                 {loading
                   ? (isKo ? "결제 준비 중..." : "Preparing...")
-                  : isPro
+                  : isPaidPro
                     ? (isKo ? "구독 중" : "Current plan")
                     : (isKo ? "구독 시작" : "Subscribe")}
               </button>
