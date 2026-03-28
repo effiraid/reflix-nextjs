@@ -6,6 +6,7 @@ import { resolveEagleLibraryPath } from "./eagle-library-path.mjs";
 import { readEagleLibrary } from "./eagle-reader.mjs";
 import { writeMetadataWithBackup } from "./eagle-metadata.mjs";
 import { DEFAULT_GEMINI_MODEL, generateAiTagsWithGemini } from "./ai-tagging.mjs";
+import { mapWithConcurrency } from "./bounded-pool.mjs";
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const DEFAULT_CHECKPOINT_RELATIVE_PATH = "config/ai-tagging-progress.json";
@@ -15,8 +16,12 @@ export function parseFlags(args) {
   const limitIdx = args.indexOf("--limit");
   const modelIdx = args.indexOf("--model");
   const checkpointIdx = args.indexOf("--checkpoint");
+  const concurrencyIdx = args.indexOf("--concurrency");
   const parsedLimit = limitIdx !== -1 && args[limitIdx + 1]
     ? Number.parseInt(args[limitIdx + 1], 10)
+    : null;
+  const parsedConcurrency = concurrencyIdx !== -1 && args[concurrencyIdx + 1]
+    ? Number.parseInt(args[concurrencyIdx + 1], 10)
     : null;
 
   return {
@@ -33,6 +38,10 @@ export function parseFlags(args) {
     model: modelIdx !== -1 && args[modelIdx + 1]
       ? args[modelIdx + 1]
       : DEFAULT_GEMINI_MODEL,
+    concurrency:
+      Number.isNaN(parsedConcurrency) || parsedConcurrency === null
+        ? 4
+        : parsedConcurrency,
     checkpointPath:
       checkpointIdx !== -1 && args[checkpointIdx + 1]
         ? args[checkpointIdx + 1]
@@ -143,6 +152,7 @@ export async function runAiTagBackfill(items, {
   ids = null,
   limit = null,
   model = DEFAULT_GEMINI_MODEL,
+  concurrency = 4,
   checkpointPath = DEFAULT_CHECKPOINT_RELATIVE_PATH,
   generateAiTags = generateAiTagsWithGemini,
   writeMetadata = writeMetadataWithBackup,
@@ -168,29 +178,59 @@ export async function runAiTagBackfill(items, {
 
   let successCount = 0;
   let failureCount = 0;
+  let checkpointWrite = Promise.resolve();
+  const queueCheckpointWrite = (itemId, result) => {
+    checkpointWrite = checkpointWrite.then(() => {
+      checkpoint.processedIds.push(itemId);
+      if (result.status === "fulfilled") {
+        checkpoint.succeededIds.push(itemId);
+      } else {
+        checkpoint.failed.push({
+          id: itemId,
+          error: result.error,
+        });
+      }
+      saveAiTagCheckpoint(absoluteCheckpointPath, checkpoint);
+    });
 
-  for (const item of pendingItems) {
-    try {
-      const aiTags = await generateAiTags(item, { model });
-      writeMetadata(item, { aiTags }, backupDir);
-      checkpoint.succeededIds.push(item.id);
-      successCount += 1;
-    } catch (error) {
-      writeMetadata(item, { aiTags: null }, backupDir);
-      checkpoint.failed.push({
-        id: item.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      failureCount += 1;
-    }
+    return checkpointWrite;
+  };
 
-    checkpoint.processedIds.push(item.id);
-    saveAiTagCheckpoint(absoluteCheckpointPath, checkpoint);
-  }
+  const results = await mapWithConcurrency(
+    pendingItems,
+    async (item) => {
+      try {
+        const aiTags = await generateAiTags(item, { model });
+        writeMetadata(item, { aiTags }, backupDir);
+        successCount += 1;
+
+        const result = {
+          id: item.id,
+          status: "fulfilled",
+        };
+        await queueCheckpointWrite(item.id, result);
+        return result;
+      } catch (error) {
+        writeMetadata(item, { aiTags: null }, backupDir);
+        failureCount += 1;
+
+        const result = {
+          id: item.id,
+          status: "rejected",
+          error: error instanceof Error ? error.message : String(error),
+        };
+        await queueCheckpointWrite(item.id, result);
+        return result;
+      }
+    },
+    { concurrency }
+  );
+
+  await checkpointWrite;
 
   return {
     selectedIds: selectedItems.map((item) => item.id),
-    processedIds: pendingItems.map((item) => item.id),
+    processedIds: results.map((item) => item.id),
     successCount,
     failureCount,
     skippedCount: selectedItems.length - pendingItems.length,

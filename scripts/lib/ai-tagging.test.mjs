@@ -50,7 +50,7 @@ test("normalizeAiTags trims values and fills metadata", () => {
   assert.deepEqual(result, {
     actionType: ["일어나기"],
     emotion: ["고통"],
-    composition: ["미디엄샷"],
+    composition: ["미디엄 샷"],
     pacing: "느림",
     characterType: ["마법사"],
     effects: ["잔상"],

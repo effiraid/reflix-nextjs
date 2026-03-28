@@ -4,6 +4,59 @@ import path from "node:path";
 export const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite-preview";
 const DEFAULT_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
+/**
+ * AI 태그 정규화 맵 — 동일 개념의 변형을 하나의 표준 형태로 통일.
+ * key: 비표준 변형, value: 표준 형태.
+ * 필드 구분 없이 모든 배열 필드에 적용됨.
+ */
+export const AI_TAG_NORMALIZATION_MAP = {
+  // composition
+  "미디엄샷": "미디엄 샷",
+  "로우앵글": "로우 앵글",
+  "풀샷": "풀 샷",
+  "전신샷": "풀 샷",
+  "오버더숄더": "오버더숄더 샷",
+  "오버숄더샷": "오버숄더 샷",
+  "오버 더 숄더 샷": "오버더숄더 샷",
+  "어두운구도": "어두운 구도",
+  "하이앵글": "하이 앵글",
+  // effects
+  "카메라흔들림": "카메라 흔들림",
+  "어두운조명": "어두운 조명",
+  "녹색조명": "녹색 조명",
+  "붉은조명": "붉은 조명",
+  "보라색이펙트": "보라색 이펙트",
+  "배경흐림": "배경 블러",
+  "어두운배경": "어두운 배경",
+  "어두운눈가": "어두운 눈가",
+  "빛이펙트": "빛 이펙트",
+  // actionType
+  "응시하다": "응시",
+  "응시하기": "응시",
+  "힘겨워함": "힘겨워하다",
+};
+
+/**
+ * 괄호 접미사 패턴 제거 — "카메라 흔들림 (초반)" → "카메라 흔들림"
+ * 대상 한정 설명(특정 캐릭터, 시간 등)은 태그 집계를 방해하므로 제거.
+ */
+const STRIP_SUFFIX_RE = /\s*\([^)]+\)\s*$/;
+
+function normalizeTagValue(value) {
+  const stripped = value.replace(STRIP_SUFFIX_RE, "").trim();
+  return AI_TAG_NORMALIZATION_MAP[stripped] ?? stripped;
+}
+
+function normalizeTagArray(values) {
+  return Array.from(
+    new Set(
+      (Array.isArray(values) ? values : [])
+        .map((v) => (typeof v === "string" ? normalizeTagValue(v.trim()) : ""))
+        .filter(Boolean)
+    )
+  );
+}
+
 function uniqStrings(values) {
   return Array.from(
     new Set(
@@ -70,10 +123,10 @@ export function buildAiTagPrompt({ clipName, existingTags }) {
 {
   "actionType": ["동작 유형 태그들 (한국어)"],
   "emotion": ["감정 태그들 (한국어)"],
-  "composition": ["구도 태그들 - 예: 클로즈업, 풀샷, 로우앵글 등"],
+  "composition": ["구도 태그들 - 예: 클로즈업, 미디엄 샷, 풀 샷, 로우 앵글, 오버더숄더 샷 등"],
   "pacing": "빠름 | 보통 | 느림",
   "characterType": ["캐릭터 유형 태그들"],
-  "effects": ["시각 이펙트 태그들 - 예: 파티클, 잔상, 카메라흔들림 등"],
+  "effects": ["시각 이펙트 태그들 - 예: 파티클, 잔상, 카메라 흔들림, 모션 블러 등"],
   "description": {
     "ko": "한국어 자연어 설명 (2-3문장)",
     "en": "English description (2-3 sentences)"
@@ -121,12 +174,12 @@ export function normalizeAiTags(payload, { model, generatedAt }) {
   }
 
   return {
-    actionType: uniqStrings(payload.actionType),
-    emotion: uniqStrings(payload.emotion),
-    composition: uniqStrings(payload.composition),
+    actionType: normalizeTagArray(payload.actionType),
+    emotion: normalizeTagArray(payload.emotion),
+    composition: normalizeTagArray(payload.composition),
     pacing,
-    characterType: uniqStrings(payload.characterType),
-    effects: uniqStrings(payload.effects),
+    characterType: normalizeTagArray(payload.characterType),
+    effects: normalizeTagArray(payload.effects),
     description,
     model: toTrimmedString(model),
     generatedAt: toTrimmedString(generatedAt),

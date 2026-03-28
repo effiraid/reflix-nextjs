@@ -11,7 +11,6 @@ function toSummaryRecord(entry) {
     width: entry.width || 640,
     height: entry.height || 360,
     duration: entry.duration || 0,
-    star: entry.star || 0,
     category: entry.category || "uncategorized",
   };
 }
@@ -76,19 +75,6 @@ function buildSearchTokens(entry, aiStructuredTags) {
   return tokens;
 }
 
-function buildLightSearchTokens(entry, tags) {
-  const seen = new Set();
-  const tokens = [];
-  for (const value of [entry.name, ...tags]) {
-    for (const token of tokenizeText(value)) {
-      if (seen.has(token)) continue;
-      seen.add(token);
-      tokens.push(token);
-    }
-  }
-  return tokens;
-}
-
 export function buildBrowseArtifacts(entries) {
   const summary = entries.map((entry) => toSummaryRecord(entry));
 
@@ -103,8 +89,15 @@ export function buildBrowseArtifacts(entries) {
     const tags = Array.isArray(entry.tags) ? entry.tags : [];
     const aiStructuredTags = getStructuredAiTags(entry.aiTags);
     const folders = Array.isArray(entry.folders) ? entry.folders : [];
-    const lightTokens = buildLightSearchTokens(entry, tags);
-    return { id: entry.id, tags, aiStructuredTags, folders, lightTokens };
+    return {
+      id: entry.id,
+      name: entry.name,
+      category: entry.category || "uncategorized",
+      tags,
+      aiStructuredTags,
+      folders,
+      searchTokens: buildSearchTokens(entry, aiStructuredTags),
+    };
   });
 
   // Keep projection for backward compatibility during transition

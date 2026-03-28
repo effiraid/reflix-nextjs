@@ -17,7 +17,6 @@ test("buildClipIndex excludes internal reflix operation tags from public index e
       name: "테스트 클립",
       tags: ["연출", "reflix:approved", "표정", "reflix:published"],
       folders: ["folder-1"],
-      star: 3,
       width: 640,
       height: 360,
       duration: 1.2,
@@ -35,7 +34,6 @@ test("buildFullClip excludes internal reflix operation tags from public clip pay
       name: "테스트 클립",
       tags: ["연출", "reflix:approved", "표정", "reflix:published"],
       folders: ["folder-1"],
-      star: 3,
       width: 640,
       height: 360,
       duration: 1.2,
@@ -121,7 +119,6 @@ test("writeOutputFiles merges new entries into an existing index", () => {
             name: "Clip A",
             tags: ["old"],
             folders: [],
-            star: 0,
             category: "uncategorized",
             width: 640,
             height: 360,
@@ -135,7 +132,6 @@ test("writeOutputFiles merges new entries into an existing index", () => {
             name: "Clip B",
             tags: ["old"],
             folders: [],
-            star: 0,
             category: "uncategorized",
             width: 640,
             height: 360,
@@ -161,7 +157,6 @@ test("writeOutputFiles merges new entries into an existing index", () => {
           name: "Clip B Updated",
           tags: ["new"],
           folders: [],
-          star: 3,
           category: "uncategorized",
           width: 640,
           height: 360,
@@ -175,7 +170,6 @@ test("writeOutputFiles merges new entries into an existing index", () => {
           name: "Clip C",
           tags: ["new"],
           folders: [],
-          star: 0,
           category: "uncategorized",
           width: 640,
           height: 360,
@@ -196,7 +190,6 @@ test("writeOutputFiles merges new entries into an existing index", () => {
     assert.equal(result.clips.length, 3);
     assert.equal(result.clips.find((clip) => clip.id === "A")?.name, "Clip A");
     assert.equal(result.clips.find((clip) => clip.id === "B")?.name, "Clip B Updated");
-    assert.equal(result.clips.find((clip) => clip.id === "B")?.star, 3);
     assert.equal(result.clips.find((clip) => clip.id === "C")?.name, "Clip C");
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -217,7 +210,6 @@ test("writeOutputFiles writes a fresh index when no prior index exists", () => {
           name: "Clip X",
           tags: [],
           folders: [],
-          star: 0,
           category: "uncategorized",
           width: 640,
           height: 360,

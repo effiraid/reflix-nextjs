@@ -46,7 +46,7 @@ function scoreClipNeighbors(clip, indexes, topN) {
   const tagScores = new Map();
   for (const tag of clip.tags) {
     const peers = tagIndex.get(tag);
-    if (!peers || peers.length > MAX_TAG_FANOUT) continue;
+    if (!peers || peers.size > MAX_TAG_FANOUT) continue;
     for (const peerId of peers) {
       if (peerId === clip.id) continue;
       tagScores.set(peerId, (tagScores.get(peerId) || 0) + 1);

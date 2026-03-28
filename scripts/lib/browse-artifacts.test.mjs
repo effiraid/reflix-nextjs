@@ -25,7 +25,6 @@ const SAMPLE_ENTRY = {
     generatedAt: "2026-03-27T00:00:00.000Z",
   },
   folders: ["f1"],
-  star: 4,
   category: "combat",
   width: 1280,
   height: 720,
@@ -64,8 +63,10 @@ test("buildBrowseArtifacts produces cards and filterIndex outputs", () => {
   assert.equal("searchTokens" in cards[0], false);
   assert.equal("folders" in cards[0], false);
 
-  // filterIndex should have id, tags, aiStructuredTags, folders, lightTokens
+  // filterIndex should keep only filter/search fields plus lightweight ranking metadata.
   assert.equal(filterIndex[0].id, "A");
+  assert.equal(filterIndex[0].name, "Arcane Attack");
+  assert.equal(filterIndex[0].category, "combat");
   assert.deepEqual(filterIndex[0].tags, ["arcane", "attack"]);
   assert.deepEqual(filterIndex[0].aiStructuredTags, [
     "attack",
@@ -76,10 +77,9 @@ test("buildBrowseArtifacts produces cards and filterIndex outputs", () => {
     "glow",
   ]);
   assert.deepEqual(filterIndex[0].folders, ["f1"]);
-  // lightTokens should contain name + tag tokens only (not AI descriptions)
-  assert.ok(filterIndex[0].lightTokens.includes("arcane"));
-  assert.ok(filterIndex[0].lightTokens.includes("attack"));
-  assert.ok(!filterIndex[0].lightTokens.includes("detail"));
+  assert.ok(filterIndex[0].searchTokens.includes("arcane"));
+  assert.ok(filterIndex[0].searchTokens.includes("attack"));
+  assert.ok(filterIndex[0].searchTokens.includes("detail"));
 });
 
 test("writeBrowseArtifacts writes summary, projection, cards, and filter-index json files", () => {

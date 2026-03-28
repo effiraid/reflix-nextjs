@@ -67,6 +67,16 @@ describe("computeRelatedClips", () => {
     expect(result.get("b")).toEqual([]);
   });
 
+  it("ignores tags whose fanout exceeds the safety limit", () => {
+    const clips = Array.from({ length: 502 }, (_, index) =>
+      makeClip(`clip-${index}`, ["crowded"], [])
+    );
+
+    const result = computeRelatedClips(clips);
+
+    expect(result.get("clip-0")).toEqual([]);
+  });
+
   it("produces same results as naive O(N²) for small dataset", () => {
     const clips = [
       makeClip("a", ["t1", "t2", "t3"], ["f1", "f2"]),

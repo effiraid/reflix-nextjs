@@ -1040,6 +1040,7 @@ export async function runReleaseGo(parsed, {
     backfillResult = await runBackfill(items, {
       projectRoot,
       ids: batchIds,
+      concurrency: 4,
     });
     console.log(`   완료: 성공 ${backfillResult.successCount}, 실패 ${backfillResult.failureCount}`);
     if (backfillResult.failureCount > 0) {

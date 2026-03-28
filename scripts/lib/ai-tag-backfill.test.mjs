@@ -60,6 +60,8 @@ test("parseFlags recognizes ai tag backfill options", () => {
     "3",
     "--model",
     "gemini-2.5-flash",
+    "--concurrency",
+    "6",
     "--checkpoint",
     "config/custom-ai-progress.json",
   ]);
@@ -70,6 +72,7 @@ test("parseFlags recognizes ai tag backfill options", () => {
     ids: ["A1", "B2"],
     limit: 3,
     model: "gemini-2.5-flash",
+    concurrency: 6,
     checkpointPath: "config/custom-ai-progress.json",
   });
 });
@@ -211,6 +214,55 @@ test("runAiTagBackfill records null aiTags and failure details when generation f
     ]);
   } finally {
     fs.rmSync(entry._infoDir, { recursive: true, force: true });
+    fs.rmSync(projectRoot, { recursive: true, force: true });
+  }
+});
+
+test("runAiTagBackfill can process multiple clips concurrently while keeping checkpoint state", async () => {
+  const entryA = createTempEntry({ id: "ITEMA" });
+  const entryB = createTempEntry({ id: "ITEMB" });
+  const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ai-tag-backfill-project-"));
+  let active = 0;
+  let maxActive = 0;
+
+  try {
+    const summary = await runAiTagBackfill([entryA, entryB], {
+      projectRoot,
+      concurrency: 2,
+      generateAiTags: async (item, options) => {
+        active += 1;
+        maxActive = Math.max(maxActive, active);
+        await new Promise((resolve) => setTimeout(resolve, item.id === "ITEMA" ? 30 : 10));
+        active -= 1;
+
+        return {
+          actionType: ["공격"],
+          emotion: [],
+          composition: [],
+          pacing: "보통",
+          characterType: [],
+          effects: [],
+          description: {
+            ko: `${item.id} 설명`,
+            en: `${item.id} description`,
+          },
+          model: options.model,
+          generatedAt: "2026-03-28T00:00:00.000Z",
+        };
+      },
+    });
+
+    const checkpoint = JSON.parse(
+      fs.readFileSync(path.join(projectRoot, DEFAULT_CHECKPOINT_RELATIVE_PATH), "utf8")
+    );
+
+    assert.equal(summary.successCount, 2);
+    assert.equal(maxActive, 2);
+    assert.deepEqual(new Set(checkpoint.processedIds), new Set(["ITEMA", "ITEMB"]));
+    assert.deepEqual(new Set(checkpoint.succeededIds), new Set(["ITEMA", "ITEMB"]));
+  } finally {
+    fs.rmSync(entryA._infoDir, { recursive: true, force: true });
+    fs.rmSync(entryB._infoDir, { recursive: true, force: true });
     fs.rmSync(projectRoot, { recursive: true, force: true });
   }
 });
