@@ -23,6 +23,10 @@ interface UIStore {
   pricingModalOpen: boolean;
   pricingModalIntent: PricingModalIntent | null;
   keyboardHelpOpen: boolean;
+  searchFocused: boolean;
+  browseMode: "grid" | "tags";
+  selectedTagGroupId: string | null;
+  tagSearchQuery: string;
 
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -39,6 +43,10 @@ interface UIStore {
   openPricingModal: (intent?: PricingModalIntent) => void;
   closePricingModal: () => void;
   toggleKeyboardHelp: () => void;
+  setSearchFocused: (focused: boolean) => void;
+  setBrowseMode: (mode: "grid" | "tags") => void;
+  setSelectedTagGroupId: (id: string | null) => void;
+  setTagSearchQuery: (query: string) => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -55,6 +63,10 @@ export const useUIStore = create<UIStore>()(
       pricingModalOpen: false,
       pricingModalIntent: null,
       keyboardHelpOpen: false,
+      searchFocused: false,
+      browseMode: "grid",
+      selectedTagGroupId: null,
+      tagSearchQuery: "",
 
       toggleLeftPanel: () =>
         set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
@@ -86,6 +98,10 @@ export const useUIStore = create<UIStore>()(
         }),
       toggleKeyboardHelp: () =>
         set((state) => ({ keyboardHelpOpen: !state.keyboardHelpOpen })),
+      setSearchFocused: (focused) => set({ searchFocused: focused }),
+      setBrowseMode: (mode) => set({ browseMode: mode }),
+      setSelectedTagGroupId: (id) => set({ selectedTagGroupId: id }),
+      setTagSearchQuery: (query) => set({ tagSearchQuery: query }),
     }),
     {
       name: "reflix-ui",

@@ -37,6 +37,8 @@ describe("SubToolbar", () => {
       thumbnailSize: 2,
       activeFilterTab: null,
       shuffleSeed: 0,
+      searchFocused: false,
+      viewMode: "grid",
     });
     useFilterStore.setState({
       selectedFolders: [],

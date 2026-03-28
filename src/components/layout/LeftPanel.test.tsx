@@ -18,10 +18,11 @@ describe("LeftPanel", () => {
       </LeftPanel>
     );
 
-    const panel = screen.getByText("content").closest("aside");
+    const content = screen.getByText("content");
+    const scrollContainer = content.parentElement;
 
-    expect(panel).toHaveClass("overflow-y-auto");
-    expect(panel).toHaveClass("scrollbar-thin");
-    expect(panel).not.toHaveClass("scrollbar-hidden");
+    expect(scrollContainer).toHaveClass("overflow-y-auto");
+    expect(scrollContainer).toHaveClass("scrollbar-thin");
+    expect(scrollContainer).not.toHaveClass("scrollbar-hidden");
   });
 });

@@ -63,7 +63,12 @@
     "random": "무작위",
     "allTags": "모든 태그",
     "community": "커뮤니티",
-    "tagSearchPlaceholder": "태그 검색",
+    "tagSearchPlaceholder": "태그 검색...",
+    "backToFolders": "폴더 보기",
+    "allTagsTitle": "모든 태그",
+    "groups": "그룹",
+    "noTagsInGroup": "이 그룹에 태그가 없습니다",
+    "noSearchResults": "에 맞는 태그가 없습니다",
     "expandAllFolders": "폴더 전체 펼치기",
     "collapseAllFolders": "폴더 전체 접기",
     "sortNewest": "최신순",
@@ -82,6 +87,8 @@
     "shortcutQuickView": "퀵뷰 열기",
     "shortcutDeselect": "선택 해제 / 닫기",
     "shortcutThumbnailSize": "썸네일 크기 조절",
+    "shortcutToggleLeftPanel": "좌측 사이드바 토글",
+    "shortcutToggleRightPanel": "우측 사이드바 토글",
     "shortcutToggleHelp": "이 도움말 토글"
   },
   "clip": {

@@ -25,6 +25,20 @@ vi.mock("./ClipDataProvider", () => ({
   }),
 }));
 
+vi.mock("@/hooks/useTagGroups", () => ({
+  useTagGroups: () => ({
+    mergedGroups: [],
+    mergedParentGroups: [],
+    tagCounts: {},
+    groupTagCounts: {},
+    totalTagCount: 0,
+    ungroupedTags: [],
+    filteredGroups: [],
+    matchTag: null,
+    allTags: [],
+  }),
+}));
+
 const categories: CategoryTree = {
   movement: {
     slug: "movement",
@@ -92,6 +106,9 @@ describe("LeftPanelContent", () => {
       filterBarOpen: false,
       activeFilterTab: null,
       shuffleSeed: 0,
+      browseMode: "grid",
+      selectedTagGroupId: null,
+      tagSearchQuery: "",
     });
     updateURL.mockClear();
   });
@@ -151,7 +168,7 @@ describe("LeftPanelContent", () => {
     expect(screen.queryByText("전투")).not.toBeInTheDocument();
   });
 
-  it("opens the tag filter panel when the all tags shortcut is clicked", () => {
+  it("switches to tags browse mode when the all tags shortcut is clicked", () => {
     render(
       <LeftPanelContent
         categories={categories}
@@ -163,8 +180,7 @@ describe("LeftPanelContent", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /모든 태그/ }));
 
-    expect(useUIStore.getState().filterBarOpen).toBe(true);
-    expect(useUIStore.getState().activeFilterTab).toBe("tags");
+    expect(useUIStore.getState().browseMode).toBe("tags");
   });
 
   it("shows the full library count in the browse shortcut even when the current results are filtered", () => {

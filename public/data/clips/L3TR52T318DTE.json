@@ -11,13 +11,12 @@
     "올라가기",
     "계단",
     "오르기",
-    "연출"
+    "연출",
+    "시네마틱"
   ],
   "folders": [
     "MN34S0ZRPT5WD"
   ],
-  "star": 4,
-  "annotation": "작품",
   "url": "",
   "palettes": [
     {
@@ -110,9 +109,9 @@
       "탐험"
     ],
     "composition": [
-      "풀 샷",
+      "풀샷",
       "로우 앵글",
-      "오버더숄더 샷"
+      "오버 더 숄더 샷"
     ],
     "pacing": "느림",
     "characterType": [
@@ -141,7 +140,7 @@
     "L3TR52T30GME3",
     "L3TR52T30RO73",
     "L3TR52T313IMH",
-    "L3TR52T2F47S1",
-    "L3TR52T2VXUHO"
+    "L3TR52T30LHZT",
+    "L3TR52T31CFQ9"
   ]
 }

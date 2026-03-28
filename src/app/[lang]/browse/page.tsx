@@ -213,6 +213,8 @@ export function BrowsePageShell({
             <Suspense>
               <LeftPanelContent
                 categories={categories}
+                tagGroups={tagGroups}
+                tagI18n={tagI18n}
                 lang={lang}
                 dict={dict}
               />
@@ -242,6 +244,7 @@ export function BrowsePageShell({
               <Suspense fallback={<div className="flex flex-1 items-center justify-center p-4"><span className="text-sm font-bold tracking-tight"><span className="text-brand">Ref</span><span className="text-foreground">lix</span></span></div>}>
                 <BrowseClient
                   categories={categories}
+                  tagGroups={tagGroups}
                   tagI18n={tagI18n}
                   lang={lang}
                   dict={dict}

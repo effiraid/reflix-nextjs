@@ -10,10 +10,7 @@ import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useClipDetail } from "@/hooks/useClipDetail";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
-import { Kbd } from "@/components/ui/Kbd";
-
 const ANIMATION_DURATION = 100;
-const TIPS_STORAGE_KEY = "reflix-quickview-tips-seen";
 
 interface QuickViewModalProps {
   clip: BrowseClipRecord;
@@ -37,13 +34,6 @@ export function QuickViewModal({
   }));
   const [isClosing, setIsClosing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showTips, setShowTips] = useState(() => {
-    try {
-      return !localStorage.getItem(TIPS_STORAGE_KEY);
-    } catch {
-      return true;
-    }
-  });
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const playbackRate = playbackState.clipId === clip.id ? playbackState.rate : 1;
@@ -75,25 +65,14 @@ export function QuickViewModal({
     setTimeout(onClose, ANIMATION_DURATION);
   }, [isClosing, onClose]);
 
-  const toggleTips = useCallback(() => {
-    setShowTips((prev) => {
-      const next = !prev;
-      if (!next) {
-        try { localStorage.setItem(TIPS_STORAGE_KEY, "1"); } catch {}
-      }
-      return next;
-    });
-  }, []);
-
   const shortcuts = useMemo<Shortcut[]>(
     () => [
       { key: "Escape", action: handleClose },
       { key: "-", action: () => stepSpeed(-1), allowRepeat: true },
       { key: "+", action: () => stepSpeed(1), allowRepeat: true },
       { key: "=", action: () => stepSpeed(1), allowRepeat: true },
-      { key: "?", action: toggleTips },
     ],
-    [handleClose, stepSpeed, toggleTips]
+    [handleClose, stepSpeed]
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -115,24 +94,6 @@ export function QuickViewModal({
   const contentAnimation = isClosing
     ? "motion-safe:animate-[modalContentOut_80ms_ease-in_forwards]"
     : "motion-safe:animate-[modalContentIn_80ms_cubic-bezier(0.16,1,0.3,1)]";
-
-  const t = dict.clip;
-
-  const tipsRow1: { keys: string[]; label: string }[] = [
-    { keys: ["Esc"], label: t.tipClose },
-    { keys: ["Space"], label: t.tipPlayPause },
-    { keys: ["←", "→"], label: t.tipSeek },
-    { keys: ["<", ">"], label: t.tipFrame },
-    { keys: ["+", "−"], label: t.tipSpeed },
-    { keys: ["L"], label: t.tipLoop },
-  ];
-  const tipsRow2: { keys: string[]; label: string }[] = [
-    { keys: ["I", "O"], label: t.tipInOut },
-    { keys: ["F"], label: t.tipFullscreen },
-    { keys: ["M"], label: t.tipMute },
-    { keys: ["E"], label: t.tipExpand },
-    { keys: ["?"], label: t.tipToggleHelp },
-  ];
 
   return (
     <div
@@ -190,30 +151,6 @@ export function QuickViewModal({
             )}
           />
         </div>
-        {showTips ? (
-          <div className="sticky bottom-0 flex flex-col items-center gap-1 rounded-b-3xl border-t border-border bg-background px-6 py-2">
-            <div className="flex items-center justify-center gap-5">
-              {tipsRow1.map((tip) => (
-                <div key={tip.label} className="flex items-center gap-1.5 text-sm">
-                  <span className="flex gap-0.5">
-                    {tip.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}
-                  </span>
-                  <span className="text-foreground/60">{tip.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center gap-5">
-              {tipsRow2.map((tip) => (
-                <div key={tip.label} className="flex items-center gap-1.5 text-sm">
-                  <span className="flex gap-0.5">
-                    {tip.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}
-                  </span>
-                  <span className="text-foreground/60">{tip.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </section>
     </div>
   );

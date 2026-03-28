@@ -11,12 +11,20 @@ const { fetchBlobUrlMock } = vi.hoisted(() => ({
   fetchBlobUrlMock: vi.fn(async (url: string) => `blob:${url}`),
 }));
 
+const { getSignedVideoUrlMock } = vi.hoisted(() => ({
+  getSignedVideoUrlMock: vi.fn(async (path: string) => `https://signed.reflix.dev${path}?token=abc123`),
+}));
+
 vi.mock("@/lib/blobVideo", () => ({
   fetchBlobUrl: fetchBlobUrlMock,
 }));
 
 vi.mock("@/lib/mediaUrl", () => ({
   getMediaUrl: getMediaUrlMock,
+}));
+
+vi.mock("@/lib/signedMedia", () => ({
+  getSignedVideoUrl: getSignedVideoUrlMock,
 }));
 
 vi.mock("./SeekBar", () => ({
@@ -534,7 +542,8 @@ describe("VideoPlayer", () => {
 
       await waitFor(() => {
         expect(fetchBlobUrlMock).toHaveBeenCalledWith(
-          "https://media.reflix.app/videos/clip-1.mp4",
+          "https://signed.reflix.dev/videos/clip-1.mp4?token=abc123",
+          "/videos/clip-1.mp4",
         );
       });
     });

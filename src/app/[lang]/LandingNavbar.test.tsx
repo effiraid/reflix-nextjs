@@ -6,7 +6,6 @@ const defaultProps = {
   lang: "ko" as const,
   dict: { navCta: "탐색하기" },
   navDict: { browse: "둘러보기" },
-  authDict: { signIn: "로그인", account: "계정" },
   pricingDict: { title: "요금제" },
 };
 
@@ -34,10 +33,21 @@ describe("LandingNavbar", () => {
   it("keeps auth text links hidden on mobile so only the CTA and hamburger stay visible", () => {
     render(<LandingNavbar {...defaultProps} />);
 
-    const signInLinks = screen.getAllByRole("link", { name: "로그인" });
-    // Desktop login link should have hidden class
-    const desktopLink = signInLinks.find((el) => el.className.includes("hidden"));
-    expect(desktopLink).toBeDefined();
+    // Desktop nav links (browse, pricing) are hidden on mobile via "hidden md:flex"
+    const browseLinks = screen.getAllByRole("link", { name: "둘러보기" });
+    const desktopBrowseLink = browseLinks.find((el) =>
+      el.className.includes("hidden")
+    );
+    expect(desktopBrowseLink).toBeDefined();
+
+    // CTA links exist on both mobile and desktop; mobile one uses "md:hidden"
+    const ctaLinks = screen.getAllByRole("link", { name: "탐색하기" });
+    const mobileCta = ctaLinks.find((el) => el.className.includes("md:hidden"));
+    expect(mobileCta).toBeDefined();
+
+    // Hamburger button is visible on mobile
+    const hamburger = screen.getByRole("button", { name: "메뉴 열기" });
+    expect(hamburger).toBeDefined();
   });
 
   it("renders a hamburger button for mobile menu", () => {

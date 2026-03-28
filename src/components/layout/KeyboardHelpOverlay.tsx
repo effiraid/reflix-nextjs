@@ -35,20 +35,20 @@ function buildSections(dict: Pick<Dictionary, "browse">): ShortcutSection[] {
       title: b.shortcutsNavigation,
       rows: [
         { keys: ["↑", "↓", "←", "→"], label: b.shortcutGridMove },
-        { keys: [`${modKey}+↑`, `${modKey}+↓`], label: b.shortcutJumpTopBottom },
       ],
     },
     {
       title: b.shortcutsSelection,
       rows: [
         { keys: ["Enter", "Space"], label: b.shortcutQuickView },
-        { keys: ["Esc"], label: b.shortcutDeselect },
       ],
     },
     {
       title: b.shortcutsView,
       rows: [
         { keys: ["+", "−"], label: b.shortcutThumbnailSize },
+        { keys: ["["], label: b.shortcutToggleLeftPanel },
+        { keys: ["]"], label: b.shortcutToggleRightPanel },
       ],
     },
     {

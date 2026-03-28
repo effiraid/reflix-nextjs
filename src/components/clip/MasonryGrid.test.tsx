@@ -1,5 +1,5 @@
 import { act, render } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { MasonryGrid } from "./MasonryGrid";
 import { useAuthStore } from "@/stores/authStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -194,7 +194,13 @@ describe("MasonryGrid", () => {
     });
   });
 
+  afterEach(() => {
+    vi.clearAllTimers();
+  });
+
   it("recreates each virtualized column when the grid width changes", () => {
+    vi.useFakeTimers();
+
     render(
       <main data-masonry-scroll>
         <MasonryGrid clips={clips} />
@@ -217,13 +223,34 @@ describe("MasonryGrid", () => {
       triggerResize(gridObserver!, 960);
     });
 
+    // Debounce timer is still pending, no new virtualizers created yet
+    expect(virtualizerStubs).toHaveLength(virtualizerCountBeforeResize);
+
+    // Advance past the debounce timer (180ms)
+    act(() => {
+      vi.advanceTimersByTime(180);
+    });
+
+    // Still no new virtualizers because the width didn't actually change
+    // (lastWidthRef prevented the update since 960 is the same as initial)
     expect(virtualizerStubs).toHaveLength(virtualizerCountBeforeResize);
 
     act(() => {
       triggerResize(gridObserver!, 1280);
     });
 
+    // Still pending due to debounce
+    expect(virtualizerStubs).toHaveLength(virtualizerCountBeforeResize);
+
+    // Advance past the debounce timer
+    act(() => {
+      vi.advanceTimersByTime(180);
+    });
+
+    // Now the width changed, so new virtualizers were created
     expect(virtualizerStubs).toHaveLength(virtualizerCountBeforeResize + 3);
+
+    vi.useRealTimers();
   });
 
   it("keys virtualized measurements by clip id instead of column index", () => {

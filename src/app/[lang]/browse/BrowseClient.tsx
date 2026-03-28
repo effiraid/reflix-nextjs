@@ -15,10 +15,14 @@ import { useBrowseData } from "./ClipDataProvider";
 import { FeedView } from "./FeedView";
 import { getColumnCountFromThumbnailSize } from "@/lib/thumbnailSize";
 import { useShallow } from "zustand/react/shallow";
-import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
+import type { BrowseClipRecord, CategoryTree, Locale, TagGroupData } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
 import { BrandSplash } from "@/components/splash/BrandSplash";
 import { useSplashGate } from "@/components/splash/useSplashGate";
+import { useTagGroups } from "@/hooks/useTagGroups";
+import { TagDetailView } from "@/components/tags/TagDetailView";
+
+const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 import {
   FREE_MAX_FILTER_AXES,
   getBrowseVisibleResultsLimit,
@@ -95,6 +99,7 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
 
 interface BrowseClientProps {
   categories: CategoryTree;
+  tagGroups?: TagGroupData;
   tagI18n?: Record<string, string>;
   lang: Locale;
   dict: Dictionary;
@@ -102,6 +107,7 @@ interface BrowseClientProps {
 
 export function BrowseClient({
   categories,
+  tagGroups = EMPTY_TAG_GROUPS,
   tagI18n = {},
   lang,
   dict,
@@ -142,6 +148,8 @@ export function BrowseClient({
     openPricingModal,
     keyboardHelpOpen,
     toggleKeyboardHelp,
+    toggleLeftPanel,
+    toggleRightPanel,
   } = useUIStore(
     useShallow((s) => ({
       quickViewOpen: s.quickViewOpen,
@@ -153,6 +161,8 @@ export function BrowseClient({
       openPricingModal: s.openPricingModal,
       keyboardHelpOpen: s.keyboardHelpOpen,
       toggleKeyboardHelp: s.toggleKeyboardHelp,
+      toggleLeftPanel: s.toggleLeftPanel,
+      toggleRightPanel: s.toggleRightPanel,
     }))
   );
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
@@ -171,6 +181,8 @@ export function BrowseClient({
     shouldShow: shouldShowSplash,
     markComplete: markSplashComplete,
   } = useSplashGate("intro");
+  const browseMode = useUIStore((s) => s.browseMode);
+  const tagData = useTagGroups(tagGroups, lang, tagI18n);
   const splashDismissed = useRef(false);
   const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -332,7 +344,7 @@ export function BrowseClient({
     : dict.browse.noResults;
 
   const navigateGrid = useCallback(
-    (direction: "up" | "down" | "left" | "right" | "home" | "end" | "top" | "bottom") => {
+    (direction: "up" | "down" | "left" | "right" | "home" | "end") => {
       if (filtered.length === 0) return;
 
       if (selectedIndex < 0) {
@@ -369,12 +381,6 @@ export function BrowseClient({
             filtered.length - 1
           );
           break;
-        case "top":
-          nextIndex = 0;
-          break;
-        case "bottom":
-          nextIndex = filtered.length - 1;
-          break;
       }
 
       if (nextIndex === selectedIndex) return;
@@ -400,19 +406,6 @@ export function BrowseClient({
         key: " ",
         action: () => setQuickViewOpen(true),
         enabled: !!selectedClip && !selectedClipLocked && !quickViewOpen,
-      },
-      // Cmd/Ctrl + Arrow: jump to top/bottom
-      {
-        key: "ArrowUp",
-        action: () => navigateGrid("top"),
-        enabled: !quickViewOpen,
-        requireModifier: "ctrl",
-      },
-      {
-        key: "ArrowDown",
-        action: () => navigateGrid("bottom"),
-        enabled: !quickViewOpen,
-        requireModifier: "ctrl",
       },
       // Plain arrows: grid navigation
       {
@@ -469,6 +462,16 @@ export function BrowseClient({
         enabled: !quickViewOpen,
       },
       {
+        key: "[",
+        action: () => toggleLeftPanel(),
+        enabled: !quickViewOpen,
+      },
+      {
+        key: "]",
+        action: () => toggleRightPanel(),
+        enabled: !quickViewOpen,
+      },
+      {
         key: "?",
         action: () => toggleKeyboardHelp(),
         enabled: !quickViewOpen && !keyboardHelpOpen,
@@ -484,6 +487,8 @@ export function BrowseClient({
       setQuickViewOpen,
       stepThumbnailSize,
       navigateGrid,
+      toggleLeftPanel,
+      toggleRightPanel,
       toggleKeyboardHelp,
     ]
   );
@@ -563,6 +568,16 @@ export function BrowseClient({
         }}
       />
     ) : null;
+
+  if (browseMode === "tags") {
+    return (
+      <>
+        {splashOverlay}
+        <TagDetailView tagData={tagData} lang={lang} tagI18n={tagI18n} dict={dict} />
+        <KeyboardHelpOverlay dict={dict} />
+      </>
+    );
+  }
 
   if (filtered.length === 0) {
     return (

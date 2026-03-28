@@ -11,12 +11,14 @@ export function LeftPanel({ children }: LeftPanelProps) {
 
   return (
     <aside
-      className="shrink-0 border-r border-border overflow-hidden motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
+      className={`shrink-0 overflow-hidden motion-safe:transition-[width,border-color] motion-safe:duration-150 motion-safe:ease-out ${leftPanelOpen ? "border-r border-border" : "border-r border-transparent"}`}
       style={{ width: leftPanelOpen ? 240 : 0 }}
     >
-      <div className="w-60 h-full overflow-y-auto scrollbar-thin">
-        {children}
-      </div>
+      {leftPanelOpen ? (
+        <div className="w-60 h-full overflow-y-auto scrollbar-thin">
+          {children}
+        </div>
+      ) : null}
     </aside>
   );
 }

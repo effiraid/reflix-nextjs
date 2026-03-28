@@ -10,14 +10,13 @@
     "호라이즌",
     "대화",
     "제스처",
-    "연출"
+    "연출",
+    "시네마틱"
   ],
   "folders": [
     "MDDWHMJN8180H",
     "L475K68YP1NH3"
   ],
-  "star": 4,
-  "annotation": "작품",
   "url": "",
   "palettes": [
     {
@@ -141,10 +140,10 @@
   "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEBAQAAAAAAAAAAAAAAAAAFBgQBAQEBAQAAAAAAAAAAAAAAAAIEBQMQAAICAAQHAQAAAAAAAAAAAAEAAhFBIUKRBHEDUTHhFBMRAQEBAAAAAAAAAAAAAAAAAAARAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/ALARAdTDniBgE36ZYAOLG4o+peWCLGJMc0GRokXaR+khGr8lcKp/tyCtp3SPSxp3a0jMUgq5SCtz1//Z",
   "category": "dialogue-cinematic",
   "relatedClips": [
-    "L3TR52T310BLE",
     "L3TR52T30ATKO",
     "L3TR52T30GME3",
     "L3TR52T30RO73",
-    "L3TR52T30WFY5"
+    "L3TR52T30WFY5",
+    "L3TR52T313IMH"
   ]
 }

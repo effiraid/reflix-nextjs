@@ -16,7 +16,8 @@
     "주먹",
     "무기",
     "일대일",
-    "공격"
+    "공격",
+    "애니메이션"
   ],
   "folders": [
     "L951Y2DB121ZU",
@@ -24,8 +25,6 @@
     "L475K68YP1NH3",
     "MN34S7XS08AQ1"
   ],
-  "star": 3,
-  "annotation": "작품",
   "url": "",
   "palettes": [
     {
@@ -122,9 +121,9 @@
     ],
     "composition": [
       "클로즈업",
-      "미디엄 샷",
-      "풀 샷",
-      "로우 앵글",
+      "미디엄샷",
+      "풀샷",
+      "로우앵글",
       "오버헤드샷",
       "다이나믹 앵글"
     ],
@@ -161,9 +160,9 @@
   "category": "combat-ready",
   "relatedClips": [
     "L3TR52T2RH4G6",
-    "L3TR52T30EFY6",
     "L3TR52T22TPVR",
     "L3TR52T27B2VL",
-    "L3TR52T2A751G"
+    "L3TR52T2A751G",
+    "L3TR52T2BJCOW"
   ]
 }

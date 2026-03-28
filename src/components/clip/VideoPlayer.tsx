@@ -125,7 +125,12 @@ export function VideoPlayer({
       try {
         let fetchUrl: string;
         if (isFullVideo) {
-          fetchUrl = await getSignedVideoUrl(videoUrl);
+          try {
+            fetchUrl = await getSignedVideoUrl(videoUrl);
+          } catch {
+            // Fallback to direct URL when sign API unavailable (local dev, not logged in)
+            fetchUrl = directVideoUrl;
+          }
         } else {
           fetchUrl = directVideoUrl;
         }

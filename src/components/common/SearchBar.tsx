@@ -21,6 +21,7 @@ import {
   removeRecentSearch,
 } from "@/lib/recentSearches";
 import type { Locale } from "@/lib/types";
+import { useUIStore } from "@/stores/uiStore";
 
 interface SearchBarProps {
   initialQuery?: string;
@@ -107,6 +108,7 @@ export function SearchBar({
         !containerRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
+        useUIStore.getState().setSearchFocused(false);
       }
     }
 
@@ -137,6 +139,8 @@ export function SearchBar({
       setQuery(trimmed);
       setOpen(false);
       setHighlightIndex(null);
+      useUIStore.getState().setSearchFocused(false);
+      inputRef.current?.blur();
       onSearch(trimmed);
       if (trimmed) {
         addRecentSearch(trimmed);
@@ -201,6 +205,8 @@ export function SearchBar({
         e.stopPropagation();
         setOpen(false);
         setHighlightIndex(null);
+        useUIStore.getState().setSearchFocused(false);
+        inputRef.current?.blur();
         break;
     }
   }
@@ -213,6 +219,7 @@ export function SearchBar({
 
   function handleFocus() {
     setOpen(true);
+    useUIStore.getState().setSearchFocused(true);
   }
 
   function handleClearRecent() {

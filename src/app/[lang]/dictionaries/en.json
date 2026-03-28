@@ -63,7 +63,12 @@
     "random": "Random",
     "allTags": "All Tags",
     "community": "Community",
-    "tagSearchPlaceholder": "Search tags",
+    "tagSearchPlaceholder": "Search tags...",
+    "backToFolders": "Folders",
+    "allTagsTitle": "All Tags",
+    "groups": "group",
+    "noTagsInGroup": "No tags in this group",
+    "noSearchResults": " — no matching tags",
     "expandAllFolders": "Expand all folders",
     "collapseAllFolders": "Collapse all folders",
     "sortNewest": "Newest",
@@ -82,6 +87,8 @@
     "shortcutQuickView": "Open quick view",
     "shortcutDeselect": "Deselect / Close",
     "shortcutThumbnailSize": "Thumbnail size",
+    "shortcutToggleLeftPanel": "Toggle left sidebar",
+    "shortcutToggleRightPanel": "Toggle right sidebar",
     "shortcutToggleHelp": "Toggle this help"
   },
   "clip": {

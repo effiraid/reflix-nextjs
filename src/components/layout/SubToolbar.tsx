@@ -50,6 +50,7 @@ export function SubToolbar({
     setActiveFilterTab,
     reshuffleClips,
     viewMode,
+    searchFocused,
   } = useUIStore(
     useShallow((state) => ({
       filterBarOpen: state.filterBarOpen,
@@ -60,6 +61,7 @@ export function SubToolbar({
       setActiveFilterTab: state.setActiveFilterTab,
       reshuffleClips: state.reshuffleClips,
       viewMode: state.viewMode,
+      searchFocused: state.searchFocused,
     }))
   );
   const { user, tier } = useAuthStore(
@@ -278,8 +280,8 @@ export function SubToolbar({
           ) : null}
         </div>
 
-        {/* Right: Thumbnail size slider */}
-        <div className="flex items-center gap-1.5 justify-self-end">
+        {/* Right: Thumbnail size slider (hidden when search focused) */}
+        <div className={`flex items-center gap-1.5 justify-self-end${searchFocused ? " invisible" : ""}`}>
           <button
             type="button"
             aria-label="-"

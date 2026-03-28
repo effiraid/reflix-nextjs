@@ -47,6 +47,8 @@ export function MasonryGrid({
       return;
     }
 
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     const observer = new ResizeObserver((entries) => {
       const nextWidth = Math.round(
         entries[0]?.contentRect.width ?? container.getBoundingClientRect().width
@@ -57,14 +59,20 @@ export function MasonryGrid({
       }
 
       if (lastWidthRef.current !== null && lastWidthRef.current !== nextWidth) {
-        setLayoutVersion((version) => version + 1);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          setLayoutVersion((version) => version + 1);
+        }, 180);
       }
 
       lastWidthRef.current = nextWidth;
     });
 
     observer.observe(container);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
   }, []);
 
   // Distribute clips into columns by shortest-column-first

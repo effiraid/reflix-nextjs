@@ -11,12 +11,14 @@ export function RightPanel({ children }: RightPanelProps) {
 
   return (
     <aside
-      className="shrink-0 border-l border-border overflow-hidden motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
+      className={`shrink-0 overflow-hidden motion-safe:transition-[width,border-color] motion-safe:duration-150 motion-safe:ease-out ${rightPanelOpen ? "border-l border-border" : "border-l border-transparent"}`}
       style={{ width: rightPanelOpen ? 320 : 0 }}
     >
-      <div className="w-80 h-full overflow-y-auto scrollbar-thin">
-        {children}
-      </div>
+      {rightPanelOpen ? (
+        <div className="w-80 h-full overflow-y-auto scrollbar-none">
+          {children}
+        </div>
+      ) : null}
     </aside>
   );
 }

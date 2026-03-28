@@ -6,34 +6,27 @@ import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useFilterSync } from "@/hooks/useFilterSync";
+import { useTagGroups } from "@/hooks/useTagGroups";
+import { TagGroupList } from "@/components/tags/TagGroupList";
 import { useBrowseData, useClipData } from "./ClipDataProvider";
 import { collectExpandableFolderIds, filterCategoriesByMode, findNode } from "@/lib/categories";
-import type { CategoryTree, ContentMode, Locale } from "@/lib/types";
+import type { CategoryTree, ContentMode, Locale, TagGroupData } from "@/lib/types";
+import type { Dictionary } from "../dictionaries";
+
+const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 
 interface LeftPanelContentProps {
   categories: CategoryTree;
+  tagGroups?: TagGroupData;
+  tagI18n?: Record<string, string>;
   lang: Locale;
-  dict: {
-    browse: {
-      all: string;
-      recentlyUsed: string;
-      random: string;
-      allTags: string;
-      community: string;
-      expandAllFolders: string;
-      collapseAllFolders: string;
-      modeAll: string;
-      modeDirection: string;
-      modeGame: string;
-    };
-    clip: {
-      folders: string;
-    };
-  };
+  dict: Pick<Dictionary, "browse" | "clip">;
 }
 
 export function LeftPanelContent({
   categories,
+  tagGroups = EMPTY_TAG_GROUPS,
+  tagI18n = {},
   lang,
   dict,
 }: LeftPanelContentProps) {
@@ -42,7 +35,9 @@ export function LeftPanelContent({
   const { updateURL } = useFilterSync();
   const contentMode = useFilterStore((s) => s.contentMode);
   const selectedFolders = useFilterStore((s) => s.selectedFolders);
-  const { setFilterBarOpen, setActiveFilterTab, setViewMode } = useUIStore();
+  const { setFilterBarOpen, setActiveFilterTab, setViewMode, setBrowseMode } = useUIStore();
+  const browseMode = useUIStore((s) => s.browseMode);
+  const tagData = useTagGroups(tagGroups, lang, tagI18n);
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
@@ -134,6 +129,10 @@ export function LeftPanelContent({
     );
   }, [expandedFolderIds, foldersExpanded, pendingScrollFolderId]);
 
+  if (browseMode === "tags") {
+    return <TagGroupList tagData={tagData} lang={lang} dict={dict} />;
+  }
+
   return (
     <div className="p-3 space-y-4 text-sm">
       {/* Quick filters */}
@@ -161,8 +160,7 @@ export function LeftPanelContent({
         <button
           type="button"
           onClick={() => {
-            setFilterBarOpen(true);
-            setActiveFilterTab("tags");
+            setBrowseMode("tags");
           }}
           className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover text-muted"
         >

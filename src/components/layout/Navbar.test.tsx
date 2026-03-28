@@ -197,7 +197,7 @@ describe("Navbar", () => {
     });
 
     render(<Navbar lang="ko" dict={dict} />);
-    fireEvent.click(screen.getByRole("button", { name: "사용자 메뉴" }));
+    fireEvent.click(screen.getByRole("button", { name: "프로필" }));
 
     expect(screen.getByText("Pro 업그레이드")).toBeInTheDocument();
     expect(screen.queryByText("구독 관리")).toBeNull();
