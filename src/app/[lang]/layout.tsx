@@ -42,6 +42,25 @@ export async function generateMetadata({
   };
 }
 
+async function LocaleContent({
+  params,
+  children,
+}: {
+  params: Promise<{ lang: string }>;
+  children: React.ReactNode;
+}) {
+  const { lang } = await params;
+  if (!hasLocale(lang)) notFound();
+
+  return (
+    <>
+      <HtmlLang lang={lang} />
+      <PricingModalHost />
+      {children}
+    </>
+  );
+}
+
 export default function LocaleLayout({
   children,
   params,
@@ -50,18 +69,8 @@ export default function LocaleLayout({
   params: Promise<{ lang: string }>;
 }) {
   return (
-    <Suspense fallback={children}>
-      {params.then(({ lang }) => {
-        if (!hasLocale(lang)) notFound();
-
-        return (
-          <>
-            <HtmlLang lang={lang} />
-            <PricingModalHost />
-            {children}
-          </>
-        );
-      })}
+    <Suspense fallback={null}>
+      <LocaleContent params={params}>{children}</LocaleContent>
     </Suspense>
   );
 }
