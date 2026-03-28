@@ -1,5 +1,5 @@
 import type { CategoryTree, ContentMode, Locale, SortBy } from "./types";
-import { collectDescendantIds, filterCategoriesByMode } from "./categories";
+import { collectDescendantIds } from "./categories";
 import { getAllClipTags } from "./aiTags";
 import { searchClips, type SearchableClipRecord } from "./clipSearch";
 
@@ -50,21 +50,8 @@ export function filterClips<T extends FilterableClipRecord>(
   }
 
   if (filters.contentMode) {
-    if (categories) {
-      const modeTree = filterCategoriesByMode(categories, filters.contentMode);
-      const modeFolderIds = new Set<string>();
-      for (const id of Object.keys(modeTree)) {
-        for (const fid of collectDescendantIds(id, modeTree)) {
-          modeFolderIds.add(fid);
-        }
-      }
-      result = result.filter((c) =>
-        (c.folders ?? []).some((f) => modeFolderIds.has(f))
-      );
-    } else {
-      const keyword = CONTENT_MODE_KEYWORD[filters.contentMode];
-      result = result.filter((c) => c.name?.includes(keyword));
-    }
+    const keyword = CONTENT_MODE_KEYWORD[filters.contentMode];
+    result = result.filter((c) => c.name?.includes(keyword));
   }
 
   if (filters.selectedFolders.length > 0) {
