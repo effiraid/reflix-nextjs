@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VideoPlayer } from "./VideoPlayer";
+import { useVideoKeyboard } from "./useVideoKeyboard";
 
 const { getMediaUrlMock } = vi.hoisted(() => ({
   getMediaUrlMock: vi.fn((value: string) => `https://media.reflix.app${value}`),
@@ -134,6 +135,23 @@ describe("VideoPlayer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Pause video" }));
     expect(video.pause).toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Play video" })).toBeInTheDocument();
+  });
+
+  it("disables video keyboard shortcuts when requested", () => {
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+        enableKeyboardShortcuts={false}
+      />
+    );
+
+    expect(useVideoKeyboard).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: true,
+      })
+    );
   });
 
   it("renders current progress time and total duration", () => {
@@ -517,7 +535,6 @@ describe("VideoPlayer", () => {
       await waitFor(() => {
         expect(fetchBlobUrlMock).toHaveBeenCalledWith(
           "https://media.reflix.app/videos/clip-1.mp4",
-          expect.any(AbortSignal)
         );
       });
     });

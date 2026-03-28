@@ -30,7 +30,6 @@ describe("clip detail metadata", () => {
     getClipMock.mockResolvedValue({
       id: "clip-1",
       name: "Clip 1",
-      annotation: "설명",
       category: "action",
       tags: ["태그"],
       width: 1280,

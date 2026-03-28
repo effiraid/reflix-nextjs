@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchBlobUrl } from "./blobVideo";
+import { fetchBlobUrl, _clearCache } from "./blobVideo";
 
 const mockCreateObjectURL = vi.fn(() => "blob:https://reflix.dev/fake-uuid");
 const mockRevokeObjectURL = vi.fn();
@@ -10,6 +10,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  _clearCache();
   vi.restoreAllMocks();
 });
 
@@ -26,7 +27,7 @@ describe("fetchBlobUrl", () => {
 
     expect(mockFetch).toHaveBeenCalledWith(
       "https://media.reflix.dev/videos/clip-1.mp4",
-      { credentials: "include", signal: undefined }
+      { credentials: "include" }
     );
     expect(mockCreateObjectURL).toHaveBeenCalled();
     expect(result).toBe("blob:https://reflix.dev/fake-uuid");
@@ -42,20 +43,19 @@ describe("fetchBlobUrl", () => {
     await expect(fetchBlobUrl("https://media.reflix.dev/videos/clip-1.mp4")).rejects.toThrow("Media fetch failed: 403");
   });
 
-  it("passes AbortSignal to fetch", async () => {
+  it("returns cached blob URL on second call", async () => {
     const mockBlob = new Blob(["data"], { type: "video/mp4" });
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
       blob: vi.fn().mockResolvedValue(mockBlob),
     });
     globalThis.fetch = mockFetch;
-    const controller = new AbortController();
 
-    await fetchBlobUrl("https://media.reflix.dev/videos/clip-1.mp4", controller.signal);
+    const url = "https://media.reflix.dev/videos/clip-cached.mp4";
+    const first = await fetchBlobUrl(url);
+    const second = await fetchBlobUrl(url);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "https://media.reflix.dev/videos/clip-1.mp4",
-      { credentials: "include", signal: controller.signal }
-    );
+    expect(first).toBe(second);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
   });
 });

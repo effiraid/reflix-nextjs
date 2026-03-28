@@ -43,7 +43,7 @@ export function RightPanelInspector({
     mediaKindKey === "video" ? dict.clip.video : dict.clip.image;
 
   return (
-    <div className="space-y-5 p-4 text-sm text-foreground">
+    <div className="space-y-5 p-4 text-sm text-foreground motion-safe:animate-[fadeIn_200ms_ease-out]">
       <div className="relative h-48 overflow-hidden rounded-2xl border border-border bg-surface/60">
         <div className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-medium text-white">
           {mediaKind}

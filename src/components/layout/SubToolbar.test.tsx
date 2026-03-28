@@ -43,7 +43,6 @@ describe("SubToolbar", () => {
       excludedFolders: [],
       selectedTags: [],
       excludedTags: [],
-      starFilter: null,
       searchQuery: "",
       sortBy: "newest",
       category: null,

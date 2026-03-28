@@ -9,7 +9,6 @@ const clips: ClipIndex[] = [
     name: "슬픈 걷기",
     tags: ["걷기"],
     folders: [],
-    star: 0,
     category: "acting",
     width: 100,
     height: 100,

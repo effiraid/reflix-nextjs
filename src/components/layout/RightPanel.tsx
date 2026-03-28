@@ -12,7 +12,7 @@ export function RightPanel({ children }: RightPanelProps) {
   if (!rightPanelOpen) return null;
 
   return (
-    <aside className="w-80 shrink-0 border-l border-border overflow-y-auto scrollbar-thin">
+    <aside className="w-80 shrink-0 border-l border-border overflow-y-auto scrollbar-thin motion-safe:animate-[slideInRight_200ms_ease-out]">
       {children}
     </aside>
   );

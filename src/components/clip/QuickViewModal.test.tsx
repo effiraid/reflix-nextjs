@@ -23,19 +23,33 @@ vi.mock("@/components/clip/VideoPlayer", () => ({
     videoUrl,
     thumbnailUrl,
     autoPlayMuted,
+    isExpanded,
+    onExpandToggle,
   }: {
     videoUrl: string;
     thumbnailUrl: string;
     autoPlayMuted?: boolean;
+    isExpanded?: boolean;
+    onExpandToggle?: () => void;
   }) => (
     <div
       data-testid="video-player"
       data-video-url={videoUrl}
       data-thumbnail-url={thumbnailUrl}
       data-auto-play-muted={String(autoPlayMuted ?? false)}
+      data-is-expanded={String(isExpanded ?? false)}
     >
       <button type="button">Play video</button>
       <button type="button">Playback speed</button>
+      {onExpandToggle ? (
+        <button
+          type="button"
+          aria-label={isExpanded ? "Collapse player" : "Expand player"}
+          onClick={onExpandToggle}
+        >
+          Toggle expand
+        </button>
+      ) : null}
     </div>
   ),
   PLAYBACK_SPEEDS: [0.25, 0.5, 1, 1.5, 2],
@@ -46,7 +60,6 @@ const clip: ClipIndex = {
   name: "Clip One",
   tags: ["tag-a", "tag-b"],
   folders: [],
-  star: 4,
   category: "action",
   width: 1280,
   height: 720,
@@ -65,10 +78,8 @@ const dict = {
     related: "Related Clips",
     tags: "Tags",
     folders: "Folders",
-    rating: "Rating",
     added: "Added",
     duration: "Duration",
-    inspectorRating: "Rating",
     inspectorDuration: "Duration",
     fileType: "File Type",
     memo: "Memo",
@@ -84,8 +95,29 @@ const dict = {
     aiAnalysis: "AI Analysis",
     aiLatest: "NEW",
     aiPending: "AI analysis pending",
+    tipClose: "Close",
+    tipPlayPause: "Play/Pause",
+    tipSeek: "Seek 1s",
+    tipFrame: "Frame step",
+    tipSpeed: "Speed",
+    tipLoop: "Loop",
+    tipInOut: "Set in/out",
+    tipResetMarkers: "Reset markers",
+    tipMute: "Mute",
+    tipFullscreen: "Fullscreen",
+    tipExpand: "Expand",
+    tipToggleHelp: "Toggle help",
     share: "Share",
     copied: "Copied",
+    tooltipPlay: "Play (Space)",
+    tooltipPause: "Pause (Space)",
+    tooltipMute: "Mute (M)",
+    tooltipUnmute: "Unmute (M)",
+    tooltipTimeFrame: "Time / Frame",
+    tooltipSpeed: "Speed (+/−)",
+    tooltipLoop: "Loop (L)",
+    tooltipExpand: "Expand (E)",
+    tooltipFullscreen: "Fullscreen (F)",
   },
 } satisfies Pick<Dictionary, "clip">;
 
@@ -93,7 +125,6 @@ const defaultDetailOverrides = {
   ext: "mp4",
   size: 1024 * 512,
   folders: ["folder-a"],
-  annotation: "An energetic scene.",
   url: "https://example.com/source",
   palettes: [],
   btime: 0,
@@ -154,8 +185,11 @@ describe("QuickViewModal", () => {
       "/ko/clip/clip-1"
     );
 
+    vi.useFakeTimers();
     fireEvent.click(screen.getByTestId("quick-view-backdrop"));
+    vi.advanceTimersByTime(200);
     expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("closes on Escape key", () => {
@@ -170,8 +204,11 @@ describe("QuickViewModal", () => {
       />
     );
 
+    vi.useFakeTimers();
     fireEvent.keyDown(window, { key: "Escape" });
+    vi.advanceTimersByTime(200);
     expect(onClose).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("restores focus to previous element on close", () => {
@@ -237,6 +274,32 @@ describe("QuickViewModal", () => {
     const layout = dialog.querySelector("div.grid");
 
     expect(layout).toHaveClass("lg:items-start");
+  });
+
+  it("stacks the details panel below the player when expanded", () => {
+    render(
+      <QuickViewModal
+        clip={clip}
+        dict={dict}
+        lang="ko"
+        onClose={vi.fn()}
+      />
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Clip One" });
+    const layout = dialog.querySelector("div.grid");
+    const player = screen.getByTestId("video-player");
+
+    expect(layout).toHaveClass("lg:grid-cols-[minmax(0,2fr)_320px]");
+    expect(player).toHaveAttribute("data-is-expanded", "false");
+
+    fireEvent.click(screen.getByRole("button", { name: "Expand player" }));
+
+    expect(layout).toHaveClass("lg:grid-cols-1");
+    expect(layout).not.toHaveClass("lg:grid-cols-[minmax(0,2fr)_320px]");
+    expect(player).toHaveAttribute("data-is-expanded", "true");
+    expect(screen.getByRole("button", { name: "Share" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "View Detail" })).toBeInTheDocument();
   });
 
   it("caps the quick view height so the modal stays inside the viewport", () => {
@@ -342,7 +405,6 @@ describe("QuickViewModal", () => {
       expect(screen.getByText("tag-a")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("Rating")).toBeInTheDocument();
     expect(screen.getByText("Duration")).toBeInTheDocument();
     expect(screen.queryByText("Memo")).not.toBeInTheDocument();
     expect(screen.queryByText("Properties")).not.toBeInTheDocument();

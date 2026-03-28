@@ -2,12 +2,14 @@
 
 import { useState, type ReactNode } from "react";
 import { VideoPlayer } from "@/components/clip/VideoPlayer";
+import type { Locale } from "@/lib/types";
 
 interface ClipDetailLayoutProps {
   videoUrl: string;
   thumbnailUrl: string;
   duration: number;
   children: ReactNode;
+  lang?: Locale;
 }
 
 export function ClipDetailLayout({
@@ -15,6 +17,7 @@ export function ClipDetailLayout({
   thumbnailUrl,
   duration,
   children,
+  lang,
 }: ClipDetailLayoutProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -29,6 +32,7 @@ export function ClipDetailLayout({
           useBlobUrl
           isExpanded={isExpanded}
           onExpandToggle={() => setIsExpanded((prev) => !prev)}
+          lang={lang}
         />
       </div>
 

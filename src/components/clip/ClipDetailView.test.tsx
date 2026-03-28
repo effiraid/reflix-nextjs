@@ -33,8 +33,6 @@ const baseClip: Clip = {
   duration: 18.4,
   tags: ["tag-a", "tag-b"],
   folders: ["folder-a"],
-  star: 4,
-  annotation: "An energetic scene.",
   url: "https://example.com",
   palettes: [],
   btime: 1710000000,
@@ -81,7 +79,6 @@ const dict = {
     related: "Related Clips",
     tags: "Tags",
     folders: "Folders",
-    rating: "Rating",
     memo: "Memo",
     properties: "Properties",
     size: "Size",
@@ -89,7 +86,6 @@ const dict = {
     format: "Format",
     added: "Added",
     duration: "Duration",
-    inspectorRating: "Rating",
     inspectorDuration: "Duration",
     fileType: "File Type",
     share: "Share",
@@ -102,6 +98,27 @@ const dict = {
     aiAnalysis: "AI Analysis",
     aiLatest: "NEW",
     aiPending: "AI analysis pending",
+    tipClose: "Close",
+    tipPlayPause: "Play/Pause",
+    tipSeek: "Seek 1s",
+    tipFrame: "Frame step",
+    tipSpeed: "Speed",
+    tipLoop: "Loop",
+    tipInOut: "Set in/out",
+    tipResetMarkers: "Reset markers",
+    tipMute: "Mute",
+    tipFullscreen: "Fullscreen",
+    tipExpand: "Expand",
+    tipToggleHelp: "Toggle help",
+    tooltipPlay: "Play (Space)",
+    tooltipPause: "Pause (Space)",
+    tooltipMute: "Mute (M)",
+    tooltipUnmute: "Unmute (M)",
+    tooltipTimeFrame: "Time / Frame",
+    tooltipSpeed: "Speed (+/−)",
+    tooltipLoop: "Loop (L)",
+    tooltipExpand: "Expand (E)",
+    tooltipFullscreen: "Fullscreen (F)",
   },
 };
 
@@ -112,8 +129,6 @@ describe("ClipDetailView", () => {
     expect(screen.getByText("액션")).toBeInTheDocument();
     expect(screen.getByText("tag-a")).toBeInTheDocument();
     expect(screen.getByText("AI Analysis")).toBeInTheDocument();
-    expect(screen.getByText("Memo")).toBeInTheDocument();
-    expect(screen.getByText("An energetic scene.")).toBeInTheDocument();
     expect(screen.getByText("Source URL")).toBeInTheDocument();
     expect(screen.getByText("https://example.com")).toBeInTheDocument();
     expect(screen.getByText("File Type")).toBeInTheDocument();

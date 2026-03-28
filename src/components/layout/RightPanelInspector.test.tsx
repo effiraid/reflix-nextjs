@@ -13,6 +13,10 @@ vi.mock("@/lib/mediaUrl", () => ({
   getMediaUrl: getMediaUrlMock,
 }));
 
+vi.mock("@/components/clip/ClipRatingPanel", () => ({
+  ClipRatingPanel: () => <section data-testid="clip-rating-panel" />,
+}));
+
 const categories: CategoryTree = {
   combat: {
     slug: "combat",
@@ -36,8 +40,6 @@ const clip: Clip = {
   duration: 65.1,
   tags: ["검"],
   folders: ["ultimate"],
-  star: 4,
-  annotation: "연계 마무리용",
   url: "https://example.com/share/clip-1",
   palettes: [
     { color: [12, 34, 56], ratio: 40 },
@@ -67,14 +69,12 @@ const dict: Pick<Dictionary, "clip"> = {
     memo: "메모",
     folders: "폴더",
     tags: "태그",
-    rating: "별점",
     properties: "속성",
     size: "크기",
     resolution: "해상도",
     format: "포맷",
     added: "추가일",
     duration: "재생시간",
-    inspectorRating: "평가",
     inspectorDuration: "지속 시간",
     fileType: "파일 형식",
     share: "공유",
@@ -87,6 +87,27 @@ const dict: Pick<Dictionary, "clip"> = {
     aiLatest: "NEW",
     aiAnalysis: "AI 분석",
     aiPending: "AI 분석 대기 중",
+    tipClose: "닫기",
+    tipPlayPause: "재생/정지",
+    tipSeek: "1초 이동",
+    tipFrame: "프레임 이동",
+    tipSpeed: "속도 조절",
+    tipLoop: "반복",
+    tipInOut: "구간 설정",
+    tipResetMarkers: "구간 초기화",
+    tipMute: "음소거",
+    tipFullscreen: "전체화면",
+    tipExpand: "패널 확장",
+    tipToggleHelp: "도움말 토글",
+    tooltipPlay: "재생 (Space)",
+    tooltipPause: "일시정지 (Space)",
+    tooltipMute: "음소거 (M)",
+    tooltipUnmute: "음소거 해제 (M)",
+    tooltipTimeFrame: "시간 / 프레임",
+    tooltipSpeed: "속도 (+/−)",
+    tooltipLoop: "반복 (L)",
+    tooltipExpand: "확장 (E)",
+    tooltipFullscreen: "전체화면 (F)",
   },
 };
 
@@ -120,12 +141,11 @@ describe("RightPanelInspector", () => {
     expect(getMediaUrlMock).toHaveBeenCalledWith(clip.previewUrl);
   });
 
-  it("renders blank memo and link as muted placeholders while keeping the share CTA enabled", () => {
+  it("renders blank link as muted placeholder while keeping the share CTA enabled", () => {
     render(
       <RightPanelInspector
         clip={{
           ...clip,
-          annotation: "",
           url: "",
         }}
         categories={categories}
@@ -134,13 +154,9 @@ describe("RightPanelInspector", () => {
       />
     );
 
-    const memoPlaceholder = screen.getByText("-");
     const linkPlaceholder = screen.getByText("링크 없음");
     const shareButton = screen.getByRole("button", { name: "공유" });
 
-    expect(memoPlaceholder).toBeInTheDocument();
-    expect(memoPlaceholder).toHaveClass("text-muted");
-    expect(memoPlaceholder).toHaveClass("italic");
     expect(linkPlaceholder).toBeInTheDocument();
     expect(linkPlaceholder).toHaveClass("text-muted");
     expect(linkPlaceholder).toHaveClass("italic");
@@ -149,7 +165,7 @@ describe("RightPanelInspector", () => {
     expect(shareButton).not.toBeDisabled();
   });
 
-  it("centers the palette swatches within the inspector card", () => {
+  it("renders the palette swatches inside the properties section", () => {
     render(
       <RightPanelInspector
         clip={clip}
@@ -159,11 +175,11 @@ describe("RightPanelInspector", () => {
       />
     );
 
-    const paletteSection = screen.getByText("색상 팔레트").parentElement;
-    const swatchRow = paletteSection?.querySelector(".flex.flex-wrap");
+    const propertiesHeading = screen.getByText("속성");
+    const propertiesSection = propertiesHeading.closest("section");
+    const paletteLabel = screen.getByText("색상 팔레트");
 
-    expect(swatchRow).not.toBeNull();
-    expect(swatchRow).toHaveClass("justify-center");
+    expect(propertiesSection).toContainElement(paletteLabel);
   });
 
   it("does not render the clip title below the palette card", () => {
@@ -285,7 +301,6 @@ describe("RightPanelInspector", () => {
             folders: "Folders",
             tags: "Tags",
             properties: "Properties",
-            inspectorRating: "Rating",
             inspectorDuration: "Duration",
             fileType: "File Type",
             share: "Share",
@@ -298,6 +313,27 @@ describe("RightPanelInspector", () => {
             aiLatest: "NEW",
             aiAnalysis: "AI Analysis",
             aiPending: "AI analysis pending",
+            tipClose: "Close",
+            tipPlayPause: "Play/Pause",
+            tipSeek: "Seek 1s",
+            tipFrame: "Frame step",
+            tipSpeed: "Speed",
+            tipLoop: "Loop",
+            tipInOut: "Set in/out",
+            tipResetMarkers: "Reset markers",
+            tipMute: "Mute",
+            tipFullscreen: "Fullscreen",
+            tipExpand: "Expand",
+            tipToggleHelp: "Toggle help",
+            tooltipPlay: "Play (Space)",
+            tooltipPause: "Pause (Space)",
+            tooltipMute: "Mute (M)",
+            tooltipUnmute: "Unmute (M)",
+            tooltipTimeFrame: "Time / Frame",
+            tooltipSpeed: "Speed (+/−)",
+            tooltipLoop: "Loop (L)",
+            tooltipExpand: "Expand (E)",
+            tooltipFullscreen: "Fullscreen (F)",
             related: "Related Clips",
             memo: "Memo",
           },
@@ -493,6 +529,7 @@ describe("RightPanelInspector", () => {
     );
 
     expect(aiSection).not.toBeNull();
+    // children[0] = preview, children[1] = AI analysis
     expect(inspector.children[1]).toBe(aiSection);
   });
 
@@ -532,8 +569,9 @@ describe("RightPanelInspector", () => {
 
     expect(folderSection).not.toBeNull();
     expect(tagSection).not.toBeNull();
-    expect(inspector.children[2]).toBe(folderSection);
-    expect(inspector.children[3]).toBe(tagSection);
+    // children[0] = preview, children[1] = AI analysis, children[2] = my rating, children[3] = folders, children[4] = tags
+    expect(inspector.children[3]).toBe(folderSection);
+    expect(inspector.children[4]).toBe(tagSection);
   });
 
   it("renders a pending AI state and clickable related clips", () => {
@@ -554,7 +592,6 @@ describe("RightPanelInspector", () => {
             name: "Counter Slash",
             tags: ["검"],
             folders: [],
-            star: 3,
             category: "action",
             width: 120,
             height: 120,
@@ -594,7 +631,6 @@ describe("RightPanelInspector", () => {
             name: "Counter Slash",
             tags: ["검"],
             folders: [],
-            star: 3,
             category: "action",
             width: 120,
             height: 120,

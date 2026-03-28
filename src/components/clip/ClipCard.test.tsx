@@ -5,7 +5,19 @@ import type { ClipIndex } from "@/lib/types";
 import { useAuthStore } from "@/stores/authStore";
 
 const setSelectedClipIdMock = vi.fn();
-const { getMediaUrlMock, clipStoreState, intersectionState } = vi.hoisted(() => ({
+const {
+  authStoreState,
+  authSelectors,
+  getMediaUrlMock,
+  clipStoreState,
+  intersectionState,
+} = vi.hoisted(() => ({
+  authStoreState: {
+    user: null as Record<string, unknown> | null,
+    tier: "free" as "free" | "pro",
+    isLoading: false,
+  },
+  authSelectors: [] as Array<(s: Record<string, unknown>) => unknown>,
   getMediaUrlMock: vi.fn((path: string) => path),
   clipStoreState: {
     selectedClipId: null as string | null,
@@ -34,6 +46,31 @@ vi.mock("@/stores/clipStore", () => ({
   },
 }));
 
+vi.mock("@/stores/authStore", () => {
+  const useAuthStoreMock = (selector?: (s: Record<string, unknown>) => unknown) => {
+    const store = {
+      user: authStoreState.user,
+      tier: authStoreState.tier,
+      isLoading: authStoreState.isLoading,
+    };
+
+    if (!selector) {
+      return store;
+    }
+
+    authSelectors.push(selector);
+    return selector(store);
+  };
+
+  useAuthStoreMock.setState = (partial: Partial<typeof authStoreState>) => {
+    Object.assign(authStoreState, partial);
+  };
+
+  return {
+    useAuthStore: useAuthStoreMock,
+  };
+});
+
 vi.mock("@/lib/mediaUrl", () => ({
   getMediaUrl: getMediaUrlMock,
 }));
@@ -43,7 +80,6 @@ const clip: ClipIndex = {
   name: "연출 아케인 힘듦 일어나기 비몽사몽 비틀비틀 아픔",
   tags: ["아케인", "힘듦"],
   folders: [],
-  star: 3,
   category: "acting",
   width: 1920,
   height: 1080,
@@ -58,6 +94,7 @@ describe("ClipCard", () => {
     clipStoreState.selectedClipId = null;
     intersectionState.stage = "thumbnail";
     intersectionState.isInView = false;
+    authSelectors.length = 0;
     useAuthStore.setState({
       user: null,
       tier: "free",
@@ -68,13 +105,12 @@ describe("ClipCard", () => {
     getMediaUrlMock.mockImplementation((path: string) => path);
   });
 
-  it("shows tags and duration with lighter default text that brightens on hover and omits stars", () => {
+  it("shows tags and duration with lighter default text that brightens on hover", () => {
     render(<ClipCard clip={clip} />);
 
     expect(screen.getByRole("button", { name: clip.name })).toBeInTheDocument();
     expect(screen.getByText("아케인, 힘듦")).toBeInTheDocument();
     expect(screen.getByText("8.6s")).toBeInTheDocument();
-    expect(screen.queryByText("★★★")).not.toBeInTheDocument();
 
     const duration = screen.getByText("8.6s");
     const infoRow = duration.closest("div");
@@ -217,6 +253,22 @@ describe("ClipCard", () => {
     render(<ClipCard clip={clip} />);
 
     expect(screen.getByAltText(clip.name)).not.toHaveAttribute("data-nimg", "fill");
+  });
+
+  it("uses stable auth selector snapshots for Zustand subscriptions", () => {
+    render(<ClipCard clip={clip} />);
+
+    expect(authSelectors.length).toBeGreaterThan(0);
+
+    const state = {
+      user: authStoreState.user,
+      tier: authStoreState.tier,
+      isLoading: authStoreState.isLoading,
+    };
+
+    for (const selector of authSelectors) {
+      expect(selector(state)).toBe(selector(state));
+    }
   });
 
 });

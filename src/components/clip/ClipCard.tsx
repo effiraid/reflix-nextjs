@@ -40,10 +40,8 @@ export function ClipCard({
   const { ref, stage, isInView } = useIntersectionLoader();
   const isSelected = useClipStore((s) => s.selectedClipId === clip.id);
   const setSelectedClipId = useClipStore((s) => s.setSelectedClipId);
-  const { user, tier } = useAuthStore((s) => ({
-    user: s.user,
-    tier: s.tier,
-  }));
+  const user = useAuthStore((s) => s.user);
+  const tier = useAuthStore((s) => s.tier);
   const openPricingModal = useUIStore((s) => s.openPricingModal);
   const [isHovered, setIsHovered] = useState(false);
   const [failedPreviewUrl, setFailedPreviewUrl] = useState<string | null>(null);
@@ -149,10 +147,12 @@ export function ClipCard({
       aria-label={clip.name}
       aria-pressed={isSelected}
       aria-disabled={locked ? "true" : undefined}
-      className={`group relative overflow-hidden rounded-lg bg-black transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+      className={`group relative overflow-hidden rounded-lg bg-black outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:ease-out ${
         locked ? "cursor-not-allowed" : "cursor-pointer"
       } ${
-        isSelected ? "ring-2 ring-accent" : "hover:shadow-lg"
+        isSelected
+          ? "ring-2 ring-accent motion-safe:scale-[1.01]"
+          : "[@media(hover:hover)]:hover:motion-safe:scale-[1.02] hover:shadow-lg"
       }`}
       style={{ aspectRatio: THUMBNAIL_ASPECT_RATIO }}
       onClick={handleClick}
@@ -200,7 +200,7 @@ export function ClipCard({
           disablePictureInPicture
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
-          className={`absolute inset-0 h-full w-full object-contain${lockedMediaClass}`}
+          className={`absolute inset-0 h-full w-full object-contain motion-safe:animate-[fadeIn_200ms_ease-out]${lockedMediaClass}`}
           onContextMenu={(e) => e.preventDefault()}
           onError={() => setFailedPreviewUrl(previewUrl)}
         />

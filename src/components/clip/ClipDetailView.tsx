@@ -23,6 +23,7 @@ export function ClipDetailView({
       videoUrl={clip.videoUrl}
       thumbnailUrl={clip.thumbnailUrl}
       duration={clip.duration}
+      lang={lang}
     >
       <aside
         data-pagefind-body

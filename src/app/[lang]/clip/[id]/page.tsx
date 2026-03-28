@@ -41,7 +41,6 @@ export async function generateMetadata({
   const locale = lang as Locale;
   const title = clip.i18n.title[locale] || clip.name;
   const description =
-    clip.annotation ||
     clip.aiTags?.description[locale] ||
     clip.aiTags?.description.ko ||
     `${clip.category} · ${clip.tags.join(", ")}`;
@@ -102,7 +101,6 @@ async function ClipDetailPageContent({ params }: ClipDetailPageProps) {
 
   const clipTitle = clip.i18n.title[locale] || clip.name;
   const clipDescription =
-    clip.annotation ||
     clip.aiTags?.description[locale] ||
     clip.aiTags?.description.ko ||
     `${clip.category} · ${clip.tags.join(", ")}`;

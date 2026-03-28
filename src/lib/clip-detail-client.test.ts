@@ -14,8 +14,6 @@ const remoteClip = {
   duration: 3.2,
   tags: ["tag"],
   folders: ["folder"],
-  star: 3,
-  annotation: "annotation",
   url: "",
   palettes: [],
   btime: 0,

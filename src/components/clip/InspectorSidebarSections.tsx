@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { ClipRatingPanel } from "@/components/clip/ClipRatingPanel";
 import { ShareButton } from "@/components/clip/ShareButton";
 import { getStructuredAiTags } from "@/lib/aiTags";
 import { getCategoryLabel } from "@/lib/categories";
@@ -55,9 +56,7 @@ export function InspectorSidebarSections({
   }));
   const palette = clip.palettes?.slice(0, 6) ?? [];
   const linkText = clip.url || dict.clip.noLink;
-  const memoText = clip.annotation || "-";
   const hasLink = Boolean(clip.url);
-  const hasMemo = Boolean(clip.annotation);
   const hasAiAnalysis = Object.prototype.hasOwnProperty.call(clip, "aiTags");
   const aiTagTokens = getTagDisplayLabels(
     getStructuredAiTags(clip.aiTags),
@@ -130,6 +129,8 @@ export function InspectorSidebarSections({
         </section>
       ) : null}
 
+      <ClipRatingPanel clipId={clip.id} lang={lang} />
+
       <TokenSection
         label={dict.clip.folders}
         items={folderItems}
@@ -141,28 +142,6 @@ export function InspectorSidebarSections({
         items={tagItems}
         onSelectItem={onSelectTag}
       />
-
-      {palette.length > 0 ? (
-        <div className="rounded-2xl border border-border bg-surface/40 p-3">
-          <div className="mb-3 text-xs font-medium uppercase tracking-[0.18em] text-muted">
-            {dict.clip.colorPalette}
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            {palette.map((swatch, index) => (
-              <div
-                key={`${swatch.color.join("-")}-${index}`}
-                className="h-8 w-8 rounded-full border border-white/10 shadow-sm"
-                style={{
-                  backgroundColor: `rgb(${swatch.color[0]}, ${swatch.color[1]}, ${swatch.color[2]})`,
-                }}
-                title={`${swatch.ratio}%`}
-              />
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      <FieldCard label={dict.clip.memo} value={memoText} isPlaceholder={!hasMemo} />
 
       <FieldCard
         label={dict.clip.sourceUrl}
@@ -177,14 +156,29 @@ export function InspectorSidebarSections({
         </h4>
         <dl className="space-y-3">
           <PropertyRow
-            label={dict.clip.inspectorRating}
-            value={`${"★".repeat(clip.star)}${"☆".repeat(Math.max(0, 5 - clip.star))}`}
-          />
-          <PropertyRow
             label={dict.clip.inspectorDuration}
             value={formatClipDuration(clip.duration)}
           />
           <PropertyRow label={dict.clip.fileType} value={mediaKind} />
+          {palette.length > 0 ? (
+            <PropertyRow
+              label={dict.clip.colorPalette}
+              value={
+                <div className="flex flex-wrap justify-end gap-1">
+                  {palette.map((swatch, index) => (
+                    <div
+                      key={`${swatch.color.join("-")}-${index}`}
+                      className="h-3.5 w-3.5 rounded-full border border-white/10"
+                      style={{
+                        backgroundColor: `rgb(${swatch.color[0]}, ${swatch.color[1]}, ${swatch.color[2]})`,
+                      }}
+                      title={`${swatch.ratio}%`}
+                    />
+                  ))}
+                </div>
+              }
+            />
+          ) : null}
         </dl>
       </section>
 
@@ -325,7 +319,7 @@ function TokenSection({
   );
 }
 
-function PropertyRow({ label, value }: { label: string; value: string }) {
+function PropertyRow({ label, value }: { label: string; value: import("react").ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <dt className="text-muted">{label}</dt>

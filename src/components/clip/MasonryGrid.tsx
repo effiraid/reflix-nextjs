@@ -161,8 +161,9 @@ function MasonryColumn({
                 width: "100%",
                 transform: `translateY(${virtualItem.start}px)`,
               }}
-              className="pb-3"
+              className="pb-3 motion-safe:animate-[fadeIn_300ms_ease-out_both]"
             >
+              <div className="motion-safe:animate-[fadeInUp_300ms_ease-out_both]">
               <ClipCard
                 clip={clip}
                 lang={lang}
@@ -174,6 +175,7 @@ function MasonryColumn({
                 locked={lockedClipIds.has(clip.id)}
                 onOpenQuickView={onOpenQuickView}
               />
+              </div>
             </div>
           );
         })}

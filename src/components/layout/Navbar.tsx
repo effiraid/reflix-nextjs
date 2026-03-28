@@ -13,6 +13,7 @@ import { useClipStore } from "@/stores/clipStore";
 import { useAuthStore } from "@/stores/authStore";
 import { createClient } from "@/lib/supabase/client";
 import { MobileSearchOverlay } from "./MobileSearchOverlay";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 
 interface NavbarProps {
@@ -143,42 +144,52 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
           data-testid="navbar-controls"
           className="col-start-2 flex items-center justify-self-end gap-1 md:col-start-3"
         >
-          <button
-            type="button"
-            aria-label={mobileSearchLabel}
-            title={mobileSearchLabel}
-            onClick={handleMobileSearchOpen}
-            className="p-1.5 rounded hover:bg-surface-hover text-sm md:hidden"
-          >
-            <SearchIcon className="size-4" strokeWidth={1.75} />
-          </button>
+          <Tooltip label={mobileSearchLabel}>
+            <button
+              type="button"
+              aria-label={mobileSearchLabel}
+              onClick={handleMobileSearchOpen}
+              className="p-1.5 rounded hover:bg-surface-hover text-sm md:hidden"
+            >
+              <SearchIcon className="size-4" strokeWidth={1.75} />
+            </button>
+          </Tooltip>
 
-          <Link
-            href={switchedPath}
-            className="px-2 py-1 text-xs rounded hover:bg-surface-hover"
-          >
-            {lang === "ko" ? "EN" : "KO"}
-          </Link>
+          <Tooltip label={lang === "ko" ? "English로 전환" : "한국어로 전환"}>
+            <Link
+              href={switchedPath}
+              className="flex items-center gap-1.5 px-2 py-1 text-xs rounded hover:bg-surface-hover text-muted hover:text-foreground transition-colors"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              {lang === "ko" ? "EN" : "KO"}
+            </Link>
+          </Tooltip>
 
-          <button
-            type="button"
-            aria-label={themeLabel}
-            title={themeLabel}
-            onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
-            className="p-1.5 rounded hover:bg-surface-hover text-sm"
-          >
-            <ThemeIcon className="size-4" strokeWidth={1.75} />
-          </button>
+          <Tooltip label={themeLabel}>
+            <button
+              type="button"
+              aria-label={themeLabel}
+              onClick={() => setTheme(isDarkTheme ? "light" : "dark")}
+              className="p-1.5 rounded hover:bg-surface-hover text-sm"
+            >
+              <ThemeIcon className="size-4" strokeWidth={1.75} />
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            aria-label={panelLabel}
-            title={panelLabel}
-            onClick={handlePanelsToggle}
-            className="p-1.5 rounded hover:bg-surface-hover text-sm"
-          >
-            {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
-          </button>
+          <Tooltip label={panelLabel}>
+            <button
+              type="button"
+              aria-label={panelLabel}
+              onClick={handlePanelsToggle}
+              className="p-1.5 rounded hover:bg-surface-hover text-sm"
+            >
+              {allPanelsOpen ? <PanelsOpenIcon /> : <PanelsClosedIcon />}
+            </button>
+          </Tooltip>
 
           {/* Auth: login button or user menu */}
           {mounted && !authLoading ? (
@@ -260,29 +271,31 @@ function UserMenu({
 
   return (
     <div className="relative ml-1">
-      <button
-        type="button"
-        onClick={() => setUserMenuOpen(!userMenuOpen)}
-        aria-label={isKo ? "사용자 메뉴" : "User menu"}
-        className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium hover:bg-surface-hover"
-        aria-expanded={userMenuOpen}
-        aria-haspopup="true"
-      >
-        <UserIcon className="size-3.5" strokeWidth={1.75} />
-        {isPaidPro ? (
-          <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
-            PRO
-          </span>
-        ) : isBetaPro ? (
-          <span className="rounded bg-foreground/10 px-1 py-0.5 text-[10px] font-semibold leading-none text-foreground/70">
-            BETA
-          </span>
-        ) : tier === "pro" ? (
-          <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
-            PRO
-          </span>
-        ) : null}
-      </button>
+      <Tooltip label={isKo ? "프로필" : "Profile"}>
+        <button
+          type="button"
+          onClick={() => setUserMenuOpen(!userMenuOpen)}
+          aria-label={isKo ? "프로필" : "Profile"}
+          className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium hover:bg-surface-hover"
+          aria-expanded={userMenuOpen}
+          aria-haspopup="true"
+        >
+          <UserIcon className="size-3.5" strokeWidth={1.75} />
+          {isPaidPro ? (
+            <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
+              PRO
+            </span>
+          ) : isBetaPro ? (
+            <span className="rounded bg-foreground/10 px-1 py-0.5 text-[10px] font-semibold leading-none text-foreground/70">
+              BETA
+            </span>
+          ) : tier === "pro" ? (
+            <span className="rounded bg-accent/20 px-1 py-0.5 text-[10px] font-semibold leading-none text-accent">
+              PRO
+            </span>
+          ) : null}
+        </button>
+      </Tooltip>
 
       {userMenuOpen ? (
         <>

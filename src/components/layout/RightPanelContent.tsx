@@ -69,6 +69,7 @@ export function RightPanelContent({
 
   return (
     <RightPanelInspector
+      key={activeClip.id}
       clip={activeClip}
       categories={categories}
       lang={lang}

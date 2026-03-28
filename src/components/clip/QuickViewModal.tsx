@@ -10,7 +10,10 @@ import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useClipDetail } from "@/hooks/useClipDetail";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
+import { Kbd } from "@/components/ui/Kbd";
 
+const ANIMATION_DURATION = 100;
+const TIPS_STORAGE_KEY = "reflix-quickview-tips-seen";
 
 interface QuickViewModalProps {
   clip: BrowseClipRecord;
@@ -32,6 +35,15 @@ export function QuickViewModal({
     clipId: clip.id,
     rate: 1,
   }));
+  const [isClosing, setIsClosing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showTips, setShowTips] = useState(() => {
+    try {
+      return !localStorage.getItem(TIPS_STORAGE_KEY);
+    } catch {
+      return true;
+    }
+  });
   const dialogRef = useRef<HTMLElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const playbackRate = playbackState.clipId === clip.id ? playbackState.rate : 1;
@@ -57,14 +69,31 @@ export function QuickViewModal({
     });
   }, [clip.id]);
 
+  const handleClose = useCallback(() => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setTimeout(onClose, ANIMATION_DURATION);
+  }, [isClosing, onClose]);
+
+  const toggleTips = useCallback(() => {
+    setShowTips((prev) => {
+      const next = !prev;
+      if (!next) {
+        try { localStorage.setItem(TIPS_STORAGE_KEY, "1"); } catch {}
+      }
+      return next;
+    });
+  }, []);
+
   const shortcuts = useMemo<Shortcut[]>(
     () => [
-      { key: "Escape", action: onClose },
+      { key: "Escape", action: handleClose },
       { key: "-", action: () => stepSpeed(-1), allowRepeat: true },
       { key: "+", action: () => stepSpeed(1), allowRepeat: true },
       { key: "=", action: () => stepSpeed(1), allowRepeat: true },
+      { key: "?", action: toggleTips },
     ],
-    [onClose, stepSpeed]
+    [handleClose, stepSpeed, toggleTips]
   );
   useKeyboardShortcuts(shortcuts);
 
@@ -79,11 +108,37 @@ export function QuickViewModal({
     };
   }, []);
 
+  const backdropAnimation = isClosing
+    ? "motion-safe:animate-[modalBackdropOut_100ms_ease-in_forwards]"
+    : "motion-safe:animate-[modalBackdropIn_100ms_ease-out]";
+
+  const contentAnimation = isClosing
+    ? "motion-safe:animate-[modalContentOut_80ms_ease-in_forwards]"
+    : "motion-safe:animate-[modalContentIn_80ms_cubic-bezier(0.16,1,0.3,1)]";
+
+  const t = dict.clip;
+
+  const tipsRow1: { keys: string[]; label: string }[] = [
+    { keys: ["Esc"], label: t.tipClose },
+    { keys: ["Space"], label: t.tipPlayPause },
+    { keys: ["←", "→"], label: t.tipSeek },
+    { keys: ["<", ">"], label: t.tipFrame },
+    { keys: ["+", "−"], label: t.tipSpeed },
+    { keys: ["L"], label: t.tipLoop },
+  ];
+  const tipsRow2: { keys: string[]; label: string }[] = [
+    { keys: ["I", "O"], label: t.tipInOut },
+    { keys: ["F"], label: t.tipFullscreen },
+    { keys: ["M"], label: t.tipMute },
+    { keys: ["E"], label: t.tipExpand },
+    { keys: ["?"], label: t.tipToggleHelp },
+  ];
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 will-change-[opacity] ${backdropAnimation}`}
       data-testid="quick-view-backdrop"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <section
         ref={dialogRef}
@@ -91,17 +146,24 @@ export function QuickViewModal({
         aria-modal="true"
         aria-label={clip.name}
         tabIndex={-1}
-        className="max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-y-auto rounded-3xl border border-border bg-background shadow-2xl"
+        className={`max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-y-auto rounded-3xl border border-border bg-background shadow-2xl will-change-[transform,opacity] ${contentAnimation}`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="grid gap-6 p-6 lg:items-start lg:grid-cols-[minmax(0,2fr)_320px]">
+        <div
+          data-testid="quick-view-layout"
+          className={`grid gap-6 p-6 lg:items-start ${isExpanded ? "lg:grid-cols-1" : "lg:grid-cols-[minmax(0,2fr)_320px]"}`}
+        >
           <VideoPlayer
             videoUrl={videoUrl}
             thumbnailUrl={thumbnailUrl}
             duration={duration}
             autoPlayMuted
+            useBlobUrl
             playbackRate={playbackRate}
             onPlaybackRateChange={setPlaybackRate}
+            isExpanded={isExpanded}
+            onExpandToggle={() => setIsExpanded((prev) => !prev)}
+            lang={lang}
           />
 
           <ClipDetailsPanel
@@ -128,6 +190,30 @@ export function QuickViewModal({
             )}
           />
         </div>
+        {showTips ? (
+          <div className="sticky bottom-0 flex flex-col items-center gap-1 rounded-b-3xl border-t border-border bg-background px-6 py-2">
+            <div className="flex items-center justify-center gap-5">
+              {tipsRow1.map((tip) => (
+                <div key={tip.label} className="flex items-center gap-1.5 text-sm">
+                  <span className="flex gap-0.5">
+                    {tip.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}
+                  </span>
+                  <span className="text-foreground/60">{tip.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-center gap-5">
+              {tipsRow2.map((tip) => (
+                <div key={tip.label} className="flex items-center gap-1.5 text-sm">
+                  <span className="flex gap-0.5">
+                    {tip.keys.map((k) => <Kbd key={k}>{k}</Kbd>)}
+                  </span>
+                  <span className="text-foreground/60">{tip.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </section>
     </div>
   );

@@ -17,12 +17,40 @@ import {
   ExpandIcon,
   CollapseIcon,
 } from "./PlayerIcons";
+import { Tooltip } from "@/components/ui/Tooltip";
+import type { Locale } from "@/lib/types";
+
+const TOOLTIPS = {
+  ko: {
+    play: "재생 (Space)",
+    pause: "일시정지 (Space)",
+    mute: "음소거 (M)",
+    unmute: "음소거 해제 (M)",
+    timeFrame: "시간 / 프레임",
+    speed: "속도 (+/−)",
+    loop: "반복 (L)",
+    expand: "확장 (E)",
+    fullscreen: "전체화면 (F)",
+  },
+  en: {
+    play: "Play (Space)",
+    pause: "Pause (Space)",
+    mute: "Mute (M)",
+    unmute: "Unmute (M)",
+    timeFrame: "Time / Frame",
+    speed: "Speed (+/−)",
+    loop: "Loop (L)",
+    expand: "Expand (E)",
+    fullscreen: "Fullscreen (F)",
+  },
+} as const;
 
 interface VideoPlayerProps {
   videoUrl: string;
   thumbnailUrl: string;
   duration: number;
   compact?: boolean;
+  enableKeyboardShortcuts?: boolean;
   playbackToggleCount?: number;
   autoPlayMuted?: boolean;
   playbackRate?: number;
@@ -30,6 +58,7 @@ interface VideoPlayerProps {
   useBlobUrl?: boolean;
   isExpanded?: boolean;
   onExpandToggle?: () => void;
+  lang?: Locale;
 }
 
 export const PLAYBACK_SPEEDS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -54,6 +83,7 @@ export function VideoPlayer({
   thumbnailUrl,
   duration,
   compact = false,
+  enableKeyboardShortcuts = true,
   playbackToggleCount = 0,
   autoPlayMuted = false,
   playbackRate: controlledRate,
@@ -61,7 +91,9 @@ export function VideoPlayer({
   useBlobUrl = false,
   isExpanded = false,
   onExpandToggle,
+  lang = "ko",
 }: VideoPlayerProps) {
+  const tt = TOOLTIPS[lang];
   const isControlled = controlledRate !== undefined;
   const videoRef = useRef<HTMLVideoElement>(null);
   const previousPlaybackToggleCount = useRef(playbackToggleCount);
@@ -81,28 +113,23 @@ export function VideoPlayer({
 
   const directVideoUrl = getMediaUrl(videoUrl);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const blobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!useBlobUrl) return;
 
-    const controller = new AbortController();
-    fetchBlobUrl(directVideoUrl, controller.signal)
+    let cancelled = false;
+    fetchBlobUrl(directVideoUrl)
       .then((url) => {
-        blobUrlRef.current = url;
+        if (cancelled) return;
         setBlobUrl(url);
       })
-      .catch((err: unknown) => {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+      .catch(() => {
+        if (cancelled) return;
         setHasPlaybackError(true);
       });
 
     return () => {
-      controller.abort();
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
+      cancelled = true;
     };
   }, [directVideoUrl, useBlobUrl]);
 
@@ -512,7 +539,7 @@ export function VideoPlayer({
     stepBackward,
     stepSpeed,
     onExpandToggle,
-    disabled: hasPlaybackError,
+    disabled: hasPlaybackError || !enableKeyboardShortcuts,
   });
 
   useEffect(() => {
@@ -561,12 +588,12 @@ export function VideoPlayer({
     <div
       ref={containerRef}
       data-testid="video-player"
-      className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
+      className="rounded-2xl border border-border bg-background shadow-[0_10px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_14px_40px_rgba(0,0,0,0.35)]"
     >
       {/* Video area */}
       <div
         data-testid="video-player-surface"
-        className="relative bg-black"
+        className="relative overflow-hidden rounded-t-2xl bg-black"
         onContextMenu={(e) => e.preventDefault()}
       >
         <div
@@ -581,6 +608,7 @@ export function VideoPlayer({
           ref={videoRef}
           src={resolvedVideoUrl || undefined}
           poster={resolvedThumbnailUrl}
+          preload="auto"
           playsInline
           controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture
@@ -600,43 +628,49 @@ export function VideoPlayer({
       {/* Control bar */}
       <div
         data-testid="video-player-controls"
-        className="flex items-center gap-2 border-t border-border bg-surface px-3 py-2"
+        className="flex items-center gap-2 rounded-b-2xl border-t border-border bg-surface px-3 py-2"
       >
-        <button
-          type="button"
-          tabIndex={-1}
-          className={`${iconButtonClass} text-foreground hover:text-foreground/80`}
-          onClick={() => {
-            void togglePlayback();
-          }}
-          aria-label={hasPlaybackError ? "Video unavailable" : isPlaying ? "Pause video" : "Play video"}
-          disabled={hasPlaybackError}
-        >
-          {hasPlaybackError ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
+        <Tooltip label={isPlaying ? tt.pause : tt.play} side="top">
+          <button
+            type="button"
+            tabIndex={-1}
+            className={`${iconButtonClass} text-foreground hover:text-foreground/80`}
+            onClick={() => {
+              void togglePlayback();
+            }}
+            aria-label={hasPlaybackError ? "Video unavailable" : isPlaying ? "Pause video" : "Play video"}
+            disabled={hasPlaybackError}
+          >
+            {hasPlaybackError ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          tabIndex={-1}
-          className={`${iconButtonClass} text-muted hover:text-foreground`}
-          onClick={toggleMute}
-          aria-label={isMuted ? "Unmute" : "Mute"}
-          disabled={hasPlaybackError}
-        >
-          {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
-        </button>
+        <Tooltip label={isMuted ? tt.unmute : tt.mute} side="top">
+          <button
+            type="button"
+            tabIndex={-1}
+            className={`${iconButtonClass} text-muted hover:text-foreground`}
+            onClick={toggleMute}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+            disabled={hasPlaybackError}
+          >
+            {isMuted ? <VolumeOffIcon /> : <VolumeOnIcon />}
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          tabIndex={-1}
-          className="rounded-md px-1.5 py-1 text-xs tabular-nums text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
-          onClick={() => setShowFrames((prev) => !prev)}
-          aria-label="Toggle time/frame display"
-        >
-          {showFrames
-            ? `${formatFrameCount(currentTime, frameDuration)}f / ${formatFrameCount(totalDuration, frameDuration)}f`
-            : `${formatPlaybackTime(currentTime)} / ${formatPlaybackTime(totalDuration)}`}
-        </button>
+        <Tooltip label={tt.timeFrame} side="top">
+          <button
+            type="button"
+            tabIndex={-1}
+            className="rounded-md px-1.5 py-1 text-xs tabular-nums text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+            onClick={() => setShowFrames((prev) => !prev)}
+            aria-label="Toggle time/frame display"
+          >
+            {showFrames
+              ? `${formatFrameCount(currentTime, frameDuration)}f / ${formatFrameCount(totalDuration, frameDuration)}f`
+              : `${formatPlaybackTime(currentTime)} / ${formatPlaybackTime(totalDuration)}`}
+          </button>
+        </Tooltip>
 
         <SeekBar
           currentTime={currentTime}
@@ -651,49 +685,57 @@ export function VideoPlayer({
           disabled={hasPlaybackError}
         />
 
-        <button
-          type="button"
-          tabIndex={-1}
-          className={`${textButtonClass} text-muted hover:text-foreground`}
-          onClick={cyclePlaybackRate}
-          aria-label="Playback speed"
-          disabled={hasPlaybackError}
-        >
-          {playbackRate}x
-        </button>
+        <Tooltip label={tt.speed} side="top">
+          <button
+            type="button"
+            tabIndex={-1}
+            className={`${textButtonClass} text-muted hover:text-foreground`}
+            onClick={cyclePlaybackRate}
+            aria-label="Playback speed"
+            disabled={hasPlaybackError}
+          >
+            {playbackRate}x
+          </button>
+        </Tooltip>
 
-        <button
-          type="button"
-          tabIndex={-1}
-          className={`${iconButtonClass} ${isLooping ? "text-accent hover:text-accent" : "text-muted hover:text-foreground"}`}
-          onClick={() => setIsLooping((prev) => !prev)}
-          aria-label={isLooping ? "Disable loop" : "Enable loop"}
-          disabled={hasPlaybackError}
-        >
-          <RepeatIcon />
-        </button>
+        <Tooltip label={tt.loop} side="top">
+          <button
+            type="button"
+            tabIndex={-1}
+            className={`${iconButtonClass} ${isLooping ? "text-accent hover:text-accent" : "text-muted hover:text-foreground"}`}
+            onClick={() => setIsLooping((prev) => !prev)}
+            aria-label={isLooping ? "Disable loop" : "Enable loop"}
+            disabled={hasPlaybackError}
+          >
+            <RepeatIcon />
+          </button>
+        </Tooltip>
 
         {onExpandToggle && (
+          <Tooltip label={tt.expand} side="top">
+            <button
+              type="button"
+              tabIndex={-1}
+              className={`${iconButtonClass} text-muted hover:text-foreground`}
+              onClick={onExpandToggle}
+              aria-label={isExpanded ? "Collapse player" : "Expand player"}
+            >
+              {isExpanded ? <CollapseIcon /> : <ExpandIcon />}
+            </button>
+          </Tooltip>
+        )}
+
+        <Tooltip label={tt.fullscreen} side="top">
           <button
             type="button"
             tabIndex={-1}
             className={`${iconButtonClass} text-muted hover:text-foreground`}
-            onClick={onExpandToggle}
-            aria-label={isExpanded ? "Collapse player" : "Expand player"}
+            onClick={() => { void toggleFullscreen(); }}
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            {isExpanded ? <CollapseIcon /> : <ExpandIcon />}
+            {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
           </button>
-        )}
-
-        <button
-          type="button"
-          tabIndex={-1}
-          className={`${iconButtonClass} text-muted hover:text-foreground`}
-          onClick={() => { void toggleFullscreen(); }}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-        >
-          {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-        </button>
+        </Tooltip>
       </div>
     </div>
   );
