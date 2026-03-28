@@ -52,7 +52,7 @@ export function SearchSuggestions({
     <div
       role="listbox"
       aria-label={suggestionsLabel}
-      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[320px] overflow-y-auto rounded-lg border border-border bg-surface shadow-lg"
+      className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[320px] overflow-y-auto rounded-lg border border-border bg-surface shadow-xl"
     >
       {showRecent ? (
         <div>
