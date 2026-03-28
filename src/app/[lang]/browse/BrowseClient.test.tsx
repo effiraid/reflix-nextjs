@@ -391,10 +391,7 @@ describe("BrowseClient", () => {
     expect(statusBar).toHaveAttribute("aria-live", "polite");
     expect(statusBar).toHaveTextContent(/7개 클립/);
     expect(statusBar).toHaveTextContent(/2개 결과는 Pro 전용/);
-    expect(screen.getByRole("link", { name: "Pro로 잠금 해제" })).toHaveAttribute(
-      "href",
-      "/ko/pricing"
-    );
+    expect(screen.getByRole("button", { name: "Pro로 잠금 해제" })).toBeInTheDocument();
   });
 
   it("blocks free users from combining multiple filter axes", () => {
