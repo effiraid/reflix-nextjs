@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useUIStore } from "@/stores/uiStore";
 import type { Locale } from "@/lib/types";
 
 interface LandingPricingProps {
@@ -63,6 +64,7 @@ function CheckIcon() {
 
 export function LandingPricing({ lang, dict }: LandingPricingProps) {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const { openPricingModal } = useUIStore();
   const isYearly = billingInterval === "yearly";
   const yearlyDiscountRate = "-17%";
   const yearlyDiscountCapsuleStyle = {
@@ -84,9 +86,6 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
     ? dict.pricingProPeriodYearly
     : dict.pricingProPeriod;
 
-  const proCta = isYearly
-    ? `/${lang}/pricing?interval=yearly`
-    : `/${lang}/pricing`;
   const yearlyBillingNote = (
     <>
       <span
@@ -302,12 +301,13 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
             ))}
           </ul>
 
-          <Link
-            href={proCta}
-            className="mt-8 block rounded-full bg-white py-2.5 text-center text-[14px] font-medium text-black transition-opacity hover:opacity-80"
+          <button
+            type="button"
+            onClick={openPricingModal}
+            className="mt-8 w-full rounded-full bg-white py-2.5 text-center text-[14px] font-medium text-black transition-opacity hover:opacity-80"
           >
             {dict.pricingProCta}
-          </Link>
+          </button>
         </div>
       </div>
     </section>
