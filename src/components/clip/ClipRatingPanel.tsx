@@ -57,6 +57,11 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
   // 2. 메모 자동 저장 debounce
   const memoDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const memoSaveInFlightRef = useRef(false);
+  // 자동 저장 완료 시 localMemo 덮어쓰기 방지 플래그
+  const skipMemoSyncRef = useRef(false);
+  // flush용: 클립 전환·blur·언마운트 시 최신 localMemo 참조
+  const localMemoRef = useRef(localMemo);
+  localMemoRef.current = localMemo;
   // 4. textarea 자동 높이
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = LABELS[lang];
@@ -78,9 +83,38 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
     queuedRatingRef.current = undefined;
     starSaveInFlightRef.current = false;
     if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
+
+    // 클립 전환 또는 언마운트 시 미저장 메모 즉시 flush
+    const effectCacheKey = cacheKey;
+    const effectClipId = clipId;
+    return () => {
+      if (memoDebounceRef.current) {
+        clearTimeout(memoDebounceRef.current);
+        memoDebounceRef.current = null;
+      }
+      if (!effectCacheKey) return;
+      const stored = useClipRatingStore.getState().ratings[effectCacheKey];
+      const storedMemo = stored?.memo ?? "";
+      const pending = localMemoRef.current;
+      if (pending !== storedMemo) {
+        skipMemoSyncRef.current = true;
+        saveClipRating(effectClipId, stored?.rating ?? null, pending || null)
+          .then((result) => {
+            useClipRatingStore.getState().setRating(effectCacheKey, result);
+          })
+          .catch(() => {});
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cacheKey]);
 
+  // 클립 전환 또는 외부 스토어 업데이트 시 localMemo 동기화
+  // (자동 저장 완료 시에는 skipMemoSyncRef로 덮어쓰기 방지)
   useEffect(() => {
+    if (skipMemoSyncRef.current) {
+      skipMemoSyncRef.current = false;
+      return;
+    }
     setLocalMemo(currentRating?.memo ?? "");
   }, [cacheKey, currentRating?.memo]);
 
@@ -156,11 +190,16 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
     [cacheKey, persistRating, saving, user]
   );
 
-  // 2. Debounced memo auto-save
+  // 2. Debounced memo auto-save (큐잉으로 드롭 방지)
+  const pendingMemoRef = useRef<string | null>(null);
   const saveMemo = useCallback(
     async (memo: string) => {
       if (!user || !cacheKey) return;
-      if (memoSaveInFlightRef.current) return;
+      if (memoSaveInFlightRef.current) {
+        // 진행 중이면 최신 값을 큐에 저장 → 완료 후 재시도
+        pendingMemoRef.current = memo;
+        return;
+      }
       memoSaveInFlightRef.current = true;
       setSaving(true);
       try {
@@ -169,6 +208,7 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
           useClipRatingStore.getState().ratings[cacheKey]?.rating ?? null,
           memo || null
         );
+        skipMemoSyncRef.current = true;
         setRating(cacheKey, result);
         flashSaved();
       } catch {
@@ -176,6 +216,12 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
       } finally {
         memoSaveInFlightRef.current = false;
         setSaving(false);
+      }
+      // 큐에 대기 중인 메모가 있으면 이어서 저장
+      if (pendingMemoRef.current !== null) {
+        const queued = pendingMemoRef.current;
+        pendingMemoRef.current = null;
+        saveMemo(queued);
       }
     },
     [cacheKey, clipId, flashSaved, setRating, user]
@@ -190,11 +236,18 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
     [saveMemo]
   );
 
-  // Cleanup timers
+  // blur 시 debounce 대기 중인 메모 즉시 저장
+  const handleMemoBlur = useCallback(() => {
+    if (!memoDebounceRef.current) return;
+    clearTimeout(memoDebounceRef.current);
+    memoDebounceRef.current = null;
+    saveMemo(localMemoRef.current);
+  }, [saveMemo]);
+
+  // Cleanup "saved" flash timer on unmount
   useEffect(() => {
     return () => {
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      if (memoDebounceRef.current) clearTimeout(memoDebounceRef.current);
     };
   }, []);
 
@@ -270,6 +323,7 @@ export function ClipRatingPanel({ clipId, lang }: ClipRatingPanelProps) {
               ref={textareaRef}
               value={localMemo}
               onChange={(e) => handleMemoChange(e.target.value)}
+              onBlur={handleMemoBlur}
               placeholder={t.placeholder}
               rows={1}
               className="w-full resize-none overflow-hidden rounded-lg border border-border bg-background px-3 py-2 text-xs leading-relaxed text-foreground placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
