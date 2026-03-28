@@ -54,44 +54,9 @@ export default function LocaleLayout({
       {params.then(({ lang }) => {
         if (!hasLocale(lang)) notFound();
 
-        const organizationLd = {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: "Reflix",
-          url: BASE_URL,
-          logo: `${BASE_URL}/og-default.png`,
-          description:
-            lang === "ko"
-              ? "애니메이터와 개발자를 위한 모션 레퍼런스 라이브러리"
-              : "Animation reference library for animators and developers",
-        };
-
-        const websiteLd = {
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Reflix",
-          url: BASE_URL,
-          potentialAction: {
-            "@type": "SearchAction",
-            target: {
-              "@type": "EntryPoint",
-              urlTemplate: `${BASE_URL}/${lang}/browse?q={search_term_string}`,
-            },
-            "query-input": "required name=search_term_string",
-          },
-        };
-
         return (
           <>
             <HtmlLang lang={lang} />
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
-            />
-            <script
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
-            />
             <PricingModalHost />
             {children}
           </>

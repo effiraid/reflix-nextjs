@@ -76,10 +76,13 @@ export function PricingModal({ lang }: PricingModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lang, interval: billingInterval }),
       });
+      if (!res.ok) throw new Error(`Checkout failed: ${res.status}`);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+        return;
       }
+      setLoading(false);
     } catch {
       setLoading(false);
     }
