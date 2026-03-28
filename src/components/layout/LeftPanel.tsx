@@ -9,11 +9,14 @@ interface LeftPanelProps {
 export function LeftPanel({ children }: LeftPanelProps) {
   const { leftPanelOpen } = useUIStore();
 
-  if (!leftPanelOpen) return null;
-
   return (
-    <aside className="w-60 shrink-0 border-r border-border overflow-y-auto scrollbar-thin motion-safe:animate-[slideInLeft_150ms_ease-out]">
-      {children}
+    <aside
+      className="shrink-0 border-r border-border overflow-hidden motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
+      style={{ width: leftPanelOpen ? 240 : 0 }}
+    >
+      <div className="w-60 h-full overflow-y-auto scrollbar-thin">
+        {children}
+      </div>
     </aside>
   );
 }

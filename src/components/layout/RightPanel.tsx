@@ -9,11 +9,14 @@ interface RightPanelProps {
 export function RightPanel({ children }: RightPanelProps) {
   const { rightPanelOpen } = useUIStore();
 
-  if (!rightPanelOpen) return null;
-
   return (
-    <aside className="w-80 shrink-0 border-l border-border overflow-y-auto scrollbar-thin motion-safe:animate-[slideInRight_200ms_ease-out]">
-      {children}
+    <aside
+      className="shrink-0 border-l border-border overflow-hidden motion-safe:transition-[width] motion-safe:duration-150 motion-safe:ease-out"
+      style={{ width: rightPanelOpen ? 320 : 0 }}
+    >
+      <div className="w-80 h-full overflow-y-auto scrollbar-thin">
+        {children}
+      </div>
     </aside>
   );
 }

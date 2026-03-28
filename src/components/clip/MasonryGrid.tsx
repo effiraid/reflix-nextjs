@@ -94,6 +94,7 @@ export function MasonryGrid({
           lang={lang}
           tagI18n={tagI18n}
           onOpenQuickView={onOpenQuickView}
+          skipEntrance={layoutVersion > 0}
         />
       ))}
     </div>
@@ -110,6 +111,7 @@ function MasonryColumn({
   lang,
   tagI18n,
   onOpenQuickView,
+  skipEntrance,
 }: {
   clips: BrowseClipRecord[];
   scrollElement: HTMLElement | null;
@@ -120,6 +122,7 @@ function MasonryColumn({
   lang: Locale;
   tagI18n: Record<string, string>;
   onOpenQuickView?: (clipId: string) => void;
+  skipEntrance: boolean;
 }) {
   // TanStack Virtual intentionally returns imperative helpers.
   // In React 19 + Next dev, direct getVirtualItems() reads can be compiler-hoisted
@@ -138,6 +141,7 @@ function MasonryColumn({
   });
   const virtualizerRef = useRef(virtualizer);
   virtualizerRef.current = virtualizer;
+
   const totalSize = virtualizerRef.current.getTotalSize();
   const virtualItems = virtualizerRef.current.getVirtualItems();
 
@@ -161,9 +165,9 @@ function MasonryColumn({
                 width: "100%",
                 transform: `translateY(${virtualItem.start}px)`,
               }}
-              className="pb-3 motion-safe:animate-[fadeIn_300ms_ease-out_both]"
+              className={`pb-3${skipEntrance ? "" : " motion-safe:animate-[fadeIn_300ms_ease-out_both]"}`}
             >
-              <div className="motion-safe:animate-[fadeInUp_300ms_ease-out_both]">
+              <div className={skipEntrance ? undefined : "motion-safe:animate-[fadeInUp_300ms_ease-out_both]"}>
               <ClipCard
                 clip={clip}
                 lang={lang}
