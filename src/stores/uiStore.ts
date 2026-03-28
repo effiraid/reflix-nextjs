@@ -12,6 +12,7 @@ interface UIStore {
   thumbnailSize: number;
   activeFilterTab: string | null;
   shuffleSeed: number;
+  pricingModalOpen: boolean;
 
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
@@ -25,6 +26,8 @@ interface UIStore {
   stepThumbnailSize: (delta: number) => void;
   setActiveFilterTab: (tab: string | null) => void;
   reshuffleClips: () => void;
+  openPricingModal: () => void;
+  closePricingModal: () => void;
 }
 
 export const useUIStore = create<UIStore>()(
@@ -38,6 +41,7 @@ export const useUIStore = create<UIStore>()(
       thumbnailSize: 2,
       activeFilterTab: null,
       shuffleSeed: 0,
+      pricingModalOpen: false,
 
       toggleLeftPanel: () =>
         set((state) => ({ leftPanelOpen: !state.leftPanelOpen })),
@@ -57,6 +61,8 @@ export const useUIStore = create<UIStore>()(
       setActiveFilterTab: (tab) => set({ activeFilterTab: tab }),
       reshuffleClips: () =>
         set((state) => ({ shuffleSeed: state.shuffleSeed + 1 })),
+      openPricingModal: () => set({ pricingModalOpen: true }),
+      closePricingModal: () => set({ pricingModalOpen: false }),
     }),
     {
       name: "reflix-ui",
