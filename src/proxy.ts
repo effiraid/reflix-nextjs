@@ -106,6 +106,13 @@ export async function proxy(request: NextRequest) {
   );
 
   if (pathnameHasLocale) {
+    // Redirect removed /pricing route to /browse
+    const pricingMatch = pathname.match(/^\/([a-z]{2})\/pricing\b/);
+    if (pricingMatch) {
+      const pricingLang = pricingMatch[1];
+      return NextResponse.redirect(new URL(`/${pricingLang}/browse`, request.url), 301);
+    }
+
     if (pathname.match(/^\/[a-z]{2}\/account(?:\/|$)/)) {
       const { userId } = await getSessionTier(request);
       if (!userId) {
