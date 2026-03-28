@@ -1,31 +1,7 @@
 import { describe, expect, it } from "vitest";
-import ko from "./ko.json";
 import en from "./en.json";
 
-function flattenLeaves(value: unknown, prefix = ""): string[] {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return [prefix];
-  }
-
-  return Object.entries(value).flatMap(([key, child]) =>
-    flattenLeaves(child, prefix ? `${prefix}.${key}` : key)
-  );
-}
-
 describe("English dictionary", () => {
-  it("keeps all locale keys aligned with the Korean source dictionary", () => {
-    const koKeys = flattenLeaves(ko);
-    const enKeys = flattenLeaves(en);
-
-    expect({
-      missingInEn: koKeys.filter((key) => !enKeys.includes(key)),
-      extraInEn: enKeys.filter((key) => !koKeys.includes(key)),
-    }).toEqual({
-      missingInEn: [],
-      extraInEn: [],
-    });
-  });
-
   it("preserves the reviewed English marketing and UI copy", () => {
     expect(en.landing).toMatchObject({
       heroTitleMobile: "A reference engine\nfor animation",

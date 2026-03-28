@@ -173,7 +173,7 @@ function PlayerControlsOverlay({ text }: { text: string }) {
 }
 
 function FeaturePlaybackPlayer({ clip }: { clip: BrowseClipRecord }) {
-  const [playbackRate, setPlaybackRate] = useState(0.25);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
   return (
     <VideoPlayer
@@ -217,8 +217,8 @@ function FeatureRow({
         {title}
       </h3>
       <p
-        className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-[#777]"
-        style={{ wordBreak: "keep-all" }}
+        className="mt-3 whitespace-pre-line text-[15px] leading-relaxed"
+        style={{ wordBreak: "keep-all", color: "rgba(255,255,255,0.45)" }}
       >
         {description}
       </p>
@@ -279,8 +279,8 @@ export function LandingFeatures({
           {dict.featuresTitle}
         </h2>
         <p
-          className="mt-3 whitespace-pre-line text-[15px] text-[#777]"
-          style={{ wordBreak: "keep-all" }}
+          className="mt-3 whitespace-pre-line text-[15px]"
+          style={{ wordBreak: "keep-all", color: "rgba(255,255,255,0.45)" }}
         >
           {dict.featuresSub}
         </p>

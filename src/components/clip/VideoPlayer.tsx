@@ -287,6 +287,23 @@ export function VideoPlayer({
     return () => document.removeEventListener("fullscreenchange", handleChange);
   }, []);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const preventWheelScroll = (event: WheelEvent) => {
+      event.preventDefault();
+    };
+
+    container.addEventListener("wheel", preventWheelScroll, { passive: false });
+
+    return () => {
+      container.removeEventListener("wheel", preventWheelScroll);
+    };
+  }, []);
+
   const seekRelative = useCallback(
     (seconds: number) => {
       const video = videoRef.current;

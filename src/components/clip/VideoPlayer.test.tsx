@@ -565,4 +565,25 @@ describe("VideoPlayer", () => {
     expect(screen.getByTestId("video-player-surface")).toHaveClass("bg-black");
     expect(screen.getByTestId("video-player-controls")).toHaveClass("bg-surface");
   });
+
+  it("prevents page scroll when the wheel is used over the player controls", () => {
+    render(
+      <VideoPlayer
+        videoUrl="/videos/clip-1.mp4"
+        thumbnailUrl="/thumbnails/clip-1.webp"
+        duration={12}
+      />
+    );
+
+    const controls = screen.getByTestId("video-player-controls");
+    const event = new WheelEvent("wheel", {
+      bubbles: true,
+      cancelable: true,
+      deltaY: 120,
+    });
+
+    controls.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(true);
+  });
 });

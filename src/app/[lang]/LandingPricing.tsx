@@ -96,8 +96,8 @@ export function LandingPricing({ lang, dict }: LandingPricingProps) {
           {dict.pricingTitle}
         </h2>
         <p
-          className="mt-3 whitespace-pre-line text-[15px] text-muted"
-          style={{ wordBreak: "keep-all" }}
+          className="mt-3 whitespace-pre-line text-[15px]"
+          style={{ wordBreak: "keep-all", color: "rgba(255,255,255,0.45)" }}
         >
           {dict.pricingSub}
         </p>

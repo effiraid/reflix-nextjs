@@ -168,7 +168,7 @@ describe("LandingFeatures", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the reusable video player for the frame playback feature", () => {
+  it("renders the reusable video player for the frame playback feature at 1x", () => {
     render(
       <LandingFeatures
         lang="ko"
@@ -186,7 +186,7 @@ describe("LandingFeatures", () => {
     expect(player).toHaveAttribute("data-video-url", "/preview.mp4");
     expect(player).toHaveAttribute("data-thumbnail-url", "/thumb.webp");
     expect(player).toHaveAttribute("data-duration", "2.4");
-    expect(player).toHaveAttribute("data-playback-rate", "0.25");
+    expect(player).toHaveAttribute("data-playback-rate", "1");
     expect(player).toHaveAttribute("data-autoplay-muted", "true");
     expect(player).toHaveAttribute("data-use-blob-url", "true");
   });
@@ -210,6 +210,34 @@ describe("LandingFeatures", () => {
     expect(screen.getByTestId("landing-feature-player")).toHaveAttribute(
       "data-playback-rate",
       "0.5"
+    );
+  });
+
+  it("resets the landing feature player speed back to 1x after remount", () => {
+    const props = {
+      lang: "ko" as const,
+      tagI18n: {},
+      featureClips: [
+        createClip("clip-1"),
+        createClip("clip-2", true),
+        createClip("clip-3"),
+      ],
+      dict,
+    };
+    const { unmount } = render(<LandingFeatures {...props} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "cycle-speed" }));
+    expect(screen.getByTestId("landing-feature-player")).toHaveAttribute(
+      "data-playback-rate",
+      "0.5"
+    );
+
+    unmount();
+    render(<LandingFeatures {...props} />);
+
+    expect(screen.getByTestId("landing-feature-player")).toHaveAttribute(
+      "data-playback-rate",
+      "1"
     );
   });
 });

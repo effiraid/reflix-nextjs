@@ -21,8 +21,8 @@ export function LandingCTA({ lang, dict }: LandingCTAProps) {
         {dict.ctaTitle}
       </h2>
       <p
-        className="mt-3 whitespace-pre-line text-[15px] text-[#777]"
-        style={{ wordBreak: "keep-all" }}
+        className="mt-3 whitespace-pre-line text-[15px]"
+        style={{ color: "rgba(255,255,255,0.45)", wordBreak: "keep-all" }}
       >
         {dict.ctaSub}
       </p>
