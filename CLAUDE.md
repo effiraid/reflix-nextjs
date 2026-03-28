@@ -43,6 +43,8 @@ npm run release:mark-published # Record successful publish
 
 Next.js 16, React 19, TypeScript 5, Tailwind CSS 4, Zustand, @tanstack/react-virtual, next-themes, Pagefind, Cloudflare R2 (@aws-sdk/client-s3), Supabase (@supabase/ssr), Stripe
 
+- **Font:** Pretendard Variable 단일 폰트 (sans + mono 모두). 다른 폰트 추가 금지.
+
 ## Next.js 16 Breaking Changes (CRITICAL)
 
 These differ from your training data. **Read `node_modules/next/dist/docs/` before writing route files.**
