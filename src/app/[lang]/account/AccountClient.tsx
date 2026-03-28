@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { CrownIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import { useAuthStore } from "@/stores/authStore";
+import { useUIStore } from "@/stores/uiStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
 import { BrandSplash } from "@/components/splash/BrandSplash";
@@ -18,6 +18,7 @@ interface AccountClientProps {
 
 export function AccountClient({ lang }: AccountClientProps) {
   const { user, tier, isLoading } = useAuthStore();
+  const { openPricingModal } = useUIStore();
   const router = useRouter();
   const searchParams = useSearchParams();
   const isKo = lang === "ko";
@@ -177,13 +178,14 @@ export function AccountClient({ lang }: AccountClientProps) {
                   : "Manage your subscription via Stripe Customer Portal."}
               </p>
             ) : (
-              <Link
-                href={`/${lang}/pricing`}
+              <button
+                type="button"
+                onClick={openPricingModal}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90"
               >
                 <CrownIcon className="size-3.5" strokeWidth={2} />
                 {isKo ? "Pro로 업그레이드" : "Upgrade to Pro"}
-              </Link>
+              </button>
             )}
           </div>
 
