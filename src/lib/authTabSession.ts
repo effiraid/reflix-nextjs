@@ -4,6 +4,8 @@ const TAB_ID_KEY = "reflix-auth-tab-id";
 const ACTIVE_TAB_KEY = "reflix-active-auth-tab";
 const TAB_REVOKED_KEY = "reflix-auth-tab-revoked";
 const ACTIVE_TAB_STALE_MS = 15_000;
+const PENDING_AUTH_FLOW_KEY = "reflix-pending-auth-flow";
+const PENDING_AUTH_FLOW_STALE_MS = 15 * 60 * 1000;
 
 interface ActiveAuthTabRecord {
   tabId: string;
@@ -113,6 +115,44 @@ export function clearTabSessionRevoked() {
 export function isTabSessionRevoked() {
   if (!isBrowser()) return false;
   return window.sessionStorage.getItem(TAB_REVOKED_KEY) === "1";
+}
+
+function hasFreshPendingAuthFlow() {
+  if (!isBrowser()) return false;
+
+  const raw = window.sessionStorage.getItem(PENDING_AUTH_FLOW_KEY);
+  if (!raw) return false;
+
+  const createdAt = Number.parseInt(raw, 10);
+  if (!Number.isFinite(createdAt)) {
+    window.sessionStorage.removeItem(PENDING_AUTH_FLOW_KEY);
+    return false;
+  }
+
+  if (Date.now() - createdAt > PENDING_AUTH_FLOW_STALE_MS) {
+    window.sessionStorage.removeItem(PENDING_AUTH_FLOW_KEY);
+    return false;
+  }
+
+  return true;
+}
+
+export function markPendingAuthFlow() {
+  if (!isBrowser()) return;
+  window.sessionStorage.setItem(PENDING_AUTH_FLOW_KEY, `${Date.now()}`);
+}
+
+export function clearPendingAuthFlow() {
+  if (!isBrowser()) return;
+  window.sessionStorage.removeItem(PENDING_AUTH_FLOW_KEY);
+}
+
+export function consumePendingAuthFlow() {
+  const isValid = hasFreshPendingAuthFlow();
+  if (isValid) {
+    clearPendingAuthFlow();
+  }
+  return isValid;
 }
 
 export function buildSessionReplacedLoginPath(pathname: string) {

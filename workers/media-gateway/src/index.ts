@@ -244,36 +244,21 @@ const worker = {
       return new Response("Forbidden", { status: 403 });
     }
 
-    // Tier-based access control:
-    // /videos/* requires an authenticated session (free/pro)
-    // /previews/* allows all tiers
-    const tier = getPayloadTier(session);
-    const canAccessFullVideo =
-      session.v === 2 && (Boolean(session.userId) || tier === "pro");
-    if (url.pathname.startsWith("/videos/") && !canAccessFullVideo) {
-      const cors = corsHeaders(request);
-      cors.set("Content-Type", "application/json");
-      return new Response(
-        JSON.stringify({ error: "sign_in_required", message: "Sign in required for full videos" }),
-        { status: 403, headers: cors }
-      );
-    }
-
-    // Signed URL verification for /videos/* (grace period: allow if no tok/sig present)
     const isVideoPath = url.pathname.startsWith("/videos/");
+    let hasValidSignedUrl = false;
     if (isVideoPath) {
       const tok = url.searchParams.get("tok");
       const sig = url.searchParams.get("sig");
 
       if (tok && sig) {
-        const valid = await verifySignedUrl(
+        hasValidSignedUrl = await verifySignedUrl(
           tok,
           sig,
           env.MEDIA_SESSION_SECRET,
           url.pathname,
           Date.now(),
         );
-        if (!valid) {
+        if (!hasValidSignedUrl) {
           const cors = corsHeaders(request);
           cors.set("Content-Type", "application/json");
           return new Response(
@@ -283,6 +268,23 @@ const worker = {
         }
       }
       // Grace period: if tok/sig absent, fall through with cookie-only auth
+    }
+
+    // Tier-based access control:
+    // /videos/* requires either an authenticated session (free/pro)
+    // or a valid signed URL that the app issued for a shareable detail page.
+    // /previews/* allows all tiers.
+    const tier = getPayloadTier(session);
+    const canAccessFullVideo =
+      hasValidSignedUrl ||
+      (session.v === 2 && (Boolean(session.userId) || tier === "pro"));
+    if (url.pathname.startsWith("/videos/") && !canAccessFullVideo) {
+      const cors = corsHeaders(request);
+      cors.set("Content-Type", "application/json");
+      return new Response(
+        JSON.stringify({ error: "sign_in_required", message: "Sign in required for full videos" }),
+        { status: 403, headers: cors }
+      );
     }
 
     const response = await serveR2Object(

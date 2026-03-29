@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 import { loadBrowseFilterIndex } from "@/lib/data";
+import { getServerViewerTier } from "@/lib/browseAccess";
 
 export async function GET() {
-  const filterIndex = await loadBrowseFilterIndex();
+  const [filterIndex] = await Promise.all([
+    loadBrowseFilterIndex(),
+    getServerViewerTier(),
+  ]);
   const body = JSON.stringify(filterIndex);
 
   return new NextResponse(body, {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control":
-        "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Robots-Tag": "noindex",
     },

@@ -108,7 +108,7 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
 - **Browse API:** Split into 3 endpoints: `/api/browse/cards` (card data), `/api/browse/filter-index` (facet counts), `/api/browse/projection` (full projection). Client loads cards first, then projection in background.
 - **User ratings:** `/api/user-ratings` — CRUD for per-user clip ratings + memos. Backed by `user_clip_ratings` table.
 - **DB schema:** `supabase/migrations/` — 001: `profiles`, `subscriptions`, `daily_usage`, `boards`; 002: `beta_access_grants`; 003: scale indexes; 004: `user_clip_ratings`. All tables have RLS policies.
-- **Access policy:** `src/lib/accessPolicy.ts` — tier-based capability matrix. Guest: 5 clips. Free: 50 clips, 20 views/day, 1 board. Pro: full library, unlimited.
+- **Access policy:** `src/lib/accessPolicy.ts` — tier-based capability matrix. Guest: browse/search allowed, default browse teaser is limited, search/filter result thumbnails are blurred and login-gated, but shared clip detail links remain playable without login. Free: 5 visible results, 1 filter axis, 1 board. Pro: full library, multi-filter combinations, unlimited boards, shuffle.
 - **Search:** Korean: `es-hangul` (초성 검색 + 영타→한글 변환). English: `@nozbe/microfuzz` (fuzzy). Factory: `createMatcher(lang, query)` in `src/lib/search.ts`. 1만 건+ 시 Pagefind 전환 예정 (상세: `docs/search-strategy.md`)
 - **Path alias:** `@/*` maps to `./src/*`
 

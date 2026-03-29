@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getValidatedRequestOrigin } from "@/lib/requestOrigin";
 
 export async function PUT(request: Request) {
+  const originCheck = getValidatedRequestOrigin(request);
+  if (!originCheck.ok) {
+    return NextResponse.json(
+      { error: originCheck.error },
+      { status: originCheck.status }
+    );
+  }
+
   const supabase = await createServerSupabase();
   const {
     data: { user },

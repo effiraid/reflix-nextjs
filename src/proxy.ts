@@ -8,87 +8,6 @@ import {
   signMediaSessionToken,
 } from "@/lib/mediaSession";
 
-async function getSessionAccess(request: NextRequest): Promise<{
-  userId?: string;
-  effectiveTier: "free" | "pro";
-  accessSource: "free" | "paid" | "beta";
-}> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    return { effectiveTier: "free", accessSource: "free" };
-  }
-
-  try {
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: () => {},
-      },
-    });
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return { effectiveTier: "free", accessSource: "free" };
-    }
-
-    const access = await loadEffectiveAccess(supabase as never, user.id);
-
-    return {
-      userId: user.id,
-      effectiveTier: access.effectiveTier,
-      accessSource: access.accessSource,
-    };
-  } catch {
-    return { effectiveTier: "free", accessSource: "free" };
-  }
-}
-
-async function withMediaSession(
-  request: NextRequest,
-  response: NextResponse
-): Promise<NextResponse> {
-  const config = getMediaSessionConfig(process.env);
-  if (!config.enabled) {
-    return response;
-  }
-
-  const { userId, effectiveTier, accessSource } = await getSessionAccess(request);
-
-  const now = Date.now();
-  const token = await signMediaSessionToken(
-    {
-      v: 2,
-      host: request.nextUrl.hostname,
-      exp: now + config.ttlSeconds * 1000,
-      userId,
-      tier: effectiveTier,
-      accessSource,
-    },
-    config.secret
-  );
-
-  response.cookies.set({
-    name: MEDIA_SESSION_COOKIE_NAME,
-    value: token,
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    // Keep the cookie domain explicit in env config (for example `.reflix.dev`).
-    // Origin allowlisting is handled downstream, so avoid wildcard host logic
-    // or localhost-only production exceptions in this proxy layer.
-    domain: config.domain,
-    path: "/",
-    maxAge: config.ttlSeconds,
-  });
-
-  return response;
-}
-
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -102,7 +21,103 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if locale is already in path
+  // --- Auth session: create one Supabase client, propagate cookie updates ---
+  // Tracking cookie updates and writing them to every response prevents stale
+  // refresh-token cookies from reaching the browser client, which would cause
+  // an uncatchable AuthApiError("Invalid Refresh Token") in the SDK internals.
+  const authCookieUpdates: {
+    name: string;
+    value: string;
+    options?: Record<string, unknown>;
+  }[] = [];
+
+  let sessionAccess: {
+    userId?: string;
+    effectiveTier: "free" | "pro";
+    accessSource: "free" | "paid" | "beta";
+  } = { effectiveTier: "free", accessSource: "free" };
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (supabaseUrl && supabaseKey) {
+    try {
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          getAll: () => request.cookies.getAll(),
+          setAll: (cookies) => {
+            authCookieUpdates.length = 0;
+            authCookieUpdates.push(...cookies);
+            for (const { name, value } of cookies) {
+              request.cookies.set(name, value);
+            }
+          },
+        },
+      });
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const access = await loadEffectiveAccess(supabase as never, user.id);
+        sessionAccess = {
+          userId: user.id,
+          effectiveTier: access.effectiveTier,
+          accessSource: access.accessSource,
+        };
+      }
+    } catch {
+      // Auth unavailable — continue as guest
+    }
+  }
+
+  // Apply tracked auth cookie updates to any response
+  function finalizeResponse(response: NextResponse): NextResponse {
+    for (const { name, value, options } of authCookieUpdates) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      response.cookies.set(name, value, options as any);
+    }
+    return response;
+  }
+
+  async function addMediaSession(
+    response: NextResponse
+  ): Promise<NextResponse> {
+    const config = getMediaSessionConfig(process.env);
+    if (!config.enabled) return response;
+
+    const now = Date.now();
+    const token = await signMediaSessionToken(
+      {
+        v: 2,
+        host: request.nextUrl.hostname,
+        exp: now + config.ttlSeconds * 1000,
+        userId: sessionAccess.userId,
+        tier: sessionAccess.effectiveTier,
+        accessSource: sessionAccess.accessSource,
+      },
+      config.secret
+    );
+
+    response.cookies.set({
+      name: MEDIA_SESSION_COOKIE_NAME,
+      value: token,
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      // Keep the cookie domain explicit in env config (for example `.reflix.dev`).
+      // Origin allowlisting is handled downstream, so avoid wildcard host logic
+      // or localhost-only production exceptions in this proxy layer.
+      domain: config.domain,
+      path: "/",
+      maxAge: config.ttlSeconds,
+    });
+
+    return response;
+  }
+
+  // --- Routing ---
   const pathnameHasLocale = LOCALES.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
@@ -112,18 +127,24 @@ export async function proxy(request: NextRequest) {
     const pricingMatch = pathname.match(/^\/([a-z]{2})\/pricing\b/);
     if (pricingMatch) {
       const pricingLang = pricingMatch[1];
-      return NextResponse.redirect(new URL(`/${pricingLang}/browse`, request.url), 301);
+      return finalizeResponse(
+        NextResponse.redirect(
+          new URL(`/${pricingLang}/browse`, request.url),
+          301
+        )
+      );
     }
 
     if (pathname.match(/^\/[a-z]{2}\/account(?:\/|$)/)) {
-      const { userId } = await getSessionAccess(request);
-      if (!userId) {
+      if (!sessionAccess.userId) {
         const lang = pathname.split("/")[1] || "ko";
-        return NextResponse.redirect(new URL(`/${lang}/login`, request.url));
+        return finalizeResponse(
+          NextResponse.redirect(new URL(`/${lang}/login`, request.url))
+        );
       }
     }
 
-    return withMediaSession(request, NextResponse.next());
+    return finalizeResponse(await addMediaSession(NextResponse.next()));
   }
 
   // Detect preferred locale from Accept-Language header
@@ -131,12 +152,13 @@ export async function proxy(request: NextRequest) {
   const preferred = acceptLanguage.includes("ko") ? "ko" : DEFAULT_LOCALE;
 
   // Redirect to locale-prefixed path
-  return withMediaSession(
-    request,
-    NextResponse.redirect(
-      new URL(
-        `/${preferred}${pathname === "/" ? "" : pathname}`,
-        request.url
+  return finalizeResponse(
+    await addMediaSession(
+      NextResponse.redirect(
+        new URL(
+          `/${preferred}${pathname === "/" ? "" : pathname}`,
+          request.url
+        )
       )
     )
   );

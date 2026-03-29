@@ -2,6 +2,7 @@ import accessPolicy from "@/data/access-policy.json";
 
 export type SubscriptionTier = "free" | "pro";
 export type ViewerTier = "guest" | SubscriptionTier;
+export type FullVideoSurface = "detail" | "browse";
 
 export type CapabilityAccess = "yes" | "no" | "limited" | string;
 
@@ -51,9 +52,14 @@ export function hasProAccess(
 
 export function canAccessFullVideo(
   user: { id: string } | null | undefined,
-  tier: SubscriptionTier
+  tier: SubscriptionTier,
+  surface: FullVideoSurface = "detail"
 ): boolean {
   const viewerTier = getViewerTier(user, tier);
+  if (surface === "detail") {
+    return true;
+  }
+
   return viewerTier === "free" || viewerTier === "pro";
 }
 

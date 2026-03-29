@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ClipCard } from "./ClipCard";
 import type { ClipIndex } from "@/lib/types";
 import { useAuthStore } from "@/stores/authStore";
+import { useUIStore } from "@/stores/uiStore";
 
 const setSelectedClipIdMock = vi.fn();
 const {
@@ -103,6 +104,10 @@ describe("ClipCard", () => {
     setSelectedClipIdMock.mockReset();
     getMediaUrlMock.mockClear();
     getMediaUrlMock.mockImplementation((path: string) => path);
+    useUIStore.setState({
+      pricingModalOpen: false,
+      pricingModalIntent: null,
+    });
   });
 
   it("shows tags and duration with lighter default text that brightens on hover", () => {
@@ -151,7 +156,7 @@ describe("ClipCard", () => {
     expect(screen.queryByLabelText("Pro 전용 클립")).not.toBeInTheDocument();
   });
 
-  it("blurs and blocks interaction when locked", () => {
+  it("blurs locked cards but keeps them clickable for the auth gate", () => {
     const onOpenQuickView = vi.fn();
 
     render(<ClipCard clip={clip} locked onOpenQuickView={onOpenQuickView} />);
@@ -161,17 +166,22 @@ describe("ClipCard", () => {
     const overlay = screen.getByTestId("clip-lock-overlay");
 
     fireEvent.click(card);
-    fireEvent.doubleClick(card);
     fireEvent.keyDown(card, { key: "Enter" });
 
-    expect(card).toHaveAttribute("aria-disabled", "true");
-    expect(card).toHaveAttribute("tabindex", "-1");
-    expect(card.className).toContain("cursor-not-allowed");
+    expect(card).not.toHaveAttribute("aria-disabled");
+    expect(card).toHaveAttribute("tabindex", "0");
+    expect(card.className).toContain("cursor-pointer");
     expect(image.className).toContain("blur-lg");
     expect(overlay).toHaveClass("bg-black/10");
     expect(overlay.firstElementChild).toHaveClass("size-8");
     expect(setSelectedClipIdMock).not.toHaveBeenCalled();
     expect(onOpenQuickView).not.toHaveBeenCalled();
+    expect(useUIStore.getState().pricingModalOpen).toBe(true);
+    expect(useUIStore.getState().pricingModalIntent).toMatchObject({
+      kind: "locked-clip",
+      viewerTier: "guest",
+      clipId: clip.id,
+    });
   });
 
   it("resolves the thumbnail path through the shared media URL helper", () => {

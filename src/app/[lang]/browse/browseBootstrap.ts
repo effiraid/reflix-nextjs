@@ -1,4 +1,6 @@
 import type { Locale } from "@/lib/types";
+import type { ViewerTier } from "@/lib/accessPolicy";
+import { limitBrowsePayload } from "@/lib/browseAccess";
 
 interface FolderIndexedRecord {
   id: string;
@@ -25,6 +27,8 @@ function buildInitialFolderClipIds(
 interface LoadBrowsePageDataOptions {
   lang: Locale;
   shouldLoadDetailedIndex: boolean;
+  shouldLoadFilterIndex?: boolean;
+  viewerTier: ViewerTier;
 }
 
 interface LoadBrowsePageDataDeps<
@@ -32,7 +36,7 @@ interface LoadBrowsePageDataDeps<
   TCategories,
   TTagGroups,
   TTagI18n,
-  TBrowseCards,
+  TBrowseCards extends unknown[],
   TBrowseFilterIndex extends FolderIndexedRecord[],
 > {
   getDictionary: (lang: Locale) => Promise<TDict>;
@@ -49,10 +53,15 @@ export async function loadBrowsePageData<
   TCategories,
   TTagGroups,
   TTagI18n,
-  TBrowseCards,
+  TBrowseCards extends unknown[],
   TBrowseFilterIndex extends FolderIndexedRecord[],
 >(
-  { lang, shouldLoadDetailedIndex }: LoadBrowsePageDataOptions,
+  {
+    lang,
+    shouldLoadDetailedIndex,
+    shouldLoadFilterIndex = true,
+    viewerTier,
+  }: LoadBrowsePageDataOptions,
   deps: LoadBrowsePageDataDeps<
     TDict,
     TCategories,
@@ -62,6 +71,9 @@ export async function loadBrowsePageData<
     TBrowseFilterIndex
   >
 ) {
+  const browseFilterIndexPromise = shouldLoadFilterIndex
+    ? deps.loadBrowseFilterIndex()
+    : Promise.resolve(null);
   const [dict, categories, tagGroups, tagI18n, browseCards, browseFilterIndex] =
     await Promise.all([
       deps.getDictionary(lang),
@@ -69,18 +81,27 @@ export async function loadBrowsePageData<
       deps.getTagGroups(),
       deps.getTagI18n(),
       deps.loadBrowseCards(),
-      shouldLoadDetailedIndex
-        ? deps.loadBrowseFilterIndex()
-        : Promise.resolve(null as TBrowseFilterIndex | null),
+      browseFilterIndexPromise,
     ]);
+
+  const shouldServeFullDetailedPayload =
+    viewerTier === "guest" && shouldLoadDetailedIndex;
+  const limitedBrowseCards = shouldServeFullDetailedPayload
+    ? browseCards
+    : (limitBrowsePayload(browseCards, viewerTier) as TBrowseCards);
+  const limitedBrowseFilterIndex = browseFilterIndex
+    ? shouldServeFullDetailedPayload
+      ? browseFilterIndex
+      : (limitBrowsePayload(browseFilterIndex, viewerTier) as TBrowseFilterIndex)
+    : null;
 
   return {
     dict,
     categories,
     tagGroups,
     tagI18n,
-    browseCards,
-    browseFilterIndex,
-    initialFolderClipIds: buildInitialFolderClipIds(browseFilterIndex),
+    browseCards: limitedBrowseCards,
+    browseFilterIndex: shouldLoadDetailedIndex ? limitedBrowseFilterIndex : null,
+    initialFolderClipIds: buildInitialFolderClipIds(limitedBrowseFilterIndex),
   };
 }

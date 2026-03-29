@@ -1,14 +1,18 @@
 {
   "meta": {
     "title": "Reflix Access Policy",
-    "lastUpdated": "2026-03-28",
+    "lastUpdated": "2026-03-29",
     "truthSource": "current-code",
     "truthSourceLabel": "현재 코드가 진실의 원천",
     "ownerDecisions": [
       "로그인하지 않은 사용자는 guest로 본다.",
       "로그인한 비구독자는 free로 본다.",
       "구독자만 pro로 본다.",
-      "상세 페이지는 로그인하지 않은 사용자도 조회할 수 있다."
+      "상세 페이지는 로그인하지 않은 사용자도 조회할 수 있다.",
+      "공유된 상세 링크는 로그인 없이도 바로 확인할 수 있어야 한다.",
+      "따라서 guest도 /clip/{id} 상세 페이지에서는 원본 영상을 재생할 수 있다.",
+      "guest가 검색 또는 필터를 쓰면 결과는 보여주되 썸네일을 블러 처리하고 로그인 전에는 열지 못하게 한다.",
+      "guest가 블러된 검색 결과를 누르면 /login 페이지와 같은 로그인 UI를 모달로 연다."
     ]
   },
   "rules": {
@@ -16,8 +20,11 @@
     "freeBrowseVisibleResults": 5,
     "freeBoardLimit": 1,
     "freeMaxFilterAxes": 1,
+    "guestSearchResultsVisibleButBlurred": true,
+    "guestSearchClickOpensSharedLoginModal": true,
     "detailPagesPublic": true,
-    "fullVideoRequiresAuthentication": true,
+    "guestDetailLinksCanPlayFullVideo": true,
+    "fullVideoRequiresAuthentication": false,
     "previewVideoRequiresPro": false,
     "shuffleRequiresPro": true,
     "aiAnalysisPaywalled": false,
@@ -85,10 +92,10 @@
     {
       "id": "full-video",
       "label": "원본 영상 재생",
-      "guest": "no",
+      "guest": "detail links only",
       "free": "yes",
       "pro": "yes",
-      "notes": "로그인 사용자(free/pro)는 허용, guest는 차단"
+      "notes": "guest는 공유된 상세 링크(/clip/{id})에서는 허용하지만, browse/search 발견 흐름에서는 로그인 전 열 수 없음"
     },
     {
       "id": "search",
@@ -96,7 +103,7 @@
       "guest": "limited",
       "free": "limited",
       "pro": "yes",
-      "notes": "guest/free 모두 가능하지만 잠금 결과가 생길 수 있음"
+      "notes": "guest는 검색/필터 결과를 볼 수 있지만 썸네일이 블러되고 로그인 전에는 열 수 없음. free는 1축까지만 허용"
     },
     {
       "id": "multi-axis-filters",
@@ -109,10 +116,10 @@
     {
       "id": "unlocked-results",
       "label": "브라우즈 결과 잠금 해제 범위",
-      "guest": "3 results",
+      "guest": "3 teaser results; searched results stay visible but locked",
       "free": "5 results",
       "pro": "all results",
-      "notes": "guest 3개, free 5개, pro 전체"
+      "notes": "guest 기본 browse는 teaser만 열리고, 검색/필터 결과는 전부 블러 + 로그인 게이트. free 5개, pro 전체"
     },
     {
       "id": "boards",
@@ -174,8 +181,8 @@
     },
     {
       "priority": "P2",
-      "title": "상세 페이지 공개 정책을 문서화",
-      "detail": "상세 페이지는 공개지만 원본 영상은 Pro 전용이라는 점을 제품 문구와 내부 문서에 함께 남긴다."
+      "title": "상세 공유 링크 정책을 문서화",
+      "detail": "상세 페이지는 공개이고 공유된 링크의 원본 영상도 guest가 볼 수 있게 유지하되, browse/search 발견 흐름은 계속 게이트한다."
     }
   ]
 }

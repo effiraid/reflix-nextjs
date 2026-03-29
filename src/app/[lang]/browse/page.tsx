@@ -28,6 +28,9 @@ import {
 import { BrandSplash } from "@/components/splash/BrandSplash";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { loadBrowsePageData } from "./browseBootstrap";
+import { getServerViewerTier } from "@/lib/browseAccess";
+import { loadBoardClipIds } from "@/lib/boardData";
+import type { FilterState } from "@/lib/filter";
 
 function toURLSearchParams(
   rawSearchParams: Record<string, string | string[] | undefined>
@@ -52,18 +55,26 @@ function toURLSearchParams(
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reflix.dev";
 
+function isPlainSearchOnlyBrowseRequest(filters: FilterState) {
+  return (
+    filters.searchQuery.trim().length > 0 &&
+    filters.category === null &&
+    filters.selectedFolders.length === 0 &&
+    filters.excludedFolders.length === 0 &&
+    filters.selectedTags.length === 0 &&
+    filters.excludedTags.length === 0 &&
+    filters.contentMode === null &&
+    filters.boardId === null
+  );
+}
+
 async function loadInitialBoardClipIds(boardId: string | null) {
   if (!boardId) {
     return null;
   }
 
   const supabase = await createServerSupabase();
-  const { data } = await supabase
-    .from("board_clips")
-    .select("clip_id")
-    .eq("board_id", boardId);
-
-  return new Set((data ?? []).map((row) => row.clip_id));
+  return new Set(await loadBoardClipIds(supabase, boardId));
 }
 
 export async function generateMetadata({
@@ -124,32 +135,31 @@ function BrowsePageContent({
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
   const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
-  const shouldLoadDetailedIndex = requiresDetailedBrowseIndex(filters);
-  const [
-    {
-      dict,
-      categories,
-      tagGroups,
-      tagI18n,
-      browseCards,
-      browseFilterIndex,
-      initialFolderClipIds,
-    },
-    initialBoardClipIds,
-    tagAliases,
-  ] = use(
+  const shouldLoadDetailedIndex = requiresDetailedBrowseIndex(filters, {
+    includeSearchQuery: false,
+  });
+  const shouldLoadFilterIndex = !isPlainSearchOnlyBrowseRequest(filters);
+  const viewerTierPromise = getServerViewerTier();
+  const [browsePageData, initialBoardClipIds, tagAliases] = use(
     Promise.all([
-      loadBrowsePageData({
-        lang,
-        shouldLoadDetailedIndex,
-      }, {
-        getDictionary,
-        getCategories,
-        getTagGroups,
-        getTagI18n,
-        loadBrowseCards,
-        loadBrowseFilterIndex,
-      }),
+      viewerTierPromise.then((resolvedViewerTier) =>
+        loadBrowsePageData(
+          {
+            lang,
+            shouldLoadDetailedIndex,
+            shouldLoadFilterIndex,
+            viewerTier: resolvedViewerTier,
+          },
+          {
+            getDictionary,
+            getCategories,
+            getTagGroups,
+            getTagI18n,
+            loadBrowseCards,
+            loadBrowseFilterIndex,
+          }
+        )
+      ),
       loadInitialBoardClipIds(filters.boardId),
       getTagAliases(),
     ])
@@ -158,15 +168,15 @@ function BrowsePageContent({
   return (
     <BrowsePageShell
       lang={lang}
-      dict={dict}
-      categories={categories}
-      tagGroups={tagGroups}
-      tagI18n={tagI18n}
+      dict={browsePageData.dict}
+      categories={browsePageData.categories}
+      tagGroups={browsePageData.tagGroups}
+      tagI18n={browsePageData.tagI18n}
       tagAliases={tagAliases}
-      browseCards={browseCards}
-      browseFilterIndex={browseFilterIndex}
+      browseCards={browsePageData.browseCards}
+      browseFilterIndex={browsePageData.browseFilterIndex}
       initialBoardClipIds={initialBoardClipIds}
-      initialFolderClipIds={initialFolderClipIds}
+      initialFolderClipIds={browsePageData.initialFolderClipIds}
       preloadDetailedIndex={shouldLoadDetailedIndex}
       rawSearchParams={rawSearchParams}
     />

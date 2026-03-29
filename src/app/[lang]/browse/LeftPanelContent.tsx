@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookmarkIcon, ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
 import { BoardSection } from "@/components/board/BoardSection";
+import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore } from "@/stores/boardStore";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
@@ -39,9 +40,16 @@ export function LeftPanelContent({
   const clips = useClipData();
   const { totalClipCount } = useBrowseData();
   const { updateURL } = useFilterSync();
+  const user = useAuthStore((s) => s.user);
   const contentMode = useFilterStore((s) => s.contentMode);
   const selectedFolders = useFilterStore((s) => s.selectedFolders);
-  const { setFilterBarOpen, setActiveFilterTab, setViewMode, setBrowseMode } = useUIStore();
+  const {
+    setFilterBarOpen,
+    setActiveFilterTab,
+    setViewMode,
+    setBrowseMode,
+    openPricingModal,
+  } = useUIStore();
   const browseMode = useUIStore((s) => s.browseMode);
   const tagData = useTagGroups(tagGroups, lang, tagI18n);
   const boardCount = useBoardStore((s) => s.boards.length);
@@ -155,6 +163,14 @@ export function LeftPanelContent({
     return <TagGroupList tagData={tagData} lang={lang} dict={dict} />;
   }
 
+  function openAuthRequiredModal(source: "boards" | "history") {
+    openPricingModal({
+      kind: "auth-required",
+      source,
+      nextPath: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+    });
+  }
+
 
 
   return (
@@ -201,6 +217,10 @@ export function LeftPanelContent({
         <button
           type="button"
           onClick={() => {
+            if (!user) {
+              openAuthRequiredModal("boards");
+              return;
+            }
             setBrowseMode("boards");
           }}
           className={`flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover transition-colors ${
@@ -222,7 +242,13 @@ export function LeftPanelContent({
 
         <button
           type="button"
-          onClick={() => setBrowseMode("history")}
+          onClick={() => {
+            if (!user) {
+              openAuthRequiredModal("history");
+              return;
+            }
+            setBrowseMode("history");
+          }}
           className={`flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover transition-colors ${
             browseMode === "history" ? "bg-accent/10 text-accent" : "text-muted"
           }`}

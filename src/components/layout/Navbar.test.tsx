@@ -1,20 +1,31 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Navbar } from "./Navbar";
 import { useAuthStore } from "@/stores/authStore";
+import { prewarmBrowseSearch } from "@/lib/browsePagefind";
 
 const push = vi.fn();
 const setTheme = vi.fn();
 const setLeftPanelOpen = vi.fn();
 const setRightPanelOpen = vi.fn();
 const setSelectedClipId = vi.fn();
+const requestCardIndex = vi.fn();
 const requestDetailedIndex = vi.fn();
+let browseDataState = {
+  allCards: [] as Array<Record<string, unknown>>,
+  cardsStatus: "ready" as "loading" | "ready" | "error",
+  projectionClips: [] as Array<Record<string, unknown>>,
+  projectionStatus: "ready" as "loading" | "ready" | "error",
+};
 let uiState = {
   leftPanelOpen: true,
   rightPanelOpen: true,
+  mobileSearchOpen: false,
 };
 let searchBarProps: Record<string, unknown> | null = null;
+let mobileSearchOverlayProps: Record<string, unknown> | null = null;
 
 vi.mock("next/link", () => ({
   default: ({
@@ -46,6 +57,9 @@ vi.mock("@/stores/uiStore", () => ({
     ...uiState,
     setLeftPanelOpen,
     setRightPanelOpen,
+    setMobileSearchOpen: (open: boolean) => {
+      uiState.mobileSearchOpen = open;
+    },
   }),
 }));
 
@@ -66,14 +80,18 @@ vi.mock("@/components/common/SearchBar", () => ({
 vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
   useClipData: () => [],
   useBrowseData: () => ({
-    projectionClips: [],
-    projectionStatus: "ready",
+    ...browseDataState,
     initialClips: [],
     initialTotalCount: 0,
     allTags: [],
     popularTags: [],
     requestDetailedIndex,
+    requestCardIndex,
   }),
+}));
+
+vi.mock("@/lib/browsePagefind", () => ({
+  prewarmBrowseSearch: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/stores/clipStore", () => ({
@@ -83,8 +101,24 @@ vi.mock("@/stores/clipStore", () => ({
 }));
 
 vi.mock("./MobileSearchOverlay", () => ({
-  MobileSearchOverlay: ({ open }: { open: boolean }) =>
-    open ? <div>Mobile search overlay</div> : null,
+  MobileSearchOverlay: ({
+    open,
+    onRequestSearchReady,
+    ...props
+  }: {
+    open: boolean;
+    onRequestSearchReady?: () => void;
+  }) => {
+    mobileSearchOverlayProps = { open, onRequestSearchReady, ...props };
+
+    useEffect(() => {
+      if (open) {
+        onRequestSearchReady?.();
+      }
+    }, [open, onRequestSearchReady]);
+
+    return open ? <div>Mobile search overlay</div> : null;
+  },
 }));
 
 const dict = {
@@ -103,8 +137,18 @@ describe("Navbar", () => {
     setLeftPanelOpen.mockReset();
     setRightPanelOpen.mockReset();
     setSelectedClipId.mockReset();
+    requestCardIndex.mockReset();
     requestDetailedIndex.mockReset();
+    vi.mocked(prewarmBrowseSearch).mockReset();
+    vi.mocked(prewarmBrowseSearch).mockResolvedValue(undefined);
     searchBarProps = null;
+    mobileSearchOverlayProps = null;
+    browseDataState = {
+      allCards: [],
+      cardsStatus: "ready",
+      projectionClips: [],
+      projectionStatus: "ready",
+    };
     useAuthStore.setState({
       user: null,
       tier: "free",
@@ -116,6 +160,7 @@ describe("Navbar", () => {
     uiState = {
       leftPanelOpen: true,
       rightPanelOpen: true,
+      mobileSearchOpen: false,
     };
   });
 
@@ -170,7 +215,7 @@ describe("Navbar", () => {
     expect(push).toHaveBeenCalledWith("/ko/browse?q=search");
   });
 
-  it("requests the detailed browse index when desktop search activates", () => {
+  it("prewarms browse search on desktop activation by requesting cards and Pagefind", async () => {
     render(<Navbar lang="ko" dict={dict} />);
 
     const onActivate = searchBarProps?.onActivate as (() => void) | undefined;
@@ -178,7 +223,9 @@ describe("Navbar", () => {
     expect(onActivate).toBeTypeOf("function");
     onActivate?.();
 
-    expect(requestDetailedIndex).toHaveBeenCalledTimes(1);
+    expect(requestCardIndex).toHaveBeenCalledTimes(1);
+    expect(prewarmBrowseSearch).toHaveBeenCalledWith("ko");
+    expect(requestDetailedIndex).not.toHaveBeenCalled();
   });
 
   it("uses a centered desktop search slot and right-aligned control group", () => {
@@ -197,11 +244,78 @@ describe("Navbar", () => {
   });
 
   it("opens the mobile search overlay from the search icon button", () => {
-    render(<Navbar lang="ko" dict={dict} />);
+    const view = render(<Navbar lang="ko" dict={dict} />);
 
     fireEvent.click(screen.getByRole("button", { name: "모바일 검색 열기" }));
+    view.rerender(<Navbar lang="ko" dict={dict} />);
 
     expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
+  });
+
+  it("keeps the mobile search overlay open across a navbar remount", () => {
+    const firstRender = render(<Navbar lang="ko" dict={dict} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "모바일 검색 열기" }));
+    firstRender.rerender(<Navbar lang="ko" dict={dict} />);
+    expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
+
+    firstRender.unmount();
+    render(<Navbar lang="ko" dict={dict} />);
+
+    expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
+  });
+
+  it("prewarms shared mobile search when opening the overlay from the navbar", () => {
+    const view = render(<Navbar lang="ko" dict={dict} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "모바일 검색 열기" }));
+    view.rerender(<Navbar lang="ko" dict={dict} />);
+
+    expect(screen.getByText("Mobile search overlay")).toBeInTheDocument();
+    expect(requestCardIndex).toHaveBeenCalledTimes(1);
+    expect(prewarmBrowseSearch).toHaveBeenCalledWith("ko");
+  });
+
+  it("prefers projection clips and projection readiness for the mobile fallback path", () => {
+    const projectionClip = {
+      id: "projection-1",
+      name: "Projection clip",
+      thumbnailUrl: "/projection.webp",
+      previewUrl: "/projection.mp4",
+      lqipBase64: "",
+      width: 100,
+      height: 100,
+      duration: 1,
+      category: "acting",
+      tags: ["projection"],
+      folders: ["hero"],
+      aiStructuredTags: ["rich"],
+      searchTokens: ["projection"],
+    };
+    const cardClip = {
+      id: "card-1",
+      name: "Card clip",
+      thumbnailUrl: "/card.webp",
+      previewUrl: "/card.mp4",
+      lqipBase64: "",
+      width: 100,
+      height: 100,
+      duration: 1,
+      category: "acting",
+      tags: ["card"],
+    };
+
+    browseDataState = {
+      allCards: [cardClip],
+      cardsStatus: "loading",
+      projectionClips: [projectionClip],
+      projectionStatus: "ready",
+    };
+
+    render(<Navbar lang="ko" dict={dict} />);
+
+    expect(mobileSearchOverlayProps?.clips).toEqual([projectionClip]);
+    expect(mobileSearchOverlayProps?.searchReady).toBe(true);
   });
 
   it("shows Upgrade to Pro for beta users instead of Manage subscription", () => {

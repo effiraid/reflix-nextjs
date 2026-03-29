@@ -26,6 +26,8 @@ type ProjectionStatus = "loading" | "ready" | "error";
 
 interface BrowseDataContextValue {
   initialClips: BrowseSummaryRecord[];
+  allCards: BrowseCardRecord[] | null;
+  cardsStatus: ProjectionStatus;
   projectionClips: BrowseProjectionRecord[] | null;
   projectionStatus: ProjectionStatus;
   initialTotalCount: number;
@@ -33,11 +35,14 @@ interface BrowseDataContextValue {
   allTags: string[];
   popularTags: string[];
   tagCounts: Record<string, number>;
+  requestCardIndex: () => void;
   requestDetailedIndex: () => void;
 }
 
 const ClipDataContext = createContext<BrowseDataContextValue>({
   initialClips: [],
+  allCards: null,
+  cardsStatus: "loading",
   projectionClips: null,
   projectionStatus: "loading",
   initialTotalCount: 0,
@@ -45,6 +50,7 @@ const ClipDataContext = createContext<BrowseDataContextValue>({
   allTags: [],
   popularTags: [],
   tagCounts: {},
+  requestCardIndex: () => {},
   requestDetailedIndex: () => {},
 });
 
@@ -61,13 +67,22 @@ export function ClipDataProvider({
   preloadDetailedIndex?: boolean;
   children: ReactNode;
 }) {
+  const [allCards, setAllCards] = useState<BrowseCardRecord[] | null>(null);
+  const [cardsStatus, setCardsStatus] =
+    useState<ProjectionStatus>("loading");
   const [projectionClips, setProjectionClips] =
     useState<BrowseProjectionRecord[] | null>(null);
   const [projectionStatus, setProjectionStatus] =
     useState<ProjectionStatus>("loading");
+  const [cardIndexRequested, setCardIndexRequested] = useState(preloadDetailedIndex);
   const [detailedIndexRequested, setDetailedIndexRequested] =
     useState(preloadDetailedIndex);
+  const allCardsRef = useRef<BrowseCardRecord[] | null>(null);
   const inFlightRef = useRef(false);
+  const cardsLoadPromiseRef =
+    useRef<Promise<BrowseCardRecord[]> | null>(null);
+  const cardsLoadControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
   const filters = useFilterStore(
     useShallow((state) => ({
       selectedFolders: state.selectedFolders,
@@ -78,12 +93,88 @@ export function ClipDataProvider({
     }))
   );
 
+  const requestCardIndex = useCallback(() => {
+    setCardIndexRequested(true);
+  }, []);
+
   const requestDetailedIndex = useCallback(() => {
     setDetailedIndexRequested(true);
   }, []);
 
   const shouldLoadDetailedIndex =
-    detailedIndexRequested || requiresDetailedBrowseIndex(filters);
+    detailedIndexRequested ||
+    requiresDetailedBrowseIndex(filters, {
+      includeSearchQuery: false,
+    });
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      cardsLoadControllerRef.current?.abort();
+    };
+  }, []);
+
+  const loadCards = useCallback(() => {
+    if (allCardsRef.current) {
+      return Promise.resolve(allCardsRef.current);
+    }
+
+    if (cardsLoadPromiseRef.current) {
+      return cardsLoadPromiseRef.current;
+    }
+
+    const controller = new AbortController();
+    cardsLoadControllerRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    setCardsStatus("loading");
+
+    const requestPromise = (async () => {
+      try {
+        const cardsResponse = await fetch("/api/browse/cards", {
+          signal: controller.signal,
+        });
+        if (!cardsResponse.ok) {
+          throw new Error(`cards HTTP ${cardsResponse.status}`);
+        }
+
+        const cards = (await cardsResponse.json()) as BrowseCardRecord[];
+        allCardsRef.current = cards;
+        startTransition(() => {
+          setAllCards(cards);
+          setCardsStatus("ready");
+        });
+        return cards;
+      } catch (err) {
+        if (isMountedRef.current) {
+          if (err instanceof Error && err.name !== "AbortError") {
+            console.error("[ClipDataProvider] cards load failed:", err);
+          }
+          setCardsStatus("error");
+        }
+        throw err;
+      } finally {
+        clearTimeout(timeout);
+      }
+    })();
+
+    const sharedPromise = requestPromise.finally(() => {
+      if (cardsLoadPromiseRef.current === sharedPromise) {
+        cardsLoadPromiseRef.current = null;
+        cardsLoadControllerRef.current = null;
+      }
+    });
+
+    cardsLoadPromiseRef.current = sharedPromise;
+    return sharedPromise;
+  }, []);
+
+  useEffect(() => {
+    if (!cardIndexRequested || allCardsRef.current || cardsLoadPromiseRef.current) {
+      return;
+    }
+
+    void loadCards().catch(() => {});
+  }, [allCards, cardIndexRequested, loadCards]);
 
   useEffect(() => {
     if (!shouldLoadDetailedIndex || projectionClips || inFlightRef.current) {
@@ -93,26 +184,23 @@ export function ClipDataProvider({
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
     inFlightRef.current = true;
+    let cancelled = false;
 
     async function preload() {
       try {
-        const [cardsResponse, filterIndexResponse] = await Promise.all([
-          fetch("/api/browse/cards", {
-            signal: controller.signal,
-          }),
-          fetch("/api/browse/filter-index", {
-            signal: controller.signal,
-          }),
-        ]);
-        if (!cardsResponse.ok) throw new Error(`cards HTTP ${cardsResponse.status}`);
+        const cards = await loadCards();
+        if (cancelled) {
+          return;
+        }
+
+        const filterIndexResponse = await fetch("/api/browse/filter-index", {
+          signal: controller.signal,
+        });
         if (!filterIndexResponse.ok) {
           throw new Error(`filter-index HTTP ${filterIndexResponse.status}`);
         }
 
-        const [cards, filterIndex] = (await Promise.all([
-          cardsResponse.json(),
-          filterIndexResponse.json(),
-        ])) as [BrowseCardRecord[], BrowseFilterIndexRecord[]];
+        const filterIndex = (await filterIndexResponse.json()) as BrowseFilterIndexRecord[];
         const cardsById = new Map(cards.map((clip) => [clip.id, clip] as const));
         const data = filterIndex.map((record): BrowseProjectionRecord => ({
           ...(cardsById.get(record.id) ?? {
@@ -137,8 +225,13 @@ export function ClipDataProvider({
           setProjectionStatus("ready");
         });
       } catch (err) {
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.error("[ClipDataProvider] filter-index load failed:", err);
+        if (!cancelled) {
+          if (!allCardsRef.current) {
+            setCardsStatus("error");
+          }
+          if (err instanceof Error && err.name !== "AbortError") {
+            console.error("[ClipDataProvider] filter-index load failed:", err);
+          }
           setProjectionStatus("error");
         }
       } finally {
@@ -149,13 +242,14 @@ export function ClipDataProvider({
 
     void preload();
     return () => {
+      cancelled = true;
       controller.abort();
       clearTimeout(timeout);
     };
-  }, [projectionClips, shouldLoadDetailedIndex]);
+  }, [projectionClips, shouldLoadDetailedIndex, loadCards]);
 
   // Derive unique tag list from full clip data (unfiltered) for autocomplete
-  const sourceClips = projectionClips ?? clips;
+  const sourceClips = projectionClips ?? allCards ?? clips;
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
     for (const clip of sourceClips) {
@@ -203,6 +297,8 @@ export function ClipDataProvider({
     <ClipDataContext.Provider
       value={{
         initialClips: clips,
+        allCards,
+        cardsStatus,
         projectionClips,
         projectionStatus,
         initialTotalCount,
@@ -210,6 +306,7 @@ export function ClipDataProvider({
         allTags,
         popularTags,
         tagCounts,
+        requestCardIndex,
         requestDetailedIndex,
       }}
     >
@@ -219,8 +316,9 @@ export function ClipDataProvider({
 }
 
 export function useClipData() {
-  const { initialClips, projectionClips } = useContext(ClipDataContext);
-  return (projectionClips ?? initialClips) as BrowseClipRecord[];
+  const { initialClips, allCards, projectionClips } =
+    useContext(ClipDataContext);
+  return (projectionClips ?? allCards ?? initialClips) as BrowseClipRecord[];
 }
 
 export function useBrowseData() {

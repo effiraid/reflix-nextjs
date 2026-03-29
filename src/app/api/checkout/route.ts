@@ -1,31 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getTrustedSiteOrigin } from "@/lib/siteOrigin";
+import { getStripe } from "@/lib/stripe/server";
+import { getValidatedRequestOrigin } from "@/lib/requestOrigin";
+import {
+  CheckoutRateLimitError,
+  enforceCheckoutRateLimit,
+} from "@/lib/stripe/security";
 
-function validateStripeKey() {
-  const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
-
-  if (process.env.NODE_ENV === "production" && key.startsWith("sk_test_")) {
-    throw new Error(
-      "STRIPE_SECRET_KEY is a test key but NODE_ENV is production"
-    );
-  }
-  if (process.env.NODE_ENV !== "production" && key.startsWith("sk_live_")) {
-    console.warn(
-      "[stripe] WARNING: using a live key in non-production environment"
-    );
-  }
-}
-
-function getStripe() {
-  validateStripeKey();
-  return new Stripe(process.env.STRIPE_SECRET_KEY!);
+function isSupportedLang(value: unknown): value is "ko" | "en" {
+  return value === "ko" || value === "en";
 }
 
 export async function POST(request: NextRequest) {
+  const originCheck = getValidatedRequestOrigin(request);
+  if (!originCheck.ok) {
+    return NextResponse.json(
+      { error: originCheck.error },
+      { status: originCheck.status }
+    );
+  }
+
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,8 +49,20 @@ export async function POST(request: NextRequest) {
 
   const { lang = "ko", interval = "monthly" } = await request.json();
 
+  if (!isSupportedLang(lang)) {
+    return NextResponse.json({ error: "Invalid language" }, { status: 400 });
+  }
+
   if (interval !== "monthly" && interval !== "yearly") {
     return NextResponse.json({ error: "Invalid interval" }, { status: 400 });
+  }
+
+  const siteOrigin = getTrustedSiteOrigin(request.nextUrl.origin);
+  if (!siteOrigin) {
+    return NextResponse.json(
+      { error: "Billing origin is not configured" },
+      { status: 500 }
+    );
   }
 
   const priceId =
@@ -85,11 +94,10 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profile?.stripe_customer_id) {
-      const origin = request.headers.get("origin") ?? request.nextUrl.origin;
       const portalSession =
         await getStripe().billingPortal.sessions.create({
           customer: profile.stripe_customer_id,
-          return_url: `${origin}/${lang}/account`,
+          return_url: `${siteOrigin}/${lang}/account`,
         });
       return NextResponse.json({
         url: portalSession.url,
@@ -100,6 +108,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Already subscribed" },
       { status: 409 }
+    );
+  }
+
+  try {
+    await enforceCheckoutRateLimit(user.id);
+  } catch (error) {
+    if (error instanceof CheckoutRateLimitError) {
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please wait and try again." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(error.retryAfterSeconds),
+          },
+        }
+      );
+    }
+
+    console.error("[checkout] rate limit enforcement failed:", error);
+    return NextResponse.json(
+      { error: "Unable to start checkout right now" },
+      { status: 500 }
     );
   }
 
@@ -125,8 +155,6 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id);
   }
 
-  const origin = request.headers.get("origin") ?? request.nextUrl.origin;
-
   const session = await getStripe().checkout.sessions.create({
     customer: customerId,
     mode: "subscription",
@@ -136,8 +164,8 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ],
-    success_url: `${origin}/${lang}/account?checkout=success`,
-    cancel_url: `${origin}/${lang}/browse`,
+    success_url: `${siteOrigin}/${lang}/account?checkout=success`,
+    cancel_url: `${siteOrigin}/${lang}/browse`,
     metadata: {
       supabase_user_id: user.id,
     },

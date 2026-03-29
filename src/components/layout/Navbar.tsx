@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MoonStarIcon, SearchIcon, SunMediumIcon, UserIcon, LogOutIcon, CrownIcon } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "@/components/ThemeProvider";
@@ -13,6 +13,7 @@ import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useAuthStore } from "@/stores/authStore";
 import { createClient } from "@/lib/supabase/client";
+import { prewarmBrowseSearch } from "@/lib/browsePagefind";
 import { MobileSearchOverlay } from "./MobileSearchOverlay";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -28,12 +29,14 @@ interface NavbarProps {
 export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null }: NavbarProps) {
   const { theme, setTheme } = useTheme();
   const {
+    allCards,
+    cardsStatus,
     projectionClips,
     projectionStatus,
     allTags,
     popularTags,
     tagCounts,
-    requestDetailedIndex,
+    requestCardIndex,
   } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
   const { user, tier, accessSource, isLoading: authLoading } = useAuthStore();
@@ -44,15 +47,17 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
   );
   const {
     leftPanelOpen,
+    mobileSearchOpen,
     rightPanelOpen,
     setLeftPanelOpen,
+    setMobileSearchOpen,
     setRightPanelOpen,
   } = useUIStore();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const previousPathnameRef = useRef(pathname);
   const isDarkTheme = mounted && theme === "dark";
   const allPanelsOpen = leftPanelOpen && rightPanelOpen;
   const otherLang = lang === "ko" ? "en" : "ko";
@@ -108,6 +113,18 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
     setMobileSearchOpen(true);
   }
 
+  function handleSearchActivate() {
+    requestCardIndex();
+    void prewarmBrowseSearch(lang).catch(() => {});
+  }
+
+  useEffect(() => {
+    if (previousPathnameRef.current !== pathname) {
+      setMobileSearchOpen(false);
+      previousPathnameRef.current = pathname;
+    }
+  }, [pathname, setMobileSearchOpen]);
+
   return (
     <>
       <header className="grid h-12 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 md:grid-cols-[minmax(0,1fr)_minmax(16rem,32rem)_minmax(0,1fr)]">
@@ -140,7 +157,7 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
             initialQuery={currentSearchQuery}
             placeholder={dict.nav.searchPlaceholder}
             onSearch={handleSearch}
-            onActivate={requestDetailedIndex}
+            onActivate={handleSearchActivate}
             allTags={allTags}
             popularTags={popularTags}
             tagCounts={tagCounts}
@@ -232,8 +249,8 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
       <MobileSearchOverlay
         key={mobileSearchOpen ? "mobile-search-open" : "mobile-search-closed"}
         open={mobileSearchOpen}
-        clips={projectionClips ?? []}
-        searchReady={projectionStatus === "ready"}
+        clips={projectionClips ?? allCards ?? []}
+        searchReady={projectionStatus === "ready" || cardsStatus === "ready"}
         lang={lang}
         tagI18n={tagI18n}
         placeholder={dict.nav.searchPlaceholder}
@@ -241,7 +258,7 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
         noResultsLabel={dict.browse?.noResults ?? (lang === "ko" ? "검색 결과가 없습니다" : "No results found")}
         loadingLabel={dict.common?.loading ?? (lang === "ko" ? "검색 준비 중..." : "Preparing search...")}
         onClose={() => setMobileSearchOpen(false)}
-        onRequestSearchReady={requestDetailedIndex}
+        onRequestSearchReady={handleSearchActivate}
         onSelectClip={(clipId, query) => {
           setSelectedClipId(clipId);
           setMobileSearchOpen(false);

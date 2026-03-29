@@ -38,12 +38,10 @@ interface FilterableClipRecord extends SearchableClipRecord {
   folders?: string[];
 }
 
-export function filterClips<T extends FilterableClipRecord>(
+export function filterClipsByStructure<T extends FilterableClipRecord>(
   clips: T[],
   filters: FilterState,
   categories?: CategoryTree,
-  tagI18n: Record<string, string> = {},
-  lang: Locale = "ko",
   boardClipIds?: Set<string> | null
 ): T[] {
   let result = clips;
@@ -90,15 +88,33 @@ export function filterClips<T extends FilterableClipRecord>(
     });
   }
 
+  return result;
+}
+
+export function filterClips<T extends FilterableClipRecord>(
+  clips: T[],
+  filters: FilterState,
+  categories?: CategoryTree,
+  tagI18n: Record<string, string> = {},
+  lang: Locale = "ko",
+  boardClipIds?: Set<string> | null
+): T[] {
+  const structurallyFiltered = filterClipsByStructure(
+    clips,
+    filters,
+    categories,
+    boardClipIds
+  );
+
   if (filters.searchQuery) {
-    return searchClips(result, {
+    return searchClips(structurallyFiltered, {
       lang,
       query: filters.searchQuery,
       tagI18n,
     });
   }
 
-  return sortClips(result, filters.sortBy);
+  return sortClips(structurallyFiltered, filters.sortBy);
 }
 
 export function shuffleClips<T>(items: T[], rng: () => number = Math.random): T[] {

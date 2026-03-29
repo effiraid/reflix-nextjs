@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { FREE_BOARD_LIMIT, hasProAccess } from "@/lib/accessPolicy";
+import { getBoardLimitNotice } from "@/lib/boardLimitNotice";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore } from "@/stores/boardStore";
 import { useFilterStore } from "@/stores/filterStore";
@@ -293,9 +294,11 @@ export function BoardSection({ lang }: BoardSectionProps) {
 
       {!canCreateBoard ? (
         <p className="px-2 text-[10px] text-muted">
-          {isKo
-            ? "무료 계정은 보드 1개까지"
-            : "Free accounts limited to 1 board"}
+          {getBoardLimitNotice({
+            lang: isKo ? "ko" : "en",
+            boardCount: boards.length,
+            limit: FREE_BOARD_LIMIT,
+          }).split("\n")[0]}
         </p>
       ) : null}
     </div>

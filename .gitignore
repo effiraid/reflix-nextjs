@@ -23,6 +23,7 @@
 # protected media (served via media.reflix.dev worker, not Vercel)
 /public/videos/
 /public/previews/
+/public/pagefind/
 
 # misc
 .DS_Store
@@ -36,7 +37,8 @@ yarn-error.log*
 .playwright-cli/
 
 # local automation artifacts
-/output/playwright/
+/output/
+.tmp-*.png
 
 # env files (can opt-in for committing if needed)
 .env*

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LeftPanelContent } from "./LeftPanelContent";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
+import { useAuthStore } from "@/stores/authStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
 import type { BrowseSummaryRecord, CategoryTree } from "@/lib/types";
@@ -120,10 +121,21 @@ describe("LeftPanelContent", () => {
       filterBarOpen: false,
       activeFilterTab: null,
       shuffleSeed: 0,
+      pricingModalOpen: false,
+      pricingModalIntent: null,
       browseMode: "grid",
       selectedTagGroupId: null,
       tagSearchQuery: "",
     });
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
+      isLoading: false,
+    });
+    window.history.replaceState({}, "", "/ko/browse?q=arcane");
     updateURL.mockClear();
   });
 
@@ -195,6 +207,46 @@ describe("LeftPanelContent", () => {
     fireEvent.click(screen.getByRole("button", { name: /모든 태그/ }));
 
     expect(useUIStore.getState().browseMode).toBe("tags");
+  });
+
+  it("opens the login modal instead of switching to boards for guests", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /내 보드/ }));
+
+    expect(useUIStore.getState().browseMode).toBe("grid");
+    expect(useUIStore.getState().pricingModalOpen).toBe(true);
+    expect(useUIStore.getState().pricingModalIntent).toMatchObject({
+      kind: "auth-required",
+      source: "boards",
+      nextPath: "/ko/browse?q=arcane",
+    });
+  });
+
+  it("opens the login modal instead of switching to recent history for guests", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /최근 기록/ }));
+
+    expect(useUIStore.getState().browseMode).toBe("grid");
+    expect(useUIStore.getState().pricingModalOpen).toBe(true);
+    expect(useUIStore.getState().pricingModalIntent).toMatchObject({
+      kind: "auth-required",
+      source: "history",
+      nextPath: "/ko/browse?q=arcane",
+    });
   });
 
   it("shows the full library count in the browse shortcut even when the current results are filtered", () => {

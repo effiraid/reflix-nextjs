@@ -1,5 +1,6 @@
-import { render, waitFor, act } from "@testing-library/react";
+import { render, screen, act } from "@testing-library/react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { markPendingAuthFlow } from "@/lib/authTabSession";
 
 const {
   routerReplaceMock,
@@ -63,6 +64,7 @@ describe("AuthCallbackPage", () => {
       "",
       "http://localhost:3000/ko/auth/callback?next=%2Fko%2Faccount%3Flinked%3Dgoogle#access_token=a&refresh_token=b"
     );
+    markPendingAuthFlow();
 
     render(<AuthCallbackPage />);
 
@@ -103,5 +105,22 @@ describe("AuthCallbackPage", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
 
     expect(routerReplaceMock).toHaveBeenCalledWith("/ko/account?linkError=google");
+  });
+
+  it("ignores unsolicited hash tokens when no auth flow was started in this tab", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      "http://localhost:3000/ko/auth/callback#access_token=a&refresh_token=b"
+    );
+
+    render(<AuthCallbackPage />);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(200);
+    });
+
+    expect(setSessionMock).not.toHaveBeenCalled();
+    expect(screen.getByText("로그인에 실패했습니다.")).toBeInTheDocument();
   });
 });

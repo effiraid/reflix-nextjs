@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { getValidatedRequestOrigin } from "@/lib/requestOrigin";
 
 export async function GET(request: NextRequest) {
   const clipId = request.nextUrl.searchParams.get("clipId");
@@ -31,6 +32,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const originCheck = getValidatedRequestOrigin(request);
+  if (!originCheck.ok) {
+    return NextResponse.json(
+      { error: originCheck.error },
+      { status: originCheck.status }
+    );
+  }
+
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -80,6 +89,14 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const originCheck = getValidatedRequestOrigin(request);
+  if (!originCheck.ok) {
+    return NextResponse.json(
+      { error: originCheck.error },
+      { status: originCheck.status }
+    );
+  }
+
   const clipId = request.nextUrl.searchParams.get("clipId");
   if (!clipId) {
     return NextResponse.json({ error: "clipId required" }, { status: 400 });

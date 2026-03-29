@@ -443,6 +443,22 @@ describe("Tier-based access control", () => {
     expect(body).toEqual({ error: "sign_in_required", message: expect.any(String) });
   });
 
+  it("allows /videos/ for guest users with a valid signed URL", async () => {
+    const guestCookie = await createValidCookie("free", "");
+    const { tok, sig } = await signMediaUrl("/videos/clip-1.mp4", "test-secret");
+    const env = createEnv({
+      MEDIA_BUCKET: { get: vi.fn(async () => createBucketObject({})), head: vi.fn() },
+    });
+    const request = new Request(
+      `https://media.reflix.dev/videos/clip-1.mp4?tok=${encodeURIComponent(tok)}&sig=${encodeURIComponent(sig)}`,
+      {
+        headers: { Cookie: guestCookie, Origin: "https://reflix.dev" },
+      }
+    );
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+
   it("allows /videos/ for authenticated free tier users", async () => {
     const freeCookie = await createValidCookie("free");
     const env = createEnv({

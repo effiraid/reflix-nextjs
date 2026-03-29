@@ -15,6 +15,10 @@ const { loadEffectiveAccessMock } = vi.hoisted(() => ({
   loadEffectiveAccessMock: vi.fn(),
 }));
 
+const { clearBlobVideoCacheMock } = vi.hoisted(() => ({
+  clearBlobVideoCacheMock: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: routerReplaceMock,
@@ -75,12 +79,17 @@ vi.mock("@/lib/supabase/access", () => ({
   loadEffectiveAccess: loadEffectiveAccessMock,
 }));
 
+vi.mock("@/lib/blobVideo", () => ({
+  clearBlobVideoCache: clearBlobVideoCacheMock,
+}));
+
 describe("AuthProvider", () => {
   beforeEach(() => {
     authHarness.callback = null;
     authHarness.queriedTables = [];
     routerReplaceMock.mockReset();
     loadEffectiveAccessMock.mockReset();
+    clearBlobVideoCacheMock.mockReset();
     localStorage.clear();
     sessionStorage.clear();
     sessionStorage.setItem("reflix-auth-tab-id", "tab-self");
@@ -194,5 +203,30 @@ describe("AuthProvider", () => {
         betaEndsAt: "2026-04-30T00:00:00.000Z",
       });
     });
+  });
+
+  it("clears cached protected media on sign-out", async () => {
+    render(
+      <AuthProvider>
+        <div>child</div>
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(authHarness.callback).not.toBeNull();
+    });
+
+    await act(async () => {
+      authHarness.callback?.("SIGNED_IN", {
+        user: { id: "user-1" },
+      });
+    });
+
+    await act(async () => {
+      authHarness.callback?.("SIGNED_OUT", null);
+    });
+
+    expect(clearBlobVideoCacheMock).toHaveBeenCalled();
+    expect(useAuthStore.getState().user).toBeNull();
   });
 });

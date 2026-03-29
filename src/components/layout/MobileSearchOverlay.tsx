@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { SearchBar } from "@/components/common/SearchBar";
+import { searchBrowseClipIds } from "@/lib/browsePagefind";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { searchClips } from "@/lib/clipSearch";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
@@ -30,6 +31,17 @@ interface MobileSearchOverlayProps {
   aliasConfig?: TagAliasConfig | null;
 }
 
+function orderClipsByIdSequence<T extends { id: string }>(
+  clips: T[],
+  orderedIds: string[]
+): T[] {
+  const clipsById = new Map(clips.map((clip) => [clip.id, clip] as const));
+
+  return orderedIds
+    .map((id) => clipsById.get(id))
+    .filter((clip): clip is T => Boolean(clip));
+}
+
 export function MobileSearchOverlay({
   open,
   clips,
@@ -50,16 +62,40 @@ export function MobileSearchOverlay({
   aliasConfig = null,
 }: MobileSearchOverlayProps) {
   const [query, setQuery] = useState("");
-  const results = useMemo(
+  const [searchResponse, setSearchResponse] = useState<{
+    queryKey: string | null;
+    ids: string[];
+    error: boolean;
+  }>({
+    queryKey: null,
+    ids: [],
+    error: false,
+  });
+  const trimmedQuery = query.trim();
+  const hasQuery = trimmedQuery.length > 0;
+  const activeQueryKey = hasQuery ? `${lang}:${trimmedQuery}` : null;
+  const hasActiveSearchResponse = activeQueryKey === searchResponse.queryKey;
+  const isSearchLoading =
+    hasQuery && (!searchReady || !hasActiveSearchResponse);
+  const isUsingFallbackResults =
+    hasActiveSearchResponse && searchResponse.error;
+  const fallbackResults = useMemo(
     () =>
-      query
+      isUsingFallbackResults
         ? searchClips(clips, {
             lang,
-            query,
+            query: trimmedQuery,
             tagI18n,
           })
         : [],
-    [clips, lang, query, tagI18n]
+    [clips, isUsingFallbackResults, lang, tagI18n, trimmedQuery]
+  );
+  const results = useMemo(
+    () =>
+      isUsingFallbackResults
+        ? fallbackResults
+        : orderClipsByIdSequence(clips, hasActiveSearchResponse ? searchResponse.ids : []),
+    [clips, fallbackResults, hasActiveSearchResponse, isUsingFallbackResults, searchResponse.ids]
   );
 
   useEffect(() => {
@@ -67,6 +103,58 @@ export function MobileSearchOverlay({
       onRequestSearchReady?.();
     }
   }, [onRequestSearchReady, open]);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (!hasQuery || !searchReady || !activeQueryKey) {
+      return;
+    }
+
+    if (searchResponse.queryKey === activeQueryKey) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void searchBrowseClipIds(lang, trimmedQuery)
+      .then((ids) => {
+        if (cancelled) {
+          return;
+        }
+
+        setSearchResponse({
+          queryKey: activeQueryKey,
+          ids,
+          error: false,
+        });
+      })
+      .catch(() => {
+        if (cancelled) {
+          return;
+        }
+
+        setSearchResponse({
+          queryKey: activeQueryKey,
+          ids: [],
+          error: true,
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    activeQueryKey,
+    hasQuery,
+    lang,
+    open,
+    searchReady,
+    searchResponse.queryKey,
+    trimmedQuery,
+  ]);
 
   useEffect(() => {
     if (!open) {
@@ -100,6 +188,7 @@ export function MobileSearchOverlay({
             initialQuery={query}
             placeholder={placeholder}
             onSearch={setQuery}
+            isSearching={isSearchLoading}
             autoFocus
             allTags={allTags}
             popularTags={popularTags}
@@ -124,8 +213,8 @@ export function MobileSearchOverlay({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {query ? (
-          !searchReady ? (
+        {hasQuery ? (
+          isSearchLoading ? (
             <p className="py-8 text-center text-sm text-muted">{loadingLabel}</p>
           ) : results.length > 0 ? (
             <div className="space-y-2">

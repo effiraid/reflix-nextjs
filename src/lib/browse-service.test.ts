@@ -145,4 +145,57 @@ describe("browse-service", () => {
       })
     ).toBe(true);
   });
+
+  it("still requires detailed browse index for tag and folder filters on the server path", () => {
+    expect(
+      requiresDetailedBrowseIndex(
+        {
+          selectedFolders: ["folder-1"],
+          excludedFolders: [],
+          selectedTags: [],
+          excludedTags: [],
+          searchQuery: "",
+        },
+        { includeSearchQuery: false }
+      )
+    ).toBe(true);
+
+    expect(
+      requiresDetailedBrowseIndex(
+        {
+          selectedFolders: [],
+          excludedFolders: [],
+          selectedTags: [],
+          excludedTags: ["마법"],
+          searchQuery: "",
+        },
+        { includeSearchQuery: false }
+      )
+    ).toBe(true);
+  });
+
+  it("does not require detailed browse index for search-only queries on the server path", () => {
+    expect(
+      requiresDetailedBrowseIndex(
+        {
+          selectedFolders: [],
+          excludedFolders: [],
+          selectedTags: [],
+          excludedTags: [],
+          searchQuery: "alpha",
+        },
+        { includeSearchQuery: false }
+      )
+    ).toBe(false);
+
+    expect(
+      requiresDetailedBrowseIndex({
+        selectedFolders: [],
+        excludedFolders: [],
+        selectedTags: [],
+        excludedTags: [],
+        searchQuery: "alpha",
+      })
+    ).toBe(true);
+  });
 });

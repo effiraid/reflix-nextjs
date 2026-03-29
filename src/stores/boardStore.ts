@@ -1,37 +1,12 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
+import {
+  loadBoardClipIds as loadBoardClipIdsFromStorage,
+  loadBoardSummaries,
+  type BoardSummary,
+} from "@/lib/boardData";
 
-interface BoardClipRow {
-  clip_id?: string | null;
-  added_at?: string | null;
-}
-
-interface BoardClipMembershipRow extends BoardClipRow {
-  board_id?: string | null;
-}
-
-function getCoverClipIds(boardClips: BoardClipRow[] | null | undefined): string[] {
-  return [...(boardClips ?? [])]
-    .filter((row): row is { clip_id: string; added_at?: string | null } =>
-      typeof row?.clip_id === "string"
-    )
-    .sort(
-      (a, b) =>
-        new Date(b.added_at ?? 0).getTime() -
-        new Date(a.added_at ?? 0).getTime()
-    )
-    .map((row) => row.clip_id)
-    .slice(0, 3);
-}
-
-export interface Board {
-  id: string;
-  name: string;
-  clipCount: number;
-  coverClipIds: string[];
-  created_at: string;
-  updated_at: string;
-}
+export type Board = BoardSummary;
 
 interface BoardState {
   boards: Board[];
@@ -58,7 +33,7 @@ interface BoardState {
   fetchBoards: () => Promise<void>;
 }
 
-export const useBoardStore = create<BoardState>()((set, get) => ({
+export const useBoardStore = create<BoardState>()((set) => ({
   boards: [],
   isLoading: false,
   activeBoardClipIds: null,
@@ -130,21 +105,11 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     const supabase = createClient();
     if (!supabase) return;
 
-    const { data } = await supabase
-      .from("board_clips")
-      .select("clip_id")
-      .eq("board_id", boardId);
-
-    if (data) {
-      set({
-        activeBoardId: boardId,
-        activeBoardClipIds: new Set(
-          data
-            .map((row) => row.clip_id)
-            .filter((clipId): clipId is string => typeof clipId === "string")
-        ),
-      });
-    }
+    const clipIds = await loadBoardClipIdsFromStorage(supabase, boardId);
+    set({
+      activeBoardId: boardId,
+      activeBoardClipIds: new Set(clipIds),
+    });
   },
 
   clearActiveBoardClipIds: () =>
@@ -155,46 +120,8 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     if (!supabase) return;
 
     set({ isLoading: true });
-
-    const { data: boardRows } = await supabase
-      .from("boards")
-      .select("id, name, created_at, updated_at")
-      .order("created_at", { ascending: false });
-
-    if (boardRows) {
-      const boardIds = boardRows
-        .map((row) => row.id)
-        .filter((boardId): boardId is string => typeof boardId === "string");
-      const boardClipsByBoardId = new Map<string, BoardClipRow[]>();
-
-      if (boardIds.length > 0) {
-        const { data: boardClipRows } = await supabase
-          .from("board_clips")
-          .select("board_id, clip_id, added_at")
-          .in("board_id", boardIds);
-
-        for (const row of (boardClipRows ?? []) as BoardClipMembershipRow[]) {
-          if (typeof row.board_id !== "string") continue;
-
-          const boardClips = boardClipsByBoardId.get(row.board_id) ?? [];
-          boardClips.push(row);
-          boardClipsByBoardId.set(row.board_id, boardClips);
-        }
-      }
-
-      const boards: Board[] = boardRows.map((row) => {
-        const boardClips = boardClipsByBoardId.get(row.id) ?? [];
-        return {
-          id: row.id,
-          name: row.name,
-          created_at: row.created_at,
-          updated_at: row.updated_at,
-          clipCount: boardClips.length,
-          coverClipIds: getCoverClipIds(boardClips),
-        };
-      });
-      set({ boards });
-    }
+    const boards = await loadBoardSummaries(supabase);
+    set({ boards });
 
     set({ isLoading: false });
   },

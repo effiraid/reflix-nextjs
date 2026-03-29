@@ -12,6 +12,10 @@ const addBoardMock = vi.fn();
 const loadBoardClipIdsMock = vi.fn();
 const setBrowseModeMock = vi.fn();
 const requestDetailedIndexMock = vi.fn();
+const authState = {
+  user: { id: "user-1", email: "user@example.com" },
+  tier: "pro",
+};
 
 const boardState = {
   boards: [
@@ -43,10 +47,7 @@ vi.mock("@/lib/mediaUrl", () => ({
 }));
 
 vi.mock("@/stores/authStore", () => ({
-  useAuthStore: () => ({
-    user: { id: "user-1", email: "user@example.com" },
-    tier: "pro",
-  }),
+  useAuthStore: () => authState,
 }));
 
 vi.mock("@/stores/boardStore", () => ({
@@ -90,6 +91,18 @@ vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
 
 describe("BoardGalleryView", () => {
   beforeEach(() => {
+    authState.user = { id: "user-1", email: "user@example.com" };
+    authState.tier = "pro";
+    boardState.boards = [
+      {
+        id: "board-1",
+        name: "Favorites",
+        clipCount: 1,
+        coverClipIds: ["clip-99"],
+        created_at: "2026-03-29T00:00:00.000Z",
+        updated_at: "2026-03-29T00:00:00.000Z",
+      },
+    ];
     fetchBoardsMock.mockReset();
     addBoardMock.mockReset();
     loadBoardClipIdsMock.mockReset();
@@ -157,5 +170,53 @@ describe("BoardGalleryView", () => {
     expect(updateFilterURLMock).toHaveBeenCalledWith("/ko/browse", {
       boardId: null,
     });
+  });
+
+  it("explains that over-limit legacy boards remain usable for free users", () => {
+    authState.tier = "free";
+    boardState.boards = [
+      {
+        id: "board-1",
+        name: "Favorites",
+        clipCount: 1,
+        coverClipIds: ["clip-99"],
+        created_at: "2026-03-29T00:00:00.000Z",
+        updated_at: "2026-03-29T00:00:00.000Z",
+      },
+      {
+        id: "board-2",
+        name: "Legacy",
+        clipCount: 0,
+        coverClipIds: [],
+        created_at: "2026-03-28T00:00:00.000Z",
+        updated_at: "2026-03-28T00:00:00.000Z",
+      },
+    ];
+
+    const dict = {
+      browse: {
+        all: "전체",
+        myBoards: "내 보드",
+      },
+      board: {
+        title: "보드",
+        empty: "빈 보드",
+        newBoardPlaceholder: "보드 이름",
+        create: "만들기",
+        delete: "삭제",
+        add: "추가",
+        remove: "제거",
+        freeLimitNotice: "제한",
+        signInNotice: "로그인",
+        galleryEmpty: "비어 있음",
+        galleryNewBoard: "새 보드",
+      },
+    } as const;
+
+    render(<BoardGalleryView lang="ko" dict={dict as never} />);
+
+    expect(
+      screen.getByText(/기존 보드는 계속 사용할 수 있지만/)
+    ).toBeInTheDocument();
   });
 });

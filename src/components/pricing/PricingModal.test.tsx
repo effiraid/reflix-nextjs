@@ -93,7 +93,7 @@ describe("PricingModal", () => {
     ).toBeEnabled();
   });
 
-  it("prioritizes the Free login CTA for guests who clicked a locked result", () => {
+  it("renders the shared login flow for guests who clicked a locked result", () => {
     useUIStore.setState({
       pricingModalOpen: true,
       pricingModalIntent: {
@@ -106,14 +106,41 @@ describe("PricingModal", () => {
 
     render(<PricingModal lang="ko" />);
 
+    expect(screen.getByRole("dialog", { name: "로그인" })).toBeInTheDocument();
+    expect(screen.getByText("이메일로 로그인")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "로그인해서 Free 시작" })
+      screen.getByRole("button", { name: "매직 링크 보내기" })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Google로 계속하기" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "로그인해서 Free 시작" })
+    ).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole("button", { name: "로그인해서 Free 시작" }));
+  it("renders the shared login flow for auth-required browse shortcuts", () => {
+    useUIStore.setState({
+      pricingModalOpen: true,
+      pricingModalIntent: {
+        kind: "auth-required",
+        source: "boards",
+        nextPath: "/ko/browse?q=arcane",
+      },
+    });
 
-    expect(routerPushMock).toHaveBeenCalledWith(
-      "/ko/login?next=%2Fko%2Fbrowse%3Fq%3Darcane%26resumeClip%3Dclip-7%26resumeOpen%3D1"
-    );
+    render(<PricingModal lang="ko" />);
+
+    expect(screen.getByRole("dialog", { name: "로그인" })).toBeInTheDocument();
+    expect(screen.getByText("이메일로 로그인")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "매직 링크 보내기" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Google로 계속하기" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "로그인해서 Free 시작" })
+    ).not.toBeInTheDocument();
   });
 });

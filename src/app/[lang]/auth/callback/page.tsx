@@ -5,7 +5,9 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   claimActiveAuthTab,
+  clearPendingAuthFlow,
   clearTabSessionRevoked,
+  consumePendingAuthFlow,
   getActiveAuthTab,
   getOrCreateAuthTabId,
   restoreActiveAuthTab,
@@ -69,6 +71,7 @@ export default function AuthCallbackPage() {
     function onSuccess() {
       if (handled.current) return;
       handled.current = true;
+      clearPendingAuthFlow();
       const elapsed = Date.now() - splashStart.current;
       const remaining = Math.max(0, 1300 - elapsed); // min 1s splash + 300ms fade-in
       setTimeout(() => router.replace(nextPath), remaining);
@@ -81,7 +84,11 @@ export default function AuthCallbackPage() {
       const hash = window.location.hash;
       if (hash) {
         const hp = parseHashParams(hash);
-        if (hp.access_token && hp.refresh_token) {
+        if (
+          hp.access_token &&
+          hp.refresh_token &&
+          consumePendingAuthFlow()
+        ) {
           const previousActiveTab = getActiveAuthTab();
           clearTabSessionRevoked();
           claimActiveAuthTab(tabId);
@@ -116,10 +123,12 @@ export default function AuthCallbackPage() {
       // 3. No tokens found
       if (failureDestination) {
         handled.current = true;
+        clearPendingAuthFlow();
         router.replace(failureDestination);
         return;
       }
 
+      clearPendingAuthFlow();
       setState("error");
     }
 

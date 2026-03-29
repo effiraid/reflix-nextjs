@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "lsof -ti:3000 | xargs kill -9 2>/dev/null; next dev",
-    "build": "node scripts/prepare-protected-public-build.mjs && next build",
+    "build": "node scripts/prepare-protected-public-build.mjs && node scripts/build-pagefind-index.mjs && next build",
+    "search:index": "node scripts/build-pagefind-index.mjs",
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "playwright test",
@@ -67,6 +68,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "jsdom": "^29.0.1",
+    "pagefind": "^1.4.0",
     "server-only": "^0.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",

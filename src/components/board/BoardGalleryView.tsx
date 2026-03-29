@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { FREE_BOARD_LIMIT, hasProAccess } from "@/lib/accessPolicy";
+import { getBoardLimitNotice } from "@/lib/boardLimitNotice";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore, type Board } from "@/stores/boardStore";
@@ -252,10 +253,11 @@ export function BoardGalleryView({ lang, dict }: BoardGalleryViewProps) {
             ) : (
               <div className="flex items-center justify-center rounded-xl border border-dashed border-border aspect-[4/3] p-4">
                 <p className="text-[10px] text-muted text-center leading-relaxed">
-                  {(lang === "ko"
-                    ? "무료 계정은 보드 1개까지.\nPro로 업그레이드하세요."
-                    : "Free accounts are limited to 1 board.\nUpgrade to Pro."
-                  ).split("\n").map((line, i) => (
+                  {getBoardLimitNotice({
+                    lang,
+                    boardCount: boards.length,
+                    limit: FREE_BOARD_LIMIT,
+                  }).split("\n").map((line, i) => (
                     <span key={i}>{i > 0 ? <br /> : null}{line}</span>
                   ))}
                 </p>

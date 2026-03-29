@@ -57,13 +57,16 @@ export function parseBrowsePageQuery(
 
 export function requiresDetailedBrowseIndex(
   filters: Pick<FilterState, "selectedFolders" | "excludedFolders" | "selectedTags" | "excludedTags" | "searchQuery">,
+  options: { includeSearchQuery?: boolean } = {}
 ): boolean {
+  const includeSearchQuery = options.includeSearchQuery ?? true;
+
   return (
     filters.selectedFolders.length > 0 ||
     filters.excludedFolders.length > 0 ||
     filters.selectedTags.length > 0 ||
     filters.excludedTags.length > 0 ||
-    filters.searchQuery.trim().length > 0
+    (includeSearchQuery && filters.searchQuery.trim().length > 0)
   );
 }
 

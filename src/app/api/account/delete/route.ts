@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getStripeIfConfigured } from "@/lib/stripe/server";
+import { getValidatedRequestOrigin } from "@/lib/requestOrigin";
 
-export async function POST() {
+const RECENT_SIGN_IN_WINDOW_MS = 10 * 60 * 1000;
+
+function hasRecentSignIn(lastSignInAt: string | undefined) {
+  if (!lastSignInAt) return false;
+
+  const parsed = Date.parse(lastSignInAt);
+  if (Number.isNaN(parsed)) return false;
+
+  return Date.now() - parsed <= RECENT_SIGN_IN_WINDOW_MS;
+}
+
+export async function POST(request: Request) {
+  const originCheck = getValidatedRequestOrigin(request);
+  if (!originCheck.ok) {
+    return NextResponse.json(
+      { error: originCheck.error },
+      { status: originCheck.status }
+    );
+  }
+
   const supabase = await createServerSupabase();
   const {
     data: { user },
@@ -13,21 +33,38 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Cancel active Stripe subscription if exists
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (stripeKey) {
+  if (!hasRecentSignIn(user.last_sign_in_at)) {
+    return NextResponse.json({ error: "reauth_required" }, { status: 403 });
+  }
+
+  // Cancel any remaining Stripe subscriptions for this customer before deletion.
+  const stripe = getStripeIfConfigured();
+  if (stripe) {
     try {
-      const stripe = new Stripe(stripeKey);
       const admin = getSupabaseAdmin();
-      const { data: sub } = await admin
-        .from("subscriptions")
-        .select("stripe_subscription_id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("stripe_customer_id")
+        .eq("id", user.id)
         .maybeSingle();
 
-      if (sub?.stripe_subscription_id) {
-        await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+      if (profile?.stripe_customer_id) {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: profile.stripe_customer_id,
+          status: "all",
+          limit: 100,
+        });
+
+        for (const subscription of subscriptions.data) {
+          if (
+            subscription.status === "canceled" ||
+            subscription.status === "incomplete_expired"
+          ) {
+            continue;
+          }
+
+          await stripe.subscriptions.cancel(subscription.id);
+        }
       }
     } catch (err) {
       console.error("[account/delete] Stripe cancellation failed:", err);

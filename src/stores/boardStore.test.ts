@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resetBoardStorageModeForTests } from "@/lib/boardData";
 import { useBoardStore } from "./boardStore";
 
 const { createClientMock } = vi.hoisted(() => ({
@@ -11,6 +12,7 @@ vi.mock("@/lib/supabase/client", () => ({
 
 describe("boardStore", () => {
   beforeEach(() => {
+    resetBoardStorageModeForTests();
     useBoardStore.setState({
       boards: [],
       isLoading: false,
@@ -149,6 +151,93 @@ describe("boardStore", () => {
     expect(selectBoardClipsMock).toHaveBeenCalledWith("clip_id");
     expect(eqMock).toHaveBeenCalledWith("board_id", "board-1");
     expect(useBoardStore.getState().activeBoardId).toBe("board-1");
+    expect(Array.from(useBoardStore.getState().activeBoardClipIds ?? [])).toEqual([
+      "clip-a",
+      "clip-b",
+    ]);
+  });
+
+  it("falls back to legacy boards.clip_ids when board_clips is unavailable", async () => {
+    const boardOrderMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "board-1",
+            name: "Legacy",
+            created_at: "2026-03-29T00:00:00.000Z",
+            updated_at: "2026-03-29T00:00:00.000Z",
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "board-1",
+            name: "Legacy",
+            clip_ids: ["clip-a", "clip-b"],
+            created_at: "2026-03-29T00:00:00.000Z",
+            updated_at: "2026-03-29T00:00:00.000Z",
+          },
+        ],
+      });
+    const selectBoardsMock = vi.fn((columns: string) => ({
+      order: boardOrderMock,
+      ...(columns === "clip_ids"
+        ? {
+            eq: () => ({
+              single: async () => ({ data: { clip_ids: ["clip-a", "clip-b"] } }),
+            }),
+          }
+        : {}),
+    }));
+    const inMock = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: "PGRST205", message: "board_clips missing" },
+    });
+    const eqMock = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: "PGRST205", message: "board_clips missing" },
+    });
+    const selectBoardClipsMock = vi.fn((columns: string) => {
+      if (columns === "board_id, clip_id, added_at") {
+        return { in: inMock };
+      }
+
+      return { eq: eqMock };
+    });
+
+    createClientMock.mockReturnValue({
+      from: vi.fn((table: string) => {
+        if (table === "boards") {
+          return {
+            select: selectBoardsMock,
+          };
+        }
+
+        if (table === "board_clips") {
+          return {
+            select: selectBoardClipsMock,
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }),
+    });
+
+    await useBoardStore.getState().fetchBoards();
+    await useBoardStore.getState().loadBoardClipIds("board-1");
+
+    expect(useBoardStore.getState().boards).toEqual([
+      {
+        id: "board-1",
+        name: "Legacy",
+        clipCount: 2,
+        coverClipIds: ["clip-b", "clip-a"],
+        created_at: "2026-03-29T00:00:00.000Z",
+        updated_at: "2026-03-29T00:00:00.000Z",
+      },
+    ]);
     expect(Array.from(useBoardStore.getState().activeBoardClipIds ?? [])).toEqual([
       "clip-a",
       "clip-b",

@@ -57,14 +57,15 @@ describe("LandingNavbar", () => {
     expect(hamburger).toBeDefined();
   });
 
-  it("opens the bottom sheet when hamburger is clicked", () => {
+  it("keeps the bottom sheet unmounted until hamburger is clicked", () => {
     render(<LandingNavbar {...defaultProps} />);
+
+    expect(screen.queryByRole("dialog", { name: "메뉴" })).not.toBeInTheDocument();
 
     const hamburger = screen.getByRole("button", { name: "메뉴 열기" });
     fireEvent.click(hamburger);
 
-    const sheet = screen.getByRole("dialog", { name: "메뉴" });
-    expect(sheet.style.transform).toBe("translateY(0)");
+    expect(screen.getByRole("dialog", { name: "메뉴" })).toBeInTheDocument();
   });
 
   it("closes the bottom sheet on ESC key", () => {
@@ -73,11 +74,10 @@ describe("LandingNavbar", () => {
     const hamburger = screen.getByRole("button", { name: "메뉴 열기" });
     fireEvent.click(hamburger);
 
-    const sheet = screen.getByRole("dialog", { name: "메뉴" });
-    expect(sheet.style.transform).toBe("translateY(0)");
+    expect(screen.getByRole("dialog", { name: "메뉴" })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: "Escape" });
-    expect(sheet.style.transform).toBe("translateY(100%)");
+    expect(screen.queryByRole("dialog", { name: "메뉴" })).not.toBeInTheDocument();
   });
 
   it("closes the sheet then scrolls when pricing is tapped in the sheet", () => {
@@ -100,7 +100,7 @@ describe("LandingNavbar", () => {
     fireEvent.click(sheetPricing);
 
     // Sheet should close immediately
-    expect(sheet.style.transform).toBe("translateY(100%)");
+    expect(screen.queryByRole("dialog", { name: "메뉴" })).not.toBeInTheDocument();
 
     // Scroll fires after 250ms delay
     vi.advanceTimersByTime(250);

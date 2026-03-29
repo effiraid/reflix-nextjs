@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   buildSessionReplacedLoginPath,
+  clearPendingAuthFlow,
   getActiveAuthTab,
   getOrCreateAuthTabId,
   isTabSessionRevoked,
+  markPendingAuthFlow,
 } from "@/lib/authTabSession";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
@@ -57,6 +59,7 @@ export function LoginForm({ lang, nextPath }: LoginFormProps) {
       return;
     }
 
+    markPendingAuthFlow();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
@@ -65,6 +68,7 @@ export function LoginForm({ lang, nextPath }: LoginFormProps) {
     });
 
     if (error) {
+      clearPendingAuthFlow();
       setState("error");
       const isRateLimit =
         error.status === 429 || error.message?.toLowerCase().includes("rate");
@@ -105,12 +109,20 @@ export function LoginForm({ lang, nextPath }: LoginFormProps) {
       return;
     }
 
-    await supabase.auth.signInWithOAuth({
+    markPendingAuthFlow();
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
       },
     });
+    if (error) {
+      clearPendingAuthFlow();
+      setState("error");
+      setErrorMsg(
+        isKo ? "Google 로그인에 실패했습니다" : "Failed to sign in with Google"
+      );
+    }
   }
 
   if (state === "sent") {
@@ -197,6 +209,7 @@ function WaitingForLogin({
     const interval = setInterval(async () => {
       const { data } = await supabase.auth.getUser();
       if (data.user) {
+        clearPendingAuthFlow();
         const activeTab = getActiveAuthTab();
         if ((activeTab && activeTab.tabId !== tabId) || (!activeTab && isTabSessionRevoked())) {
           router.replace(buildSessionReplacedLoginPath(window.location.pathname));

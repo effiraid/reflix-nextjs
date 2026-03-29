@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import koDict from "@/app/[lang]/dictionaries/ko.json";
+import enDict from "@/app/[lang]/dictionaries/en.json";
+import { LoginCard } from "@/components/auth/LoginCard";
 import { sanitizePostAuthRedirect } from "@/lib/authRedirect";
 import { useUIStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -39,11 +42,16 @@ export function PricingModal({ lang }: PricingModalProps) {
   const isKo = lang === "ko";
   const isYearly = billingInterval === "yearly";
   const isPaidPro = accessSource === "paid";
-  const isGuestLockedFlow =
-    !user &&
+  const isGuestLockedIntent =
     pricingModalIntent?.kind === "locked-clip" &&
     pricingModalIntent.viewerTier === "guest";
-  const proSectionRef = useRef<HTMLDivElement | null>(null);
+  const isAuthRequiredIntent = pricingModalIntent?.kind === "auth-required";
+  const isLoginFlow = !user && (isGuestLockedIntent || isAuthRequiredIntent);
+  const modalDict = (lang === "ko" ? koDict : enDict) as typeof koDict;
+  const loginNextPath =
+    pricingModalIntent?.nextPath
+      ? sanitizePostAuthRedirect(pricingModalIntent.nextPath, `/${lang}/browse`)
+      : `/${lang}/browse`;
 
   useEffect(() => {
     if (pricingModalOpen) {
@@ -78,6 +86,12 @@ export function PricingModal({ lang }: PricingModalProps) {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, [pricingModalOpen]);
+
+  useEffect(() => {
+    if (pricingModalOpen && user && (isGuestLockedIntent || isAuthRequiredIntent)) {
+      handleClose();
+    }
+  }, [handleClose, isAuthRequiredIntent, isGuestLockedIntent, pricingModalOpen, user]);
 
   const handleSubscribe = useCallback(async () => {
     if (!user) {
@@ -116,13 +130,6 @@ export function PricingModal({ lang }: PricingModalProps) {
       router.push(`/${lang}/login?next=${encodeURIComponent(nextPath)}`);
     }
   }, [handleClose, lang, pricingModalIntent, router, user]);
-
-  const handleShowPro = useCallback(() => {
-    proSectionRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-    });
-  }, []);
 
   if (!pricingModalOpen && !isClosing) return null;
 
@@ -163,9 +170,9 @@ export function PricingModal({ lang }: PricingModalProps) {
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-label={isKo ? "요금제" : "Pricing"}
+        aria-label={isLoginFlow ? (isKo ? "로그인" : "Sign in") : isKo ? "요금제" : "Pricing"}
         tabIndex={-1}
-        className={`relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl bg-background outline-none will-change-[transform,opacity] ${contentAnimation}`}
+        className={`relative max-h-[calc(100vh-2rem)] w-full ${isLoginFlow ? "max-w-md" : "max-w-2xl"} overflow-y-auto rounded-2xl bg-background outline-none will-change-[transform,opacity] ${contentAnimation}`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -177,6 +184,15 @@ export function PricingModal({ lang }: PricingModalProps) {
           ✕
         </button>
 
+        {isLoginFlow ? (
+          <div className="px-6 pb-6 pt-8">
+            <LoginCard
+              lang={lang}
+              dict={modalDict}
+              nextPath={loginNextPath}
+            />
+          </div>
+        ) : (
         <div className="px-6 pb-6 pt-8 md:px-8">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-foreground" style={{ letterSpacing: "-0.5px" }}>
@@ -188,37 +204,6 @@ export function PricingModal({ lang }: PricingModalProps) {
                 : "Explore game animation references freely"}
             </p>
           </div>
-
-          {isGuestLockedFlow ? (
-            <div className="mt-5 rounded-2xl border border-accent/20 bg-accent/5 p-4">
-              <p className="text-sm font-medium text-foreground">
-                {isKo
-                  ? "로그인하면 지금 선택한 클립의 원본 영상을 바로 볼 수 있어요."
-                  : "Sign in to watch the full version of the clip you just selected."}
-              </p>
-              <p className="mt-2 text-xs text-muted">
-                {isKo
-                  ? "검색 결과는 그대로 돌아오고, Free에서 보드 1개도 바로 사용할 수 있어요."
-                  : "You will return to the same search results, and Free also gives you 1 board right away."}
-              </p>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={handleFreeStart}
-                  className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-85"
-                >
-                  {isKo ? "로그인해서 Free 시작" : "Sign in for Free"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleShowPro}
-                  className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-hover"
-                >
-                  {isKo ? "Pro 플랜 보기" : "See Pro plan"}
-                </button>
-              </div>
-            </div>
-          ) : null}
 
           <div className="mt-6 flex items-center justify-center">
             <div className="inline-flex rounded-full border border-foreground/[0.08] bg-foreground/[0.04] p-1">
@@ -254,7 +239,7 @@ export function PricingModal({ lang }: PricingModalProps) {
           </div>
 
           <div className="mt-8 flex flex-col md:flex-row">
-            <div ref={proSectionRef} className="flex flex-1 flex-col p-6">
+            <div className="flex flex-1 flex-col p-6">
               <h3 className="text-lg font-semibold text-foreground">Free</h3>
               <div className="mt-2">
                 <span className="text-3xl font-bold text-foreground">{isKo ? "₩0" : "$0"}</span>
@@ -345,6 +330,7 @@ export function PricingModal({ lang }: PricingModalProps) {
             </div>
           </div>
         </div>
+        )}
       </section>
     </div>
   );

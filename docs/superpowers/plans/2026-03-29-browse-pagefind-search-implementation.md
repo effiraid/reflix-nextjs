@@ -20,7 +20,7 @@
 - 한국어 `초성 검색`, `영타→한글 변환`은 이번 단계에서 제거한다.
 - 태그 패널 내부의 소규모 태그 이름 검색은 기존 `createMatcher()`를 그대로 유지한다.
 - 검색 결과 렌더에는 여전히 cards display envelope를 사용한다. detail-grade JSON은 검색 렌더용으로 올리지 않는다.
-- search-only 경로는 `filter-index`를 받지 않는다. tag/folder/category filters가 함께 있는 경우에만 projection이 필요할 수 있다.
+- 최종 목표는 search-only 경로에서 `filter-index`를 받지 않는 것이다. 다만 Task 2 시점에는 current `/browse?q=...` 회귀를 막기 위해 기존 searchQuery 기반 detailed load를 잠시 유지하고, 실제 제거는 Task 4 Pagefind browse search 전환과 함께 수행한다.
 
 ## File Structure
 
@@ -294,12 +294,12 @@ git commit -m "feat(search): add build-time Pagefind index generation"
 - Modify: `src/app/[lang]/browse/ClipDataProvider.tsx`
 - Modify: `src/app/[lang]/browse/ClipDataProvider.test.tsx`
 
-- [ ] **Step 1: Add a failing browse-service test that search no longer requires projection**
+- [ ] **Step 1: Add failing tests for cards-only prewarm while keeping current search behavior safe**
 
 Extend `src/lib/browse-service.test.ts` with:
 
 ```ts
-it("does not require detailed browse index for search-only queries", () => {
+it("still requires the detailed browse index for search-only queries until Pagefind browse search lands", () => {
   expect(
     requiresDetailedBrowseIndex({
       selectedFolders: [],
@@ -308,7 +308,7 @@ it("does not require detailed browse index for search-only queries", () => {
       excludedTags: [],
       searchQuery: "alpha",
     })
-  ).toBe(false);
+  ).toBe(true);
 });
 ```
 
@@ -359,24 +359,11 @@ Run:
 npx vitest run 'src/lib/browse-service.test.ts' 'src/app/[lang]/browse/ClipDataProvider.test.tsx'
 ```
 
-Expected: FAIL because `searchQuery` still implies detailed index and the provider has no cards-only request path.
+Expected: FAIL because the provider has no cards-only request path yet.
 
 - [ ] **Step 4: Implement the split loading contract**
 
-Update `requiresDetailedBrowseIndex` in `src/lib/browse-service.ts` to:
-
-```ts
-export function requiresDetailedBrowseIndex(
-  filters: Pick<FilterState, "selectedFolders" | "excludedFolders" | "selectedTags" | "excludedTags">
-) {
-  return (
-    filters.selectedFolders.length > 0 ||
-    filters.excludedFolders.length > 0 ||
-    filters.selectedTags.length > 0 ||
-    filters.excludedTags.length > 0
-  );
-}
-```
+Keep `requiresDetailedBrowseIndex` behavior unchanged for `searchQuery` in this task so current `/browse?q=...` continues to work. Task 4 will remove the `searchQuery` requirement after Pagefind-backed browse search is in place.
 
 Refactor `ClipDataProvider.tsx` to keep separate state:
 
@@ -403,6 +390,14 @@ fetch("/api/browse/filter-index", { signal: controller.signal })
 ```
 
 Expose `allCards`, `cardsStatus`, and `requestCardIndex` from the context.
+
+Important detail:
+
+```tsx
+const sourceClips = projectionClips ?? allCards ?? clips;
+```
+
+Detailed metadata-derived values such as `allTags`, `popularTags`, and `tagCounts` must prefer `projectionClips` first so they upgrade after a detailed load.
 
 - [ ] **Step 5: Verify**
 
@@ -877,4 +872,4 @@ Expected:
 
 - If broad-query search later needs better Korean UX, add a dedicated Korean search enhancement as a separate task after 10k rollout is stable.
 - If `result.data()` cost turns out high for very broad queries, the next optimization should be a tiny lookup manifest keyed by result URL or clipId metadata, not a return to full `filter-index` downloads.
-- Do not reintroduce `searchQuery` into `requiresDetailedBrowseIndex`; that would partially undo priority 1.
+- Once Task 4 lands, remove the temporary `searchQuery` requirement from `requiresDetailedBrowseIndex`; until then, keep current `/browse?q=...` behavior safe.

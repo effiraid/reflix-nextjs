@@ -23,14 +23,16 @@ function touchEntry(key: string) {
   cache.set(key, value);
 }
 
-/** @internal — exposed for tests only */
-export function _clearCache() {
+export function clearBlobVideoCache() {
   for (const blobUrl of cache.values()) {
     URL.revokeObjectURL(blobUrl);
   }
   cache.clear();
   inflight.clear();
 }
+
+/** @internal — exposed for tests only */
+export const _clearCache = clearBlobVideoCache;
 
 export async function fetchBlobUrl(
   videoUrl: string,
@@ -70,4 +72,3 @@ export async function fetchBlobUrl(
 
   return promise;
 }
-

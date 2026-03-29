@@ -226,12 +226,12 @@ export function LandingNavbar({
         </div>
       </nav>
 
+      {sheetOpen ? (
+      <>
       {/* Mobile Bottom Sheet */}
       {/* Overlay */}
       <div
-        className={`fixed inset-0 z-[100] transition-colors duration-250 ${
-          sheetOpen ? "bg-black/60 pointer-events-auto" : "bg-transparent pointer-events-none"
-        }`}
+        className="fixed inset-0 z-[100] bg-black/60 transition-colors duration-250"
         onClick={closeSheet}
         aria-hidden="true"
       />
@@ -247,8 +247,8 @@ export function LandingNavbar({
           borderTopLeftRadius: 16,
           borderTopRightRadius: 16,
           padding: "12px 24px calc(env(safe-area-inset-bottom, 16px) + 16px)",
-          transform: sheetOpen ? "translateY(0)" : "translateY(100%)",
-          boxShadow: sheetOpen ? "0 -4px 24px rgba(0,0,0,0.4)" : "none",
+          transform: "translateY(0)",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
           transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
@@ -331,6 +331,8 @@ export function LandingNavbar({
           </Link>
         </div>
       </div>
+      </>
+      ) : null}
     </>
   );
 }

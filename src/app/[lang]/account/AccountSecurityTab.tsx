@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { buildAuthCallbackUrl } from "@/lib/authRedirect";
+import { clearPendingAuthFlow, markPendingAuthFlow } from "@/lib/authTabSession";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { Locale } from "@/lib/types";
 
@@ -84,11 +85,13 @@ export function AccountSecurityTab({ lang, dict, user }: Props) {
       return;
     }
     setIsLinkingGoogle(true);
+    markPendingAuthFlow();
     const { error } = await supabase.auth.linkIdentity({
       provider: "google",
       options: { redirectTo },
     });
     if (error) {
+      clearPendingAuthFlow();
       setIdentitiesError(t.googleLinkStartFailed);
       setIsLinkingGoogle(false);
     }
@@ -127,7 +130,15 @@ export function AccountSecurityTab({ lang, dict, user }: Props) {
       const res = await fetch("/api/account/delete", { method: "POST" });
       if (!res.ok) {
         const data = await res.json();
-        setDeleteError(data.error || "Failed to delete account");
+        if (data.error === "reauth_required") {
+          setDeleteError(
+            lang === "ko"
+              ? "보안을 위해 다시 로그인한 뒤 계정 삭제를 다시 시도해주세요."
+              : "For security, sign in again and then try deleting your account."
+          );
+        } else {
+          setDeleteError(data.error || "Failed to delete account");
+        }
         setDeleting(false);
         return;
       }

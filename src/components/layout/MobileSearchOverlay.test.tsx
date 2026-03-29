@@ -1,7 +1,18 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MobileSearchOverlay } from "./MobileSearchOverlay";
 import type { ClipIndex } from "@/lib/types";
+import { searchBrowseClipIds } from "@/lib/browsePagefind";
+import { searchClips } from "@/lib/clipSearch";
+
+vi.mock("@/lib/browsePagefind", () => ({
+  searchBrowseClipIds: vi.fn(async () => []),
+}));
+
+vi.mock("@/lib/clipSearch", () => ({
+  searchClips: vi.fn(() => []),
+}));
 
 const clips: ClipIndex[] = [
   {
@@ -36,10 +47,15 @@ const clips: ClipIndex[] = [
 describe("MobileSearchOverlay", () => {
   beforeEach(() => {
     vi.useRealTimers();
+    vi.mocked(searchBrowseClipIds).mockReset();
+    vi.mocked(searchBrowseClipIds).mockResolvedValue([]);
+    vi.mocked(searchClips).mockReset();
+    vi.mocked(searchClips).mockReturnValue([]);
   });
 
-  it("renders matching results inside the full-screen overlay", async () => {
+  it("renders Pagefind-ranked results without using local fallback on the success path", async () => {
     const handleSelectClip = vi.fn();
+    vi.mocked(searchBrowseClipIds).mockResolvedValue(["clip-1"]);
 
     render(
       <MobileSearchOverlay
@@ -64,6 +80,8 @@ describe("MobileSearchOverlay", () => {
     });
     fireEvent.submit(input.closest("form") as HTMLFormElement);
 
+    expect(searchBrowseClipIds).toHaveBeenCalledWith("ko", "슬픈");
+    expect(searchClips).not.toHaveBeenCalled();
     fireEvent.click(await screen.findByRole("button", { name: "슬픈 걷기" }));
 
     expect(handleSelectClip).toHaveBeenCalledWith("clip-1", "슬픈");
@@ -94,6 +112,8 @@ describe("MobileSearchOverlay", () => {
   });
 
   it("shows translated english tags in result summaries", async () => {
+    vi.mocked(searchBrowseClipIds).mockResolvedValue(["clip-1"]);
+
     render(
       <MobileSearchOverlay
         open
@@ -117,6 +137,7 @@ describe("MobileSearchOverlay", () => {
     });
     fireEvent.submit(input.closest("form") as HTMLFormElement);
 
+    expect(searchBrowseClipIds).toHaveBeenCalledWith("en", "walk");
     expect(await screen.findByText("Walk")).toBeInTheDocument();
     expect(screen.queryByText("걷기")).not.toBeInTheDocument();
   });
@@ -170,5 +191,93 @@ describe("MobileSearchOverlay", () => {
     );
 
     expect(onRequestSearchReady).toHaveBeenCalledTimes(1);
+  });
+
+  it("falls back to local search results when Pagefind rejects", async () => {
+    vi.mocked(searchBrowseClipIds).mockRejectedValue(new Error("pagefind down"));
+    vi.mocked(searchClips).mockReturnValue([clips[0]]);
+
+    render(
+      <MobileSearchOverlay
+        open
+        clips={clips}
+        searchReady
+        lang="ko"
+        tagI18n={{}}
+        placeholder="클립 검색"
+        closeLabel="닫기"
+        noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
+        onClose={vi.fn()}
+        onSelectClip={vi.fn()}
+      />
+    );
+
+    const input = screen.getByRole("searchbox", { name: "클립 검색" });
+
+    fireEvent.change(input, {
+      target: { value: "fallback-only" },
+    });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+    expect(searchBrowseClipIds).toHaveBeenCalledWith("ko", "fallback-only");
+    expect(await screen.findByRole("button", { name: "슬픈 걷기" })).toBeInTheDocument();
+    expect(searchClips).toHaveBeenCalledWith(
+      clips,
+      expect.objectContaining({
+        lang: "ko",
+        query: "fallback-only",
+        tagI18n: {},
+      })
+    );
+  });
+
+  it("resets query and prior results after close then reopen", async () => {
+    vi.mocked(searchBrowseClipIds).mockResolvedValue(["clip-1"]);
+
+    function Harness() {
+      const [open, setOpen] = useState(true);
+
+      return (
+        <div>
+          <button type="button" onClick={() => setOpen((value) => !value)}>
+            toggle
+          </button>
+          <MobileSearchOverlay
+            key={open ? "mobile-search-open" : "mobile-search-closed"}
+            open={open}
+            clips={clips}
+            searchReady
+            lang="ko"
+            tagI18n={{}}
+            placeholder="클립 검색"
+            closeLabel="닫기"
+            noResultsLabel="결과 없음"
+            loadingLabel="검색 준비 중..."
+            onClose={() => setOpen(false)}
+            onSelectClip={vi.fn()}
+          />
+        </div>
+      );
+    }
+
+    render(<Harness />);
+
+    const input = screen.getByRole("searchbox", { name: "클립 검색" });
+    fireEvent.change(input, {
+      target: { value: "슬픈" },
+    });
+    fireEvent.submit(input.closest("form") as HTMLFormElement);
+
+    expect(await screen.findByRole("button", { name: "슬픈 걷기" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "닫기" }));
+    expect(screen.queryByRole("dialog", { name: "클립 검색" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "toggle" }));
+
+    const reopenedInput = screen.getByRole("searchbox", { name: "클립 검색" });
+    expect(reopenedInput).toHaveValue("");
+    expect(screen.queryByRole("button", { name: "슬픈 걷기" })).not.toBeInTheDocument();
   });
 });

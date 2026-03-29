@@ -8,12 +8,14 @@ import {
   buildSessionReplacedLoginPath,
   claimActiveAuthTab,
   clearActiveAuthTab,
+  clearPendingAuthFlow,
   clearTabSessionRevoked,
   getActiveAuthTab,
   getOrCreateAuthTabId,
   isTabSessionRevoked,
   markTabSessionRevoked,
 } from "@/lib/authTabSession";
+import { clearBlobVideoCache } from "@/lib/blobVideo";
 import { useAuthStore } from "@/stores/authStore";
 
 function AuthProviderEffects() {
@@ -75,6 +77,7 @@ function AuthProviderEffects() {
     }
 
     function supersedeCurrentTab() {
+      clearBlobVideoCache();
       stopHeartbeat();
       markTabSessionRevoked();
       setUser(null);
@@ -85,6 +88,7 @@ function AuthProviderEffects() {
 
     function acceptCurrentTabSession(user: Parameters<typeof setUser>[0] & { id: string }) {
       clearTabSessionRevoked();
+      clearPendingAuthFlow();
       claimActiveAuthTab(tabId);
       startHeartbeat();
 
@@ -94,17 +98,17 @@ function AuthProviderEffects() {
     }
 
     // Single listener: handles INITIAL_SESSION, SIGNED_IN, SIGNED_OUT
-    // Avoids lock contention from concurrent getSession() + onAuthStateChange
-    // Clear stale refresh token cookies to prevent console AuthApiError
-    client.auth.getSession().then(({ error }) => {
-      if (error?.message?.includes("Refresh Token")) {
-        client.auth.signOut({ scope: "local" });
-      }
-    });
-
+    // Stale refresh-token cookies are cleared server-side in proxy.ts,
+    // so no client-side getSession() cleanup is needed here.
     const {
       data: { subscription },
     } = client.auth.onAuthStateChange((event, session) => {
+      const currentUserId = useAuthStore.getState().user?.id ?? null;
+      const nextUserId = session?.user?.id ?? null;
+      if (currentUserId !== nextUserId) {
+        clearBlobVideoCache();
+      }
+
       if (session?.user) {
         const activeTab = getActiveAuthTab();
 

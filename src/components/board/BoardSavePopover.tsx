@@ -12,6 +12,11 @@ import {
 import { CheckIcon, PlusIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { FREE_BOARD_LIMIT, hasProAccess } from "@/lib/accessPolicy";
+import {
+  loadBoardIdsForClip,
+  persistBoardClipMembership,
+} from "@/lib/boardData";
+import { getBoardLimitNotice } from "@/lib/boardLimitNotice";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore, type Board } from "@/stores/boardStore";
 import { showToast } from "@/components/common/Toast";
@@ -40,6 +45,13 @@ export function BoardSavePopover({
   const [isMembershipLoading, setIsMembershipLoading] = useState(true);
   const popoverRef = useRef<HTMLDivElement>(null);
   const boardClipMapRef = useRef<Record<string, boolean>>({});
+  const syncBoardMembershipRef = useRef<
+    (
+      boardId: string,
+      nextInBoard: boolean,
+      options?: { showUndoToast?: boolean }
+    ) => Promise<void>
+  >(async () => {});
 
   const { refs, floatingStyles } = useFloating({
     elements: { reference: referenceElement },
@@ -65,23 +77,15 @@ export function BoardSavePopover({
         return;
       }
 
-      const { data, error } = await supabase
-        .from("board_clips")
-        .select("board_id")
-        .eq("clip_id", clipId);
+      const map: Record<string, boolean> = {};
+      const boardIds = await loadBoardIdsForClip(supabase, clipId);
 
       if (cancelled) {
         return;
       }
 
-      if (error) {
-        setIsMembershipLoading(false);
-        return;
-      }
-
-      const map: Record<string, boolean> = {};
-      for (const row of data ?? []) {
-        map[row.board_id] = true;
+      for (const boardId of boardIds) {
+        map[boardId] = true;
       }
 
       boardClipMapRef.current = map;
@@ -122,11 +126,12 @@ export function BoardSavePopover({
         removeClipFromBoard(boardId, clipId);
       }
 
-      const rpcName = nextInBoard ? "board_add_clip" : "board_remove_clip";
-      const { error } = await supabase.rpc(rpcName, {
-        p_board_id: boardId,
-        p_clip_id: clipId,
-      });
+      const { error } = await persistBoardClipMembership(
+        supabase,
+        boardId,
+        clipId,
+        nextInBoard
+      );
 
       if (error) {
         boardClipMapRef.current = {
@@ -152,7 +157,7 @@ export function BoardSavePopover({
       showToast(
         nextInBoard ? `${boardName}에 저장됨` : `${boardName}에서 제거됨`,
         () => {
-          void syncBoardMembership(boardId, !nextInBoard, {
+          void syncBoardMembershipRef.current(boardId, !nextInBoard, {
             showUndoToast: false,
           });
         }
@@ -160,6 +165,9 @@ export function BoardSavePopover({
     },
     [addClipToBoard, boards, clipId, removeClipFromBoard]
   );
+  useEffect(() => {
+    syncBoardMembershipRef.current = syncBoardMembership;
+  }, [syncBoardMembership]);
 
   // Close on scroll (masonry grid compatibility)
   useEffect(() => {
@@ -310,7 +318,11 @@ export function BoardSavePopover({
         </form>
       ) : (
         <p className="mt-1 border-t border-border px-2 pt-1.5 text-[10px] text-muted">
-          무료 계정은 보드 1개까지
+          {getBoardLimitNotice({
+            lang: "ko",
+            boardCount: boards.length,
+            limit: FREE_BOARD_LIMIT,
+          }).split("\n")[0]}
         </p>
       )}
     </div>,

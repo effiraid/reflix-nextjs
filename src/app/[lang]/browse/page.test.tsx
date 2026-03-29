@@ -1,7 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
-import { render, screen } from "@testing-library/react";
-import { BrowsePageShell } from "./page";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type {
   BrowseCardRecord,
@@ -9,9 +8,40 @@ import type {
   BrowseSummaryRecord,
 } from "@/lib/types";
 
+const pageMocks = vi.hoisted(() => ({
+  getServerViewerTier: vi.fn(),
+  getTagAliases: vi.fn(),
+  loadBrowsePageData: vi.fn(),
+}));
+
 const dict = {
   ...koDict,
 } as const;
+
+vi.mock("@/lib/data", () => ({
+  getCategories: vi.fn(async () => ({})),
+  getTagAliases: pageMocks.getTagAliases,
+  getTagGroups: vi.fn(async () => ({ groups: [], parentGroups: [] })),
+  getTagI18n: vi.fn(async () => ({})),
+  loadBrowseCards: vi.fn(async () => []),
+  loadBrowseFilterIndex: vi.fn(async () => []),
+}));
+
+vi.mock("./browseBootstrap", () => ({
+  loadBrowsePageData: pageMocks.loadBrowsePageData,
+}));
+
+vi.mock("@/lib/browseAccess", () => ({
+  getServerViewerTier: pageMocks.getServerViewerTier,
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createServerSupabase: vi.fn(async () => ({})),
+}));
+
+vi.mock("@/lib/boardData", () => ({
+  loadBoardClipIds: vi.fn(async () => []),
+}));
 
 vi.mock("../dictionaries", () => ({
   getDictionary: vi.fn(async () => dict),
@@ -66,7 +96,71 @@ vi.mock("@/components/layout/RightPanelContent", () => ({
   },
 }));
 
+import BrowsePage, { BrowsePageShell } from "./page";
+
 describe("BrowsePage", () => {
+  beforeEach(() => {
+    clipDataProviderProps = null;
+    vi.clearAllMocks();
+    pageMocks.getServerViewerTier.mockResolvedValue("guest");
+    pageMocks.getTagAliases.mockResolvedValue(null);
+    pageMocks.loadBrowsePageData.mockResolvedValue({
+      dict,
+      categories: {},
+      tagGroups: { groups: [], parentGroups: [] },
+      tagI18n: {},
+      browseCards: [],
+      browseFilterIndex: null,
+      initialFolderClipIds: {},
+    });
+  });
+
+  it("does not ask bootstrap to load the detailed filter index for search-only deep links", async () => {
+    await act(async () => {
+      render(
+        <BrowsePage
+          params={Promise.resolve({ lang: "ko" })}
+          searchParams={Promise.resolve({ q: "Alpha" })}
+        />
+      );
+    });
+
+    await waitFor(() => {
+      expect(pageMocks.loadBrowsePageData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          lang: "ko",
+          shouldLoadDetailedIndex: false,
+          shouldLoadFilterIndex: false,
+          viewerTier: "guest",
+        }),
+        expect.any(Object)
+      );
+    });
+  });
+
+  it("still asks bootstrap to load the detailed filter index for tag deep links", async () => {
+    await act(async () => {
+      render(
+        <BrowsePage
+          params={Promise.resolve({ lang: "ko" })}
+          searchParams={Promise.resolve({ tag: "마법" })}
+        />
+      );
+    });
+
+    await waitFor(() => {
+      expect(pageMocks.loadBrowsePageData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          lang: "ko",
+          shouldLoadDetailedIndex: true,
+          shouldLoadFilterIndex: true,
+          viewerTier: "guest",
+        }),
+        expect.any(Object)
+      );
+    });
+  });
+
   it("passes filtered result count and full library count separately to the clip data provider", async () => {
     const browseSummary: BrowseSummaryRecord[] = [
       {
@@ -131,6 +225,53 @@ describe("BrowsePage", () => {
     expect(clipDataProviderProps).toMatchObject({
       initialTotalCount: 1,
       totalClipCount: 3,
+    });
+  });
+
+  it("does not preload the detailed index in the shell for search-only deep links", () => {
+    const browseSummary: BrowseSummaryRecord[] = [
+      {
+        id: "clip-a",
+        name: "Alpha",
+        thumbnailUrl: "/a.jpg",
+        previewUrl: "/a.mp4",
+        lqipBase64: "",
+        width: 100,
+        height: 100,
+        duration: 1,
+        category: "action",
+      },
+      {
+        id: "clip-b",
+        name: "Beta",
+        thumbnailUrl: "/b.jpg",
+        previewUrl: "/b.mp4",
+        lqipBase64: "",
+        width: 100,
+        height: 100,
+        duration: 1,
+        category: "action",
+      },
+    ];
+
+    render(
+      <BrowsePageShell
+        lang="ko"
+        dict={dict as never}
+        categories={{}}
+        tagGroups={{ groups: [], parentGroups: [] }}
+        tagI18n={{}}
+        browseCards={browseSummary as BrowseCardRecord[]}
+        browseFilterIndex={null}
+        preloadDetailedIndex={false}
+        rawSearchParams={{ q: "Alpha" }}
+      />
+    );
+
+    expect(clipDataProviderProps).toMatchObject({
+      initialTotalCount: 1,
+      totalClipCount: 2,
+      preloadDetailedIndex: false,
     });
   });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterClips } from "./filter";
+import { filterClips, filterClipsByStructure } from "./filter";
 import type { BrowseProjectionRecord, ClipIndex } from "./types";
 
 const clips: ClipIndex[] = [
@@ -105,6 +105,16 @@ const categories = {
 } as const;
 
 describe("filterClips", () => {
+  it("filters tags and folders without applying text search", () => {
+    const filtered = filterClipsByStructure(clips, {
+      ...baseFilters,
+      searchQuery: "walk",
+      selectedTags: ["마법"],
+    });
+
+    expect(filtered.map((clip) => clip.id)).toEqual(["clip-1", "clip-2"]);
+  });
+
   it("matches translated tag labels when tag i18n data is provided", () => {
     const filtered = filterClips(
       clips,

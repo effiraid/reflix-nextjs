@@ -11,6 +11,14 @@ export interface PricingModalIntent {
   nextPath?: string;
 }
 
+export interface AuthRequiredModalIntent {
+  kind: "auth-required";
+  source: "boards" | "history";
+  nextPath?: string;
+}
+
+export type ModalIntent = PricingModalIntent | AuthRequiredModalIntent;
+
 interface UIStore {
   leftPanelOpen: boolean;
   rightPanelOpen: boolean;
@@ -21,7 +29,8 @@ interface UIStore {
   activeFilterTab: string | null;
   shuffleSeed: number;
   pricingModalOpen: boolean;
-  pricingModalIntent: PricingModalIntent | null;
+  pricingModalIntent: ModalIntent | null;
+  mobileSearchOpen: boolean;
   keyboardHelpOpen: boolean;
   searchFocused: boolean;
   browseMode: "grid" | "tags" | "boards" | "history";
@@ -40,8 +49,9 @@ interface UIStore {
   stepThumbnailSize: (delta: number) => void;
   setActiveFilterTab: (tab: string | null) => void;
   reshuffleClips: () => void;
-  openPricingModal: (intent?: PricingModalIntent) => void;
+  openPricingModal: (intent?: ModalIntent) => void;
   closePricingModal: () => void;
+  setMobileSearchOpen: (open: boolean) => void;
   toggleKeyboardHelp: () => void;
   setSearchFocused: (focused: boolean) => void;
   setBrowseMode: (mode: "grid" | "tags" | "boards" | "history") => void;
@@ -62,6 +72,7 @@ export const useUIStore = create<UIStore>()(
       shuffleSeed: 0,
       pricingModalOpen: false,
       pricingModalIntent: null,
+      mobileSearchOpen: false,
       keyboardHelpOpen: false,
       searchFocused: false,
       browseMode: "grid",
@@ -96,6 +107,7 @@ export const useUIStore = create<UIStore>()(
           pricingModalOpen: false,
           pricingModalIntent: null,
         }),
+      setMobileSearchOpen: (open) => set({ mobileSearchOpen: open }),
       toggleKeyboardHelp: () =>
         set((state) => ({ keyboardHelpOpen: !state.keyboardHelpOpen })),
       setSearchFocused: (focused) => set({ searchFocused: focused }),

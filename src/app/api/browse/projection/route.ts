@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { loadBrowseProjection } from "@/lib/data";
+import { getServerViewerTier } from "@/lib/browseAccess";
 
 export async function GET() {
-  const projection = await loadBrowseProjection();
+  const [projection] = await Promise.all([
+    loadBrowseProjection(),
+    getServerViewerTier(),
+  ]);
 
   return NextResponse.json(projection, {
     headers: {
-      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "private, no-store",
     },
   });
 }

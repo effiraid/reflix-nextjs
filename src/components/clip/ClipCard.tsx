@@ -144,12 +144,11 @@ export function ClipCard({
     <div
       ref={ref}
       role="button"
-      tabIndex={locked ? -1 : 0}
+      tabIndex={0}
       aria-label={clip.name}
       aria-pressed={isSelected}
-      aria-disabled={locked ? "true" : undefined}
       className={`group relative overflow-hidden rounded-lg bg-black outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[transform,box-shadow] motion-safe:duration-200 motion-safe:ease-out ${
-        locked ? "cursor-not-allowed" : "cursor-pointer"
+        "cursor-pointer"
       } ${
         isSelected
           ? "ring-2 ring-accent motion-safe:scale-[1.01]"

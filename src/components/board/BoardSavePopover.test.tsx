@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetBoardStorageModeForTests } from "@/lib/boardData";
 import { BoardSavePopover } from "./BoardSavePopover";
 import { useAuthStore } from "@/stores/authStore";
 import { useBoardStore } from "@/stores/boardStore";
@@ -64,6 +65,7 @@ describe("BoardSavePopover", () => {
   let referenceElement: HTMLButtonElement;
 
   beforeEach(() => {
+    resetBoardStorageModeForTests();
     referenceElement = document.createElement("button");
     document.body.appendChild(referenceElement);
 

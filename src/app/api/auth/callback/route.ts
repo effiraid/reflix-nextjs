@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       return response;
     }
   } else {
-    console.warn("[auth/callback] no code param in URL, params:", Object.fromEntries(searchParams.entries()));
+    console.warn("[auth/callback] no code param in URL");
   }
 
   return NextResponse.redirect(new URL("/ko/login?error=auth", origin));

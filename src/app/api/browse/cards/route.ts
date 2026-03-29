@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
 import { loadBrowseCards } from "@/lib/data";
+import { getServerViewerTier } from "@/lib/browseAccess";
 
 export async function GET() {
-  const cards = await loadBrowseCards();
+  const [cards] = await Promise.all([
+    loadBrowseCards(),
+    getServerViewerTier(),
+  ]);
   const body = JSON.stringify(cards);
 
   return new NextResponse(body, {
     headers: {
       "Content-Type": "application/json",
-      "Cache-Control":
-        "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
       "X-Robots-Tag": "noindex",
     },
