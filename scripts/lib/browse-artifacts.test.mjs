@@ -38,7 +38,7 @@ test("buildBrowseArtifacts splits summary and projection fields", () => {
   const { summary, projection } = buildBrowseArtifacts([SAMPLE_ENTRY]);
 
   assert.equal(summary[0].id, "A");
-  assert.equal("tags" in summary[0], false);
+  assert.deepEqual(summary[0].tags, ["arcane", "attack"]);
   assert.deepEqual(projection[0].aiStructuredTags, [
     "attack",
     "anger",

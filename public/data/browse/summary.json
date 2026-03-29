@@ -8,7 +8,22 @@
     "width": 1280,
     "height": 720,
     "duration": 8.555,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "일어나기",
+      "힘듦",
+      "아픔",
+      "비틀비틀",
+      "비몽사몽",
+      "지침",
+      "힘겨움",
+      "연출",
+      "다침",
+      "고통",
+      "괴로움",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T27B2VL",
@@ -19,7 +34,18 @@
     "width": 1280,
     "height": 720,
     "duration": 6.917,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "거침",
+      "숨",
+      "지침",
+      "힘겨움",
+      "연출",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2A751G",
@@ -30,7 +56,18 @@
     "width": 1280,
     "height": 720,
     "duration": 4.843,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "거침",
+      "숨",
+      "지침",
+      "힘겨움",
+      "연출",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2BJCOW",
@@ -41,7 +78,16 @@
     "width": 1280,
     "height": 720,
     "duration": 3.733334,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "심호흡",
+      "지침",
+      "힘겨움",
+      "연출",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2F47S1",
@@ -52,7 +98,20 @@
     "width": 1280,
     "height": 720,
     "duration": 3.157334,
-    "category": "run"
+    "category": "run",
+    "tags": [
+      "아케인",
+      "달리기",
+      "힘듦",
+      "올리기",
+      "올라가기",
+      "지침",
+      "힘겨움",
+      "오르기",
+      "연출",
+      "뛰기",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2K3FY9",
@@ -63,7 +122,17 @@
     "width": 1280,
     "height": 720,
     "duration": 3.477334,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "지침",
+      "힘겨움",
+      "연출",
+      "충격",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2RH4G6",
@@ -74,7 +143,26 @@
     "width": 1280,
     "height": 720,
     "duration": 6.336,
-    "category": "run"
+    "category": "run",
+    "tags": [
+      "아케인",
+      "달리기",
+      "힘듦",
+      "호흡",
+      "발차기",
+      "지침",
+      "힘겨움",
+      "연출",
+      "뛰기",
+      "공격",
+      "날라차기",
+      "점프",
+      "전투",
+      "게임",
+      "교전",
+      "일대일",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2S1A9X",
@@ -85,7 +173,27 @@
     "width": 1280,
     "height": 720,
     "duration": 13.209,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "괴로움",
+      "고뇌",
+      "지침",
+      "힘겨움",
+      "걱정",
+      "고민",
+      "연출",
+      "한숨",
+      "불안",
+      "두려움",
+      "무서움",
+      "공포",
+      "겁먹음",
+      "고통",
+      "아픔",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T2VXUHO",
@@ -96,7 +204,20 @@
     "width": 1280,
     "height": 720,
     "duration": 5.292,
-    "category": "pain"
+    "category": "pain",
+    "tags": [
+      "아케인",
+      "고통",
+      "힘듦",
+      "올라가기",
+      "지침",
+      "힘겨움",
+      "오르기",
+      "연출",
+      "아픔",
+      "괴로움",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T302BJZ",
@@ -107,7 +228,15 @@
     "width": 1920,
     "height": 804,
     "duration": 2.601,
-    "category": "emotion"
+    "category": "emotion",
+    "tags": [
+      "소울",
+      "감동",
+      "연출",
+      "와우",
+      "표정",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T30ATKO",
@@ -118,7 +247,13 @@
     "width": 1280,
     "height": 720,
     "duration": 5.2,
-    "category": "sit-lie-stand"
+    "category": "sit-lie-stand",
+    "tags": [
+      "호라이즌",
+      "눕기",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T30EFY6",
@@ -129,7 +264,14 @@
     "width": 1280,
     "height": 720,
     "duration": 2.979773,
-    "category": "dialogue-cinematic"
+    "category": "dialogue-cinematic",
+    "tags": [
+      "호라이즌",
+      "대화",
+      "제스처",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T30GME3",
@@ -140,7 +282,13 @@
     "width": 1280,
     "height": 720,
     "duration": 3.179773,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "내리기",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T30LHZT",
@@ -151,7 +299,13 @@
     "width": 1280,
     "height": 720,
     "duration": 4.737,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "원신",
+      "궁금",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T30RO73",
@@ -162,7 +316,15 @@
     "width": 1280,
     "height": 720,
     "duration": 12.1,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "물건",
+      "목걸이",
+      "걸기",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T30WFY5",
@@ -173,7 +335,14 @@
     "width": 1280,
     "height": 720,
     "duration": 5.134,
-    "category": "sit-lie-stand"
+    "category": "sit-lie-stand",
+    "tags": [
+      "호라이즌",
+      "앉기",
+      "의자",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T310BLE",
@@ -184,7 +353,20 @@
     "width": 1280,
     "height": 720,
     "duration": 42.582,
-    "category": "combat-ready"
+    "category": "combat-ready",
+    "tags": [
+      "연출",
+      "교전",
+      "아케인",
+      "싸움",
+      "격투",
+      "전투",
+      "주먹",
+      "무기",
+      "일대일",
+      "공격",
+      "애니메이션"
+    ]
   },
   {
     "id": "L3TR52T313IMH",
@@ -195,7 +377,14 @@
     "width": 1280,
     "height": 720,
     "duration": 3.579773,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "침",
+      "뱉기",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T318DTE",
@@ -206,7 +395,15 @@
     "width": 1280,
     "height": 720,
     "duration": 4.179773,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "호라이즌",
+      "올라가기",
+      "계단",
+      "오르기",
+      "연출",
+      "시네마틱"
+    ]
   },
   {
     "id": "L3TR52T31CFQ9",
@@ -217,6 +414,15 @@
     "width": 1280,
     "height": 720,
     "duration": 2.530975,
-    "category": "daily-other"
+    "category": "daily-other",
+    "tags": [
+      "요정",
+      "원신",
+      "아이",
+      "팔짱",
+      "페이몬",
+      "연출",
+      "시네마틱"
+    ]
   }
 ]

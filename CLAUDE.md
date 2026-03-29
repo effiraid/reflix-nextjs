@@ -149,6 +149,11 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
 - **Identity linking:** Account page allows linking Google to an existing email-based account via `supabase.auth.linkIdentity()`
 - **Beta access:** `beta_access_grants` table with expiry dates. `authStore.accessSource` = `"beta"` when active. Grants Pro-equivalent access until `betaEndsAt`. Managed via `npm run beta:grant`.
 
+## Interaction Rules
+
+- AskUserQuestion으로 질문할 때 반드시 한 번에 하나만 묻고, 사용자 답변을 받은 후에야 다음 단계로 진행한다.
+- 사용자 응답 없이 자동으로 넘어가는 것을 금지한다. 답변이 올 때까지 대기할 것.
+
 ## Conventions
 
 - Korean is the primary language for UI strings and data; English as secondary

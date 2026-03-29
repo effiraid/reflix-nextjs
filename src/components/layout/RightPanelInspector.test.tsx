@@ -134,6 +134,10 @@ describe("RightPanelInspector", () => {
     expect(screen.getByText("검")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "공유" })).toBeInTheDocument();
     expect(screen.getAllByText("동영상")).toHaveLength(2);
+    expect(screen.queryByText("소스 URL")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("https://example.com/share/clip-1")
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("MP4")).not.toBeInTheDocument();
     expect(screen.queryByText("규격")).not.toBeInTheDocument();
     expect(screen.queryByText("파일 크기")).not.toBeInTheDocument();
@@ -141,7 +145,7 @@ describe("RightPanelInspector", () => {
     expect(getMediaUrlMock).toHaveBeenCalledWith(clip.previewUrl);
   });
 
-  it("renders blank link as muted placeholder while keeping the share CTA enabled", () => {
+  it("does not render the source url card when the clip has no link", () => {
     render(
       <RightPanelInspector
         clip={{
@@ -154,13 +158,10 @@ describe("RightPanelInspector", () => {
       />
     );
 
-    const linkPlaceholder = screen.getByText("링크 없음");
     const shareButton = screen.getByRole("button", { name: "공유" });
 
-    expect(linkPlaceholder).toBeInTheDocument();
-    expect(linkPlaceholder).toHaveClass("text-muted");
-    expect(linkPlaceholder).toHaveClass("italic");
-    expect(linkPlaceholder).not.toHaveClass("font-mono");
+    expect(screen.queryByText("소스 URL")).not.toBeInTheDocument();
+    expect(screen.queryByText("링크 없음")).not.toBeInTheDocument();
     expect(shareButton).toBeInTheDocument();
     expect(shareButton).not.toBeDisabled();
   });

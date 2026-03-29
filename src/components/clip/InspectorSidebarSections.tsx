@@ -55,8 +55,6 @@ export function InspectorSidebarSections({
     label: tagLabels[index] ?? tag,
   }));
   const palette = clip.palettes?.slice(0, 6) ?? [];
-  const linkText = clip.url || dict.clip.noLink;
-  const hasLink = Boolean(clip.url);
   const hasAiAnalysis = Object.prototype.hasOwnProperty.call(clip, "aiTags");
   const aiTagTokens = getTagDisplayLabels(
     getStructuredAiTags(clip.aiTags),
@@ -141,13 +139,6 @@ export function InspectorSidebarSections({
         label={dict.clip.tags}
         items={tagItems}
         onSelectItem={onSelectTag}
-      />
-
-      <FieldCard
-        label={dict.clip.sourceUrl}
-        value={linkText}
-        mono={hasLink}
-        isPlaceholder={!hasLink}
       />
 
       <section className="rounded-2xl border border-border bg-surface/40 p-4">
@@ -246,33 +237,6 @@ function ChevronToggle({ expanded }: { expanded: boolean }) {
     >
       <path d="M3.5 5.5L7 9L10.5 5.5" />
     </svg>
-  );
-}
-
-function FieldCard({
-  label,
-  value,
-  mono = false,
-  isPlaceholder = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  isPlaceholder?: boolean;
-}) {
-  return (
-    <section className="rounded-2xl border border-border bg-surface/40 p-4">
-      <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted">
-        {label}
-      </div>
-      <p
-        className={`break-words text-sm leading-6 ${
-          isPlaceholder ? "italic text-muted" : ""
-        } ${mono ? "font-mono text-xs" : ""}`}
-      >
-        {value}
-      </p>
-    </section>
   );
 }
 

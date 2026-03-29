@@ -12,6 +12,7 @@ function toSummaryRecord(entry) {
     height: entry.height || 360,
     duration: entry.duration || 0,
     category: entry.category || "uncategorized",
+    tags: Array.isArray(entry.tags) ? entry.tags : [],
   };
 }
 
