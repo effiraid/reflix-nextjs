@@ -98,7 +98,9 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
   - `filterStore` — search query, folders, tags, contentMode, sortBy
   - `uiStore` — panel visibility, view mode (feed/grid), zoom, active overlays
   - `authStore` — user session, planTier (guest/free/pro), accessSource (free/paid/beta), betaEndsAt
+  - `clipStore` — selected clip ID (single selection state)
   - `clipRatingStore` — per-user clip ratings + memos (cached by `userId:clipId` key)
+  - `boardStore` — user boards (CRUD, active board filter, clip membership)
 - **Media:** 3-stage loading: LQIP base64 (~300B) → Static WebP thumbnail (~4KB) → MP4 loop preview (~70KB). 상세: `docs/media-strategy.md`
 - **Auth:** Supabase Auth (magic link OTP + Google OAuth) → `AuthProvider` syncs session to Zustand `authStore` → tier-based access gating. Key files: `src/lib/supabase/{client,server,admin}.ts`, `src/components/auth/{AuthProvider,AccessGate}.tsx`, `src/stores/authStore.ts`, `src/lib/authRedirect.ts`
 - **Billing:** Stripe Checkout for Pro subscriptions → webhooks update Supabase `profiles.tier`. Routes: `/api/checkout` (session creation), `/api/webhooks/stripe` (6 events: checkout.completed, subscription.updated/deleted, charge.refunded, charge.dispute.created, invoice.payment_failed)
@@ -107,6 +109,7 @@ These differ from your training data. **Read `node_modules/next/dist/docs/` befo
 - **Media gateway:** `workers/media-gateway/` — Cloudflare Worker at `media.reflix.dev`. Validates `reflix-media-session` cookie, verifies signed URLs (tok/sig params) for `/videos/*`, serves R2 objects with tier-aware caching headers.
 - **Browse API:** Split into 3 endpoints: `/api/browse/cards` (card data), `/api/browse/filter-index` (facet counts), `/api/browse/projection` (full projection). Client loads cards first, then projection in background.
 - **User ratings:** `/api/user-ratings` — CRUD for per-user clip ratings + memos. Backed by `user_clip_ratings` table.
+- **Other API routes:** `/api/media/sign` (signed media URL generation), `/api/profile` (user profile read/update), `/api/account/delete` (account deletion)
 - **DB schema:** `supabase/migrations/` — 001: `profiles`, `subscriptions`, `daily_usage`, `boards`; 002: `beta_access_grants`; 003: scale indexes; 004: `user_clip_ratings`. All tables have RLS policies.
 - **Access policy:** `src/lib/accessPolicy.ts` — tier-based capability matrix. Guest: browse/search allowed, default browse teaser is limited, search/filter result thumbnails are blurred and login-gated, but shared clip detail links remain playable without login. Free: 5 visible results, 1 filter axis, 1 board. Pro: full library, multi-filter combinations, unlimited boards, shuffle.
 - **Search:** Korean: `es-hangul` (초성 검색 + 영타→한글 변환). English: `@nozbe/microfuzz` (fuzzy). Factory: `createMatcher(lang, query)` in `src/lib/search.ts`. 1만 건+ 시 Pagefind 전환 예정 (상세: `docs/search-strategy.md`)

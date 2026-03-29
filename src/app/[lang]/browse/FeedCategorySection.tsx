@@ -9,6 +9,7 @@ interface FeedCategorySectionProps {
   hero: BrowseClipRecord;
   subs: BrowseClipRecord[];
   lang: Locale;
+  lockedClipIds?: Set<string>;
   onViewAll: () => void;
   onOpenQuickView: (clipId: string) => void;
 }
@@ -19,6 +20,7 @@ export function FeedCategorySection({
   hero,
   subs,
   lang,
+  lockedClipIds = new Set<string>(),
   onViewAll,
   onOpenQuickView,
 }: FeedCategorySectionProps) {
@@ -53,6 +55,8 @@ export function FeedCategorySection({
           enablePreview
           previewOnHover={false}
           showInfo
+          locked={lockedClipIds.has(hero.id)}
+          prioritizeThumbnail
           onOpenQuickView={onOpenQuickView}
         />
       </div>
@@ -68,6 +72,7 @@ export function FeedCategorySection({
               enablePreview
               previewOnHover
               showInfo
+              locked={lockedClipIds.has(clip.id)}
               onOpenQuickView={onOpenQuickView}
             />
           ))}

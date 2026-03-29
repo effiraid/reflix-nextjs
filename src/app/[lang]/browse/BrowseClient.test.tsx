@@ -8,14 +8,31 @@ import { useBoardStore } from "@/stores/boardStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
+import {
+  resetViewHistoryStoreForTests,
+  useViewHistoryStore,
+} from "@/stores/viewHistoryStore";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type {
   BrowseCardRecord,
   BrowseProjectionRecord,
   BrowseSummaryRecord,
+  CategoryTree,
   ClipIndex,
 } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
+
+const {
+  fetchViewHistoryMock,
+  recordViewHistoryBatchMock,
+  deleteViewHistoryEntryMock,
+  clearViewHistoryMock,
+} = vi.hoisted(() => ({
+  fetchViewHistoryMock: vi.fn(),
+  recordViewHistoryBatchMock: vi.fn(),
+  deleteViewHistoryEntryMock: vi.fn(),
+  clearViewHistoryMock: vi.fn(),
+}));
 
 vi.mock("@/hooks/useFilterSync", () => ({
   useFilterSync: () => ({
@@ -46,6 +63,13 @@ vi.mock("./ClipDataProvider", () => ({
 vi.mock("@/lib/browsePagefind", () => ({
   prewarmBrowseSearch: vi.fn(),
   searchBrowseClipIds: vi.fn(async () => []),
+}));
+
+vi.mock("@/lib/viewHistoryClient", () => ({
+  fetchViewHistoryEntries: fetchViewHistoryMock,
+  recordViewHistoryBatch: recordViewHistoryBatchMock,
+  deleteViewHistoryEntry: deleteViewHistoryEntryMock,
+  clearViewHistory: clearViewHistoryMock,
 }));
 
 vi.mock("@/components/clip/MasonryGrid", () => ({
@@ -81,6 +105,24 @@ vi.mock("@/components/clip/MasonryGrid", () => ({
           Open {clip.id}
         </button>
       ))}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/clip/ClipCard", () => ({
+  ClipCard: ({
+    clip,
+    locked = false,
+  }: {
+    clip: ClipIndex;
+    locked?: boolean;
+  }) => (
+    <div
+      data-testid="feed-clip-card"
+      data-clip-id={clip.id}
+      data-locked={String(locked)}
+    >
+      {clip.id}
     </div>
   ),
 }));
@@ -219,6 +261,17 @@ const initialSummaryClips: BrowseSummaryRecord[] = clips.slice(0, 1).map((clip) 
   category: clip.category,
 }));
 
+const feedCategories: CategoryTree = {
+  actionRoot: {
+    slug: "action",
+    i18n: { ko: "액션", en: "Action" },
+  },
+  dramaRoot: {
+    slug: "drama",
+    i18n: { ko: "드라마", en: "Drama" },
+  },
+};
+
 function makeFullBrowseState(overrides?: Partial<typeof browseDataState>) {
   return {
     initialClips: clips,
@@ -280,6 +333,16 @@ async function defaultSearchBrowseClipIds(_lang: string, query: string) {
 
 describe("BrowseClient", () => {
   beforeEach(() => {
+    resetViewHistoryStoreForTests();
+    fetchViewHistoryMock.mockReset();
+    fetchViewHistoryMock.mockResolvedValue([]);
+    recordViewHistoryBatchMock.mockReset();
+    recordViewHistoryBatchMock.mockResolvedValue(undefined);
+    deleteViewHistoryEntryMock.mockReset();
+    deleteViewHistoryEntryMock.mockResolvedValue(undefined);
+    clearViewHistoryMock.mockReset();
+    clearViewHistoryMock.mockResolvedValue(undefined);
+    localStorage.clear();
     browseDataState = {
       initialClips: initialSummaryClips,
       allCards: clips,
@@ -322,6 +385,7 @@ describe("BrowseClient", () => {
       selectedClipId: null,
     });
     useUIStore.setState({
+      browseMode: "grid",
       shuffleSeed: 0,
       quickViewOpen: false,
       viewMode: "masonry",
@@ -377,6 +441,11 @@ describe("BrowseClient", () => {
 
   it("opens quick view on Space and closes it on Escape", async () => {
     browseDataState = makeFullBrowseState();
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
     useClipStore.setState({
       selectedClipId: "clip-a",
     });
@@ -408,6 +477,11 @@ describe("BrowseClient", () => {
 
   it("opens quick view for the requested clip id from the grid", async () => {
     browseDataState = makeFullBrowseState();
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
     render(
       <BrowseClient
         categories={{}}
@@ -581,6 +655,274 @@ describe("BrowseClient", () => {
     expect(
       screen.queryByRole("button", { name: "Pro로 잠금 해제" })
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the full guest browse grid on first load but keeps every card locked", () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = makeFullBrowseState({
+      initialClips: manyClips,
+      allCards: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      initialTotalCount: manyClips.length,
+      totalClipCount: manyClips.length,
+    });
+
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent(
+      "clip-1,clip-2,clip-3,clip-4,clip-5,clip-6,clip-7"
+    );
+    expect(screen.getByTestId("locked-order")).toHaveTextContent(
+      "clip-1,clip-2,clip-3,clip-4,clip-5,clip-6,clip-7"
+    );
+    expect(screen.getByText(/로그인하면 결과를 열 수 있어요/)).toHaveAttribute(
+      "aria-live",
+      "polite"
+    );
+  });
+
+  it("keeps guest feed cards locked when the full browse payload is visible", () => {
+    const feedClips = [
+      {
+        ...clips[0],
+        category: "action",
+      },
+      {
+        ...clips[1],
+        category: "action",
+      },
+      {
+        ...clips[2],
+        id: "clip-d",
+        name: "Delta",
+        previewUrl: "/d.mp4",
+        thumbnailUrl: "/d.jpg",
+        category: "drama",
+      },
+      {
+        ...clips[2],
+        id: "clip-e",
+        name: "Epsilon",
+        previewUrl: "/e.mp4",
+        thumbnailUrl: "/e.jpg",
+        category: "drama",
+      },
+      {
+        ...clips[2],
+        id: "clip-f",
+        name: "Zeta",
+        previewUrl: "/f.mp4",
+        thumbnailUrl: "/f.jpg",
+        category: "drama",
+      },
+    ];
+
+    browseDataState = makeFullBrowseState({
+      initialClips: feedClips,
+      allCards: feedClips,
+      projectionClips: feedClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      initialTotalCount: feedClips.length,
+      totalClipCount: feedClips.length,
+    });
+    useUIStore.setState({
+      viewMode: "feed",
+    });
+    useAuthStore.setState({
+      user: null,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={feedCategories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(
+      screen.getAllByTestId("feed-clip-card").map((card) => card.dataset.locked)
+    ).toEqual(["true", "true", "true", "true", "true"]);
+  });
+
+  it("locks feed cards after the first five for free users", () => {
+    const feedClips = [
+      {
+        ...clips[0],
+        category: "action",
+      },
+      {
+        ...clips[1],
+        category: "action",
+      },
+      {
+        ...clips[2],
+        id: "clip-d",
+        name: "Delta",
+        previewUrl: "/d.mp4",
+        thumbnailUrl: "/d.jpg",
+        category: "drama",
+      },
+      {
+        ...clips[2],
+        id: "clip-e",
+        name: "Epsilon",
+        previewUrl: "/e.mp4",
+        thumbnailUrl: "/e.jpg",
+        category: "drama",
+      },
+      {
+        ...clips[2],
+        id: "clip-f",
+        name: "Zeta",
+        previewUrl: "/f.mp4",
+        thumbnailUrl: "/f.jpg",
+        category: "drama",
+      },
+      {
+        ...clips[2],
+        id: "clip-g",
+        name: "Eta",
+        previewUrl: "/g.mp4",
+        thumbnailUrl: "/g.jpg",
+        category: "drama",
+      },
+    ];
+
+    browseDataState = makeFullBrowseState({
+      initialClips: feedClips,
+      allCards: feedClips,
+      projectionClips: feedClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      initialTotalCount: feedClips.length,
+      totalClipCount: feedClips.length,
+    });
+    useUIStore.setState({
+      viewMode: "feed",
+    });
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={feedCategories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(
+      screen.getAllByTestId("feed-clip-card").map((card) => [
+        card.dataset.clipId,
+        card.dataset.locked,
+      ])
+    ).toEqual([
+      ["clip-a", "false"],
+      ["clip-b", "false"],
+      ["clip-d", "false"],
+      ["clip-e", "false"],
+      ["clip-f", "false"],
+      ["clip-g", "true"],
+    ]);
+  });
+
+  it("locks free direction-tab results after the first five even without search text", () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `연출 Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = makeFullBrowseState({
+      initialClips: manyClips,
+      allCards: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      initialTotalCount: manyClips.length,
+      totalClipCount: manyClips.length,
+    });
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      excludedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "",
+      sortBy: "newest",
+      contentMode: "direction",
+      boardId: null,
+    });
+
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent(
+      "clip-1,clip-2,clip-3,clip-4,clip-5,clip-6,clip-7"
+    );
+    expect(screen.getByTestId("locked-order")).toHaveTextContent("clip-6,clip-7");
   });
 
   it("locks board-only direction results after the first five for free users", () => {
@@ -1775,6 +2117,141 @@ describe("BrowseClient", () => {
     });
     expect(useUIStore.getState().quickViewOpen).toBe(false);
     expect(window.location.search).toBe("?q=match");
+  });
+
+  it("does not record recent history for guests when the selected clip changes", async () => {
+    browseDataState = makeFullBrowseState();
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await act(async () => {
+      useClipStore.setState({ selectedClipId: "clip-a" });
+    });
+
+    expect(useViewHistoryStore.getState().entries).toEqual([]);
+    expect(recordViewHistoryBatchMock).not.toHaveBeenCalled();
+  });
+
+  it("records recent history for the signed-in account when the selected clip changes", async () => {
+    browseDataState = makeFullBrowseState();
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await act(async () => {
+      useClipStore.setState({ selectedClipId: "clip-b" });
+    });
+
+    await waitFor(() => {
+      expect(useViewHistoryStore.getState().entries.map((entry) => entry.clipId)).toEqual([
+        "clip-b",
+      ]);
+    });
+  });
+
+  it("renders the signed-in account's recent history from the server", async () => {
+    browseDataState = makeFullBrowseState();
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+    useUIStore.setState({
+      browseMode: "history",
+    });
+    fetchViewHistoryMock.mockResolvedValueOnce([
+      { clipId: "clip-c", viewedAt: "2026-03-29T10:00:00.000Z" },
+      { clipId: "clip-a", viewedAt: "2026-03-29T09:00:00.000Z" },
+    ]);
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByTestId("feed-clip-card")
+          .filter((card) => card.tagName === "ARTICLE")
+          .map((card) => card.dataset.clipId)
+      ).toEqual(["clip-c", "clip-a"]);
+    });
+  });
+
+  it("updates history mode from the optimistic store without refetching on selection", async () => {
+    browseDataState = makeFullBrowseState();
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+    useUIStore.setState({
+      browseMode: "history",
+    });
+    fetchViewHistoryMock.mockResolvedValue([
+      { clipId: "clip-a", viewedAt: "2026-03-29T09:00:00.000Z" },
+    ]);
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByTestId("feed-clip-card")
+          .filter((card) => card.tagName === "ARTICLE")
+          .map((card) => card.dataset.clipId)
+      ).toEqual(["clip-a"]);
+    });
+
+    expect(fetchViewHistoryMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      useClipStore.setState({ selectedClipId: "clip-b" });
+    });
+
+    await waitFor(() => {
+      expect(useViewHistoryStore.getState().entries.map((entry) => entry.clipId)).toEqual([
+        "clip-b",
+        "clip-a",
+      ]);
+    });
+    expect(fetchViewHistoryMock).toHaveBeenCalledTimes(1);
+
+    await waitFor(() => {
+      expect(
+        screen
+          .getAllByTestId("feed-clip-card")
+          .filter((card) => card.tagName === "ARTICLE")
+          .map((card) => card.dataset.clipId)
+      ).toEqual(["clip-b", "clip-a"]);
+    });
+    expect(fetchViewHistoryMock).toHaveBeenCalledTimes(1);
   });
 
   it("lets Pro users keep multiple filter axes active", () => {

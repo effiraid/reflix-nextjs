@@ -48,7 +48,7 @@ describe("browse-data", () => {
   });
 
   it("builds browse artifacts from legacy clip index entries", () => {
-    const { summary, projection } = buildBrowseArtifactsFromClipIndex([
+    const { summary, projection, cards } = buildBrowseArtifactsFromClipIndex([
       {
         id: "clip-3",
         name: "Arcane Clash",
@@ -74,7 +74,7 @@ describe("browse-data", () => {
         category: "combat",
         thumbnailUrl: "/thumbnails/clip-3.webp",
         previewUrl: "/previews/clip-3.mp4",
-        lqipBase64: "",
+        lqipBase64: "data:image/jpeg;base64,AAA",
       },
     ]);
 
@@ -83,8 +83,10 @@ describe("browse-data", () => {
         id: "clip-3",
         name: "Arcane Clash",
         tags: ["magic"],
+        lqipBase64: "data:image/jpeg;base64,AAA",
       })
     );
+    expect(cards[0].lqipBase64).toBe("");
     expect(projection[0].aiStructuredTags).toEqual([
       "attack",
       "anger",

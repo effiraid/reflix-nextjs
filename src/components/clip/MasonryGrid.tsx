@@ -183,7 +183,7 @@ function MasonryColumn({
                 enablePreview={enablePreview}
                 previewOnHover={previewOnHover}
                 showInfo={showInfo}
-                prioritizeThumbnail={virtualItem.index === 0}
+                prioritizeThumbnail={virtualItem.index < 4}
                 locked={lockedClipIds.has(clip.id)}
                 onOpenQuickView={onOpenQuickView}
               />

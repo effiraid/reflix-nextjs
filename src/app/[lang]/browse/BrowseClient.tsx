@@ -39,17 +39,18 @@ import { TagDetailView } from "@/components/tags/TagDetailView";
 import { BoardGalleryView } from "@/components/board/BoardGalleryView";
 import { BoardContextBar } from "@/components/board/BoardContextBar";
 import { ToastContainer } from "@/components/common/Toast";
+import { ViewHistoryPanel } from "@/components/history/ViewHistoryPanel";
+import { useViewHistoryStore } from "@/stores/viewHistoryStore";
 
 const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 const NOOP = () => {};
 import {
   FREE_MAX_FILTER_AXES,
-  getBrowseVisibleResultsLimit,
+  getBrowseUnlockedResultsLimit,
   getViewerTier,
   hasProAccess,
 } from "@/lib/accessPolicy";
 import { clearGuestResumeParams, readGuestResume } from "@/lib/guestResume";
-import { addViewHistory, getViewHistory, clearViewHistory } from "@/lib/viewHistory";
 
 const QuickViewModal = dynamic(
   () =>
@@ -179,6 +180,24 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
   return limitedFilters;
 }
 
+function createLockedClipIdSet(
+  clips: BrowseClipRecord[],
+  viewerTier: "guest" | "free" | "pro",
+  browseUnlockedResultsLimit: number
+): Set<string> {
+  if (viewerTier === "guest") {
+    return new Set(clips.map((clip) => clip.id));
+  }
+
+  if (viewerTier === "free") {
+    return new Set(
+      clips.slice(browseUnlockedResultsLimit).map((clip) => clip.id)
+    );
+  }
+
+  return new Set<string>();
+}
+
 interface BrowseClientProps {
   categories: CategoryTree;
   tagGroups?: TagGroupData;
@@ -259,7 +278,7 @@ export function BrowseClient({
   const columnCount = getColumnCountFromThumbnailSize(thumbnailSize);
   const viewerTier = getViewerTier(user, tier);
   const isProUser = hasProAccess(user, tier);
-  const browseVisibleResultsLimit = getBrowseVisibleResultsLimit(viewerTier);
+  const browseUnlockedResultsLimit = getBrowseUnlockedResultsLimit(viewerTier);
   const activeFilterAxes = countActiveFilterAxes(filters);
   const isFilterCombinationLimited =
     activeFilterAxes > FREE_MAX_FILTER_AXES && !isProUser;
@@ -284,14 +303,23 @@ export function BrowseClient({
   // Sync URL → Zustand filters
   useFilterSync();
 
+  const syncViewHistory = useViewHistoryStore((s) => s.syncForUser);
+  const queueClipView = useViewHistoryStore((s) => s.queueClipView);
+
+  useEffect(() => {
+    void syncViewHistory(user?.id ?? null);
+  }, [syncViewHistory, user?.id]);
+
   // Record clip selection to view history
   const prevSelectedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (selectedClipId && selectedClipId !== prevSelectedRef.current) {
-      addViewHistory(selectedClipId);
+    const selectedKey = user && selectedClipId ? `${user.id}:${selectedClipId}` : null;
+
+    if (user && selectedClipId && selectedKey !== prevSelectedRef.current) {
+      queueClipView(user.id, selectedClipId);
     }
-    prevSelectedRef.current = selectedClipId;
-  }, [selectedClipId]);
+    prevSelectedRef.current = selectedKey;
+  }, [queueClipView, selectedClipId, user]);
 
   // Tab → jump to SearchBar; block all other Tab focus cycling
   useEffect(() => {
@@ -320,8 +348,7 @@ export function BrowseClient({
     filters.sortBy !== "newest" ||
     filters.boardId !== null;
 
-  // 전체 탭(contentMode === null)에서 무료 유저는 5개까지만 노출
-  const isAllTabLimited = filters.contentMode === null && !isProUser;
+  // browse/search는 전 티어 모두 전체 카드를 보되, 잠금 해제 개수만 다르다.
 
   const showFeed = viewMode === "feed" && !hasFeedBlockingFilters(filters);
   const hasSearchQuery = effectiveFilters.searchQuery.trim().length > 0;
@@ -341,7 +368,6 @@ export function BrowseClient({
     filters.searchQuery.length > 0 ||
     activeFilterAxes > 0 ||
     filters.boardId !== null;
-  const shouldLockAllGuestResults = viewerTier === "guest" && hasSearchOrFilter;
   const stableBrowseResultsStore = useMemo(() => createBrowseResultsStore(), []);
   const stableBrowseResults = useSyncExternalStore(
     stableBrowseResultsStore.subscribe,
@@ -365,6 +391,10 @@ export function BrowseClient({
       return projection ? { ...clip, ...projection } : clip;
     });
   }, [columnCount, initialClips, projectionClips, projectionStatus]);
+  const feedLockedClipIds = useMemo(
+    () => createLockedClipIdSet(initialClips, viewerTier, browseUnlockedResultsLimit),
+    [initialClips, viewerTier, browseUnlockedResultsLimit]
+  );
 
   const mergedProjection = useMemo(() => {
     if (!projectionClips || projectionStatus !== "ready") {
@@ -467,13 +497,14 @@ export function BrowseClient({
         const totalResultCount = filters.boardId && activeBoardClipIds
           ? clips.length
           : initialTotalCount;
-        const lockedClipIds = isAllTabLimited
-          ? new Set(clips.slice(browseVisibleResultsLimit).map((c) => c.id))
-          : new Set<string>();
         return {
           clips,
           totalResultCount,
-          lockedClipIds,
+          lockedClipIds: createLockedClipIdSet(
+            clips,
+            viewerTier,
+            browseUnlockedResultsLimit
+          ),
           isHolding: false,
         };
       };
@@ -542,21 +573,19 @@ export function BrowseClient({
           ? structuralResults
           : orderClipsByIdSequence(structuralResults, effectiveSearchResultIds ?? [])
         : structuralResults;
-      const isLimited = (hasSearchOrFilter || isAllTabLimited) && !isProUser;
       const orderedResults =
         hasSearchQuery || shuffleSeed === 0
           ? allResults
           : shuffleClips(allResults);
-      const lockedClipIds = shouldLockAllGuestResults
-        ? new Set(orderedResults.map((clip) => clip.id))
-        : isLimited
-          ? new Set(orderedResults.slice(browseVisibleResultsLimit).map((clip) => clip.id))
-          : new Set<string>();
 
       return {
         clips: orderedResults,
         totalResultCount: allResults.length,
-        lockedClipIds,
+        lockedClipIds: createLockedClipIdSet(
+          orderedResults,
+          viewerTier,
+          browseUnlockedResultsLimit
+        ),
         isHolding: false,
       };
     },
@@ -572,15 +601,12 @@ export function BrowseClient({
       hasSearchQuery,
       hasSearchOrFilter,
       isSearchPending,
-      isProUser,
-      isAllTabLimited,
       effectiveFilters,
       localSearchSource,
-      shouldLockAllGuestResults,
       shouldHoldForProjectionDependentSearch,
       shouldUseLocalSearchFallback,
       categories,
-      browseVisibleResultsLimit,
+      browseUnlockedResultsLimit,
       mergedProjection,
       structuralFilters,
       effectiveSearchResultIds,
@@ -588,6 +614,7 @@ export function BrowseClient({
       shuffleSeed,
       lang,
       activeBoardClipIds,
+      viewerTier,
     ]
   );
 
@@ -918,11 +945,10 @@ export function BrowseClient({
     return (
       <>
         {splashOverlay}
-        <HistoryView
+        <ViewHistoryPanel
           initialClips={initialClips}
           projectionClips={projectionClips}
           projectionStatus={projectionStatus}
-          selectedClipId={selectedClipId}
           lang={lang}
           tagI18n={tagI18n}
           dict={dict}
@@ -997,6 +1023,7 @@ export function BrowseClient({
         <FeedView
           categories={categories}
           lang={lang}
+          lockedClipIds={feedLockedClipIds}
           onOpenQuickView={openQuickViewForClip}
         />
         {quickViewOpen && selectedClip ? (
@@ -1063,88 +1090,6 @@ export function BrowseClient({
       ) : null}
       <KeyboardHelpOverlay dict={dict} />
       <ToastContainer />
-    </>
-  );
-}
-
-function HistoryView({
-  initialClips,
-  projectionClips,
-  projectionStatus,
-  selectedClipId,
-  lang,
-  tagI18n,
-  dict,
-  onOpenQuickView,
-}: {
-  initialClips: BrowseClipRecord[];
-  projectionClips: BrowseClipRecord[] | null;
-  projectionStatus: string;
-  selectedClipId: string | null;
-  lang: Locale;
-  tagI18n: Record<string, string>;
-  dict: Dictionary;
-  onOpenQuickView: (clipId: string) => void;
-}) {
-  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
-  void historyRefreshKey;
-  void selectedClipId;
-  const historyIds = getViewHistory();
-
-  const clips = useMemo(() => {
-    const sourceClips = projectionClips && projectionStatus === "ready"
-      ? projectionClips
-      : initialClips;
-    const clipMap = new Map(sourceClips.map((c) => [c.id, c]));
-    // Merge initial media fields into projection records
-    if (projectionClips && projectionStatus === "ready") {
-      const summaryById = new Map(initialClips.map((c) => [c.id, c]));
-      for (const [id, clip] of clipMap) {
-        const summary = summaryById.get(id);
-        if (summary) {
-          clipMap.set(id, { ...summary, ...clip });
-        }
-      }
-    }
-    return historyIds
-      .map((id) => clipMap.get(id))
-      .filter((c): c is BrowseClipRecord => c != null);
-  }, [historyIds, initialClips, projectionClips, projectionStatus]);
-
-  if (historyIds.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-8 text-muted">
-        {dict.browse.historyEmpty}
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="flex items-center justify-between border-b border-border px-4 py-2">
-        <p className="text-xs text-muted">
-          {lang === "ko"
-            ? `${clips.length}개 클립`
-            : `${clips.length} clips`}
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            clearViewHistory();
-            setHistoryRefreshKey((value) => value + 1);
-          }}
-          className="text-xs text-muted hover:text-foreground transition-colors"
-        >
-          {dict.browse.clearHistory}
-        </button>
-      </div>
-      <MasonryGrid
-        clips={clips}
-        lang={lang}
-        tagI18n={tagI18n}
-        lockedClipIds={new Set<string>()}
-        onOpenQuickView={onOpenQuickView}
-      />
     </>
   );
 }

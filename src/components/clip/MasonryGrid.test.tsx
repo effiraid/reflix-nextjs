@@ -323,25 +323,31 @@ describe("MasonryGrid", () => {
     });
   });
 
-  it("prioritizes above-the-fold thumbnails in each column", () => {
+  it("prioritizes every initially rendered above-the-fold thumbnail in each column", () => {
+    const manyClips: ClipIndex[] = Array.from({ length: 15 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `Clip ${index + 1}`,
+      tags: [],
+      folders: [],
+      category: "action",
+      width: 100,
+      height: 160,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.webp`,
+      lqipBase64: "",
+    }));
+
     render(
       <main data-masonry-scroll>
-        <MasonryGrid clips={clips} />
+        <MasonryGrid clips={manyClips} />
       </main>
     );
 
-    expect(clipCardProps.find((props) => props.clip === clips[0])).toMatchObject({
-      prioritizeThumbnail: true,
-    });
-    expect(clipCardProps.find((props) => props.clip === clips[1])).toMatchObject({
-      prioritizeThumbnail: true,
-    });
-    expect(clipCardProps.find((props) => props.clip === clips[2])).toMatchObject({
-      prioritizeThumbnail: true,
-    });
-    expect(clipCardProps.find((props) => props.clip === clips[5])).toMatchObject({
-      prioritizeThumbnail: false,
-    });
+    expect(clipCardProps).toHaveLength(12);
+    expect(
+      clipCardProps.every((props) => props.prioritizeThumbnail === true)
+    ).toBe(true);
   });
 
   it("passes lang and tag i18n through to clip cards", () => {

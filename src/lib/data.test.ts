@@ -158,7 +158,7 @@ describe("getClip", () => {
           name: "Arcane",
           thumbnailUrl: "/thumbnails/A.webp",
           previewUrl: "/previews/A.mp4",
-          lqipBase64: "",
+          lqipBase64: "data:image/jpeg;base64,abc",
           width: 640,
           height: 360,
           duration: 1,
@@ -172,6 +172,7 @@ describe("getClip", () => {
     const cards = await loadBrowseCards();
     expect(cards).toHaveLength(1);
     expect(cards[0].id).toBe("A");
+    expect(cards[0].lqipBase64).toBe("");
     expect("searchTokens" in cards[0]).toBe(false);
   });
 

@@ -39,6 +39,7 @@ export function ClipDetailView({
           lang={lang}
           dict={dict}
           tagI18n={tagI18n}
+          showSourceUrl
         />
       </aside>
     </ClipDetailLayout>

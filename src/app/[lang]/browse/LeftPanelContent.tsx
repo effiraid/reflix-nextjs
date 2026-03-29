@@ -15,8 +15,7 @@ import { useBrowseData, useClipData } from "./ClipDataProvider";
 import { collectExpandableFolderIds, filterCategoriesByMode, findNode } from "@/lib/categories";
 import type { CategoryTree, ContentMode, Locale, TagGroupData } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
-import { getViewHistory } from "@/lib/viewHistory";
-import { useClipStore } from "@/stores/clipStore";
+import { useViewHistoryStore } from "@/stores/viewHistoryStore";
 
 const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 
@@ -53,12 +52,7 @@ export function LeftPanelContent({
   const browseMode = useUIStore((s) => s.browseMode);
   const tagData = useTagGroups(tagGroups, lang, tagI18n);
   const boardCount = useBoardStore((s) => s.boards.length);
-  const selectedClipId = useClipStore((s) => s.selectedClipId);
-  const [historyCount, setHistoryCount] = useState(0);
-
-  useEffect(() => {
-    setHistoryCount(getViewHistory().length);
-  }, [browseMode, selectedClipId]);
+  const historyCount = useViewHistoryStore((s) => s.entries.length);
 
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>

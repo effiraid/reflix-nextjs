@@ -11,13 +11,15 @@
       "상세 페이지는 로그인하지 않은 사용자도 조회할 수 있다.",
       "공유된 상세 링크는 로그인 없이도 바로 확인할 수 있어야 한다.",
       "따라서 guest도 /clip/{id} 상세 페이지에서는 원본 영상을 재생할 수 있다.",
-      "guest가 검색 또는 필터를 쓰면 결과는 보여주되 썸네일을 블러 처리하고 로그인 전에는 열지 못하게 한다.",
-      "guest가 블러된 검색 결과를 누르면 /login 페이지와 같은 로그인 UI를 모달로 연다."
+      "browse/search에서는 guest, free, pro 모두 전체 아이템을 노출한다.",
+      "guest는 browse/search 결과를 전부 블러 처리하고 로그인 전에는 어떤 카드도 열 수 없다.",
+      "free는 browse/search 결과 전체를 보되 처음 5개만 잠금 해제한다.",
+      "guest가 블러된 browse/search 결과를 누르면 /login 페이지와 같은 로그인 UI를 모달로 연다."
     ]
   },
   "rules": {
-    "guestBrowseVisibleResults": 3,
-    "freeBrowseVisibleResults": 5,
+    "guestBrowseUnlockedResults": 0,
+    "freeBrowseUnlockedResults": 5,
     "freeBoardLimit": 1,
     "freeMaxFilterAxes": 1,
     "guestSearchResultsVisibleButBlurred": true,
@@ -103,7 +105,7 @@
       "guest": "limited",
       "free": "limited",
       "pro": "yes",
-      "notes": "guest는 검색/필터 결과를 볼 수 있지만 썸네일이 블러되고 로그인 전에는 열 수 없음. free는 1축까지만 허용"
+      "notes": "guest는 검색/필터 결과 전체를 보지만 전부 블러되고 로그인 전에는 열 수 없음. free는 결과 전체를 보되 1축까지만 허용하고 처음 5개만 열 수 있음"
     },
     {
       "id": "multi-axis-filters",
@@ -116,10 +118,10 @@
     {
       "id": "unlocked-results",
       "label": "브라우즈 결과 잠금 해제 범위",
-      "guest": "3 teaser results; searched results stay visible but locked",
-      "free": "5 results",
-      "pro": "all results",
-      "notes": "guest 기본 browse는 teaser만 열리고, 검색/필터 결과는 전부 블러 + 로그인 게이트. free 5개, pro 전체"
+      "guest": "all results visible; all locked",
+      "free": "all results visible; first 5 unlocked",
+      "pro": "all results visible; fully unlocked",
+      "notes": "browse 기본 화면과 검색/필터 결과 모두 전체 카드를 노출한다. guest는 전부 블러 + 로그인 게이트, free는 처음 5개만 잠금 해제, pro는 전체 잠금 해제"
     },
     {
       "id": "boards",
@@ -140,16 +142,16 @@
   ],
   "recommendedCopy": {
     "heroSub": "가입 없이 바로 탐색",
-    "freeDescription": "로그인하면 원본 영상과 저장 기능을 바로 사용",
+    "freeDescription": "로그인하면 전체 목록을 보면서 원본 영상과 저장 기능을 바로 사용",
     "freeFeatures": [
       "원본 영상 재생",
-      "태그 검색",
-      "탐색 결과 5개까지",
-      "보드 1개"
+      "전체 결과 노출, 5개 잠금 해제",
+      "보드 1개",
+      "태그 검색"
     ],
     "proDescription": "더 빨리 찾고 더 잘 정리하는 작업 모드",
     "proFeatures": [
-      "전체 결과 보기",
+      "전체 결과 잠금 해제",
       "다중 필터 조합",
       "무제한 보드",
       "셔플"
@@ -167,7 +169,7 @@
     {
       "priority": "P0",
       "title": "Guest / Free / Pro 문구를 새 기준으로 정렬",
-      "detail": "guest는 맛보기, free는 원본 영상 + 저장, pro는 검색 깊이 + 정리 효율이라는 메시지로 다시 쓴다."
+      "detail": "guest는 전체 목록 노출 + 전면 잠금, free는 전체 목록 노출 + 5개 잠금 해제, pro는 전체 잠금 해제라는 메시지로 다시 쓴다."
     },
     {
       "priority": "P1",

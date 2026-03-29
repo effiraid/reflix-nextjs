@@ -165,4 +165,86 @@ describe("loadBrowsePageData", () => {
       "folder-6": ["clip-6"],
     });
   });
+
+  it("keeps the initial guest browse payload fully visible so the client can lock every card", async () => {
+    const result = await loadBrowsePageData(
+      {
+        lang: "ko",
+        shouldLoadDetailedIndex: false,
+        viewerTier: "guest",
+      },
+      {
+        getDictionary: vi.fn(async () => ({ nav: { browse: "둘러보기" } })),
+        getCategories: vi.fn(async () => ({})),
+        getTagGroups: vi.fn(async () => ({ groups: [], parentGroups: [] })),
+        getTagI18n: vi.fn(async () => ({})),
+        loadBrowseCards: vi.fn(async () =>
+          Array.from({ length: 6 }, (_, index) => ({
+            id: `clip-${index + 1}`,
+            name: `Clip ${index + 1}`,
+            thumbnailUrl: `/${index + 1}.webp`,
+            previewUrl: `/${index + 1}.mp4`,
+            lqipBase64: "",
+            width: 100,
+            height: 100,
+            duration: 1,
+            category: "action",
+          }))
+        ),
+        loadBrowseSummary: vi.fn(async () => []),
+        loadBrowseFilterIndex: vi.fn(async () => []),
+      }
+    );
+
+    expect(result.browseCards).toHaveLength(6);
+    expect(result.browseCards.map((clip) => clip.id)).toEqual([
+      "clip-1",
+      "clip-2",
+      "clip-3",
+      "clip-4",
+      "clip-5",
+      "clip-6",
+    ]);
+  });
+
+  it("keeps the initial free browse payload fully visible so the client can unlock only the first five", async () => {
+    const result = await loadBrowsePageData(
+      {
+        lang: "ko",
+        shouldLoadDetailedIndex: false,
+        viewerTier: "free",
+      },
+      {
+        getDictionary: vi.fn(async () => ({ nav: { browse: "둘러보기" } })),
+        getCategories: vi.fn(async () => ({})),
+        getTagGroups: vi.fn(async () => ({ groups: [], parentGroups: [] })),
+        getTagI18n: vi.fn(async () => ({})),
+        loadBrowseCards: vi.fn(async () =>
+          Array.from({ length: 6 }, (_, index) => ({
+            id: `clip-${index + 1}`,
+            name: `Clip ${index + 1}`,
+            thumbnailUrl: `/${index + 1}.webp`,
+            previewUrl: `/${index + 1}.mp4`,
+            lqipBase64: "",
+            width: 100,
+            height: 100,
+            duration: 1,
+            category: "action",
+          }))
+        ),
+        loadBrowseSummary: vi.fn(async () => []),
+        loadBrowseFilterIndex: vi.fn(async () => []),
+      }
+    );
+
+    expect(result.browseCards).toHaveLength(6);
+    expect(result.browseCards.map((clip) => clip.id)).toEqual([
+      "clip-1",
+      "clip-2",
+      "clip-3",
+      "clip-4",
+      "clip-5",
+      "clip-6",
+    ]);
+  });
 });

@@ -20,7 +20,7 @@ export default defineConfig({
     video: "retain-on-failure",
   },
   webServer: {
-    command: "npm run dev",
+    command: "NEXT_PUBLIC_E2E_AUTH=1 npm run dev",
     url: "http://localhost:3000/ko/browse",
     reuseExistingServer: !isCI,
     stdout: "pipe",

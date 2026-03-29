@@ -13,6 +13,7 @@ Copy `.env.local.example` to `.env.local` and fill in the pieces you need.
 - Production protected media also requires `MEDIA_SESSION_SECRET`, `MEDIA_SESSION_COOKIE_DOMAIN=.reflix.dev`, and optionally `MEDIA_SESSION_TTL_SECONDS` (default `21600`).
 - Set `PROTECT_MP4_PUBLIC_ASSETS=true` only for production app builds that should prune same-origin `public/videos` and `public/previews`.
 - R2 upload commands require `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, and `R2_BUCKET_NAME`.
+- Optional Sentry error tracking uses `NEXT_PUBLIC_SENTRY_DSN`; add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` only if you also want source map uploads during builds.
 - Local Eagle source defaults to `/Users/macbook/Desktop/라이브러리/레퍼런스 - 게임,연출.library`; move to NAS later by changing `EAGLE_LIBRARY_PATH`.
 
 ## Getting Started

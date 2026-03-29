@@ -31,6 +31,7 @@ import { loadBrowsePageData } from "./browseBootstrap";
 import { getServerViewerTier } from "@/lib/browseAccess";
 import { loadBoardClipIds } from "@/lib/boardData";
 import type { FilterState } from "@/lib/filter";
+import type { BrowseSummaryRecord } from "@/lib/types";
 
 function toURLSearchParams(
   rawSearchParams: Record<string, string | string[] | undefined>
@@ -65,6 +66,19 @@ function isPlainSearchOnlyBrowseRequest(filters: FilterState) {
     filters.excludedTags.length === 0 &&
     filters.contentMode === null &&
     filters.boardId === null
+  );
+}
+
+function stripInlineLqipFromInitialClips(
+  clips: BrowseSummaryRecord[]
+): BrowseSummaryRecord[] {
+  return clips.map((clip) =>
+    clip.lqipBase64
+      ? {
+          ...clip,
+          lqipBase64: "",
+        }
+      : clip
   );
 }
 
@@ -221,6 +235,9 @@ export function BrowsePageShell({
     tagI18n,
     lang,
   });
+  const initialClientClips = stripInlineLqipFromInitialClips(
+    initialBrowseResults.items
+  );
 
   const collectionLd = {
     "@context": "https://schema.org",
@@ -237,7 +254,7 @@ export function BrowsePageShell({
 
   return (
     <ClipDataProvider
-      clips={initialBrowseResults.items}
+      clips={initialClientClips}
       initialTotalCount={initialBrowseResults.totalCount}
       totalClipCount={browseCards.length}
       preloadDetailedIndex={preloadDetailedIndex}

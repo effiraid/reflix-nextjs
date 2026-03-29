@@ -46,7 +46,7 @@ export function PricingModal({ lang }: PricingModalProps) {
     pricingModalIntent?.kind === "locked-clip" &&
     pricingModalIntent.viewerTier === "guest";
   const isAuthRequiredIntent = pricingModalIntent?.kind === "auth-required";
-  const isLoginFlow = !user && (isGuestLockedIntent || isAuthRequiredIntent);
+  const isLoginFlow = isGuestLockedIntent || isAuthRequiredIntent;
   const modalDict = (lang === "ko" ? koDict : enDict) as typeof koDict;
   const loginNextPath =
     pricingModalIntent?.nextPath
@@ -142,11 +142,11 @@ export function PricingModal({ lang }: PricingModalProps) {
     : "motion-safe:animate-[modalContentIn_80ms_cubic-bezier(0.16,1,0.3,1)]";
 
   const freeFeatures = isKo
-    ? ["원본 영상 재생", "탐색 결과 5개까지", "보드 1개", "태그 검색"]
-    : ["Full video playback", "Up to 5 visible results", "1 board", "Tag search"];
+    ? ["원본 영상 재생", "전체 결과 노출 · 5개 잠금 해제", "보드 1개", "태그 검색"]
+    : ["Full video playback", "Full browse visibility · first 5 unlocked", "1 board", "Tag search"];
   const proFeatures = isKo
-    ? ["전체 탐색 결과 보기", "다중 필터 조합", "무제한 보드", "AI 검색"]
-    : ["All browse results", "Multi-filter combinations", "Unlimited boards", "AI search"];
+    ? ["전체 탐색 결과 잠금 해제", "다중 필터 조합", "무제한 보드", "AI 검색"]
+    : ["Unlock every browse result", "Multi-filter combinations", "Unlimited boards", "AI search"];
 
   const proPrice = isYearly
     ? (isKo ? "₩99,000" : "$99")

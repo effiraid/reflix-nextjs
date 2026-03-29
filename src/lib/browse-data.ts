@@ -75,6 +75,15 @@ export function toBrowseSummaryRecord(
   };
 }
 
+function toBrowseCardRecord(record: BrowseSummaryRecord): BrowseSummaryRecord {
+  return {
+    ...toBrowseSummaryRecord(record),
+    // Cards render fine without inline LQIP; trimming it keeps the initial
+    // browse payload and the lazy cards API lighter.
+    lqipBase64: "",
+  };
+}
+
 export function normalizeBrowseProjectionRecord(
   record: BrowseSummaryRecord &
     Partial<Pick<BrowseProjectionRecord, "tags" | "aiStructuredTags" | "folders" | "searchTokens">>
@@ -122,7 +131,7 @@ export function buildBrowseArtifactsFromClipIndex(
       searchTokens: clip.searchTokens ?? buildSearchTokens(clip),
     })
   );
-  const cards = summary;
+  const cards = clips.map((clip) => toBrowseCardRecord(clip));
   const filterIndex = clips.map((clip): BrowseFilterIndexRecord =>
     normalizeBrowseFilterIndexRecord({
       id: clip.id,

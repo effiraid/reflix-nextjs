@@ -1,5 +1,4 @@
 import type { ViewerTier } from "@/lib/accessPolicy";
-import { getBrowseVisibleResultsLimit } from "@/lib/accessPolicy";
 import { loadEffectiveAccess } from "@/lib/supabase/access";
 import { createServerSupabase } from "@/lib/supabase/server";
 
@@ -22,12 +21,4 @@ export async function getServerViewerTier(): Promise<ViewerTier> {
   } catch {
     return "free";
   }
-}
-
-export function limitBrowsePayload<T>(
-  items: T[],
-  viewerTier: ViewerTier,
-): T[] {
-  const limit = getBrowseVisibleResultsLimit(viewerTier);
-  return Number.isFinite(limit) ? items.slice(0, limit) : items;
 }

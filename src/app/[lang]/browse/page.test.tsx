@@ -228,6 +228,41 @@ describe("BrowsePage", () => {
     });
   });
 
+  it("strips inline lqip data from the initial client payload", () => {
+    const browseSummary: BrowseSummaryRecord[] = [
+      {
+        id: "clip-a",
+        name: "Alpha",
+        thumbnailUrl: "/a.jpg",
+        previewUrl: "/a.mp4",
+        lqipBase64: "data:image/jpeg;base64,abc",
+        width: 100,
+        height: 100,
+        duration: 1,
+        category: "action",
+      },
+    ];
+
+    clipDataProviderProps = null;
+
+    render(
+      <BrowsePageShell
+        lang="ko"
+        dict={dict as never}
+        categories={{}}
+        tagGroups={{ groups: [], parentGroups: [] }}
+        tagI18n={{}}
+        browseCards={browseSummary as BrowseCardRecord[]}
+        browseFilterIndex={null}
+        rawSearchParams={{}}
+      />
+    );
+
+    expect(clipDataProviderProps).toMatchObject({
+      clips: [expect.objectContaining({ id: "clip-a", lqipBase64: "" })],
+    });
+  });
+
   it("does not preload the detailed index in the shell for search-only deep links", () => {
     const browseSummary: BrowseSummaryRecord[] = [
       {

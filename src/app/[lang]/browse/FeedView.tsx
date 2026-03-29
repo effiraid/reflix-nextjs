@@ -13,10 +13,16 @@ import type { BrowseClipRecord, CategoryTree, Locale } from "@/lib/types";
 interface FeedViewProps {
   categories: CategoryTree;
   lang: Locale;
+  lockedClipIds?: Set<string>;
   onOpenQuickView: (clipId: string) => void;
 }
 
-export function FeedView({ categories, lang, onOpenQuickView }: FeedViewProps) {
+export function FeedView({
+  categories,
+  lang,
+  lockedClipIds = new Set<string>(),
+  onOpenQuickView,
+}: FeedViewProps) {
   // Use initialClips for feed grouping — projection data lacks `category` field,
   // which causes all clips to be grouped as "uncategorized" after fetch completes.
   const { initialClips: clips } = useBrowseData();
@@ -92,6 +98,7 @@ export function FeedView({ categories, lang, onOpenQuickView }: FeedViewProps) {
               hero={hero}
               subs={subs}
               lang={lang}
+              lockedClipIds={lockedClipIds}
               onViewAll={() => handleViewAll(section.topFolderId)}
               onOpenQuickView={onOpenQuickView}
             />

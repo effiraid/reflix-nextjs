@@ -10,23 +10,23 @@ type AccessPolicyData = typeof accessPolicy;
 
 export const ACCESS_POLICY: AccessPolicyData = accessPolicy;
 
-export const GUEST_BROWSE_VISIBLE_RESULTS_LIMIT =
-  ACCESS_POLICY.rules.guestBrowseVisibleResults;
+export const GUEST_BROWSE_UNLOCKED_RESULTS_LIMIT =
+  ACCESS_POLICY.rules.guestBrowseUnlockedResults;
 
-export const FREE_BROWSE_VISIBLE_RESULTS_LIMIT =
-  ACCESS_POLICY.rules.freeBrowseVisibleResults;
+export const FREE_BROWSE_UNLOCKED_RESULTS_LIMIT =
+  ACCESS_POLICY.rules.freeBrowseUnlockedResults;
 
 export const FREE_BOARD_LIMIT = ACCESS_POLICY.rules.freeBoardLimit;
 
 export const FREE_MAX_FILTER_AXES = ACCESS_POLICY.rules.freeMaxFilterAxes;
 
-export function getBrowseVisibleResultsLimit(viewerTier: ViewerTier): number {
+export function getBrowseUnlockedResultsLimit(viewerTier: ViewerTier): number {
   if (viewerTier === "guest") {
-    return GUEST_BROWSE_VISIBLE_RESULTS_LIMIT;
+    return GUEST_BROWSE_UNLOCKED_RESULTS_LIMIT;
   }
 
   if (viewerTier === "free") {
-    return FREE_BROWSE_VISIBLE_RESULTS_LIMIT;
+    return FREE_BROWSE_UNLOCKED_RESULTS_LIMIT;
   }
 
   return Number.POSITIVE_INFINITY;

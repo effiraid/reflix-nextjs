@@ -18,6 +18,7 @@ interface InspectorSidebarSectionsProps {
   lang: Locale;
   dict: Pick<Dictionary, "clip">;
   tagI18n?: Record<string, string>;
+  showSourceUrl?: boolean;
   relatedClips?: BrowseClipRecord[];
   onSelectFolder?: (folderId: string) => void;
   onSelectRelatedClip?: (clipId: string) => void;
@@ -30,6 +31,7 @@ export function InspectorSidebarSections({
   lang,
   dict,
   tagI18n = {},
+  showSourceUrl = false,
   relatedClips = [],
   onSelectFolder,
   onSelectRelatedClip,
@@ -150,6 +152,25 @@ export function InspectorSidebarSections({
             label={dict.clip.inspectorDuration}
             value={formatClipDuration(clip.duration)}
           />
+          {showSourceUrl ? (
+            <PropertyRow
+              label={dict.clip.sourceUrl}
+              value={
+                clip.url && /^https?:\/\//i.test(clip.url) ? (
+                  <a
+                    href={clip.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all text-accent hover:underline"
+                  >
+                    {clip.url}
+                  </a>
+                ) : (
+                  dict.clip.noLink
+                )
+              }
+            />
+          ) : null}
           <PropertyRow label={dict.clip.fileType} value={mediaKind} />
           {palette.length > 0 ? (
             <PropertyRow

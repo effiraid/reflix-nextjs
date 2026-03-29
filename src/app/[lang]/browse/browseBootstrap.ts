@@ -1,6 +1,5 @@
 import type { Locale } from "@/lib/types";
 import type { ViewerTier } from "@/lib/accessPolicy";
-import { limitBrowsePayload } from "@/lib/browseAccess";
 
 interface FolderIndexedRecord {
   id: string;
@@ -84,24 +83,13 @@ export async function loadBrowsePageData<
       browseFilterIndexPromise,
     ]);
 
-  const shouldServeFullDetailedPayload =
-    viewerTier === "guest" && shouldLoadDetailedIndex;
-  const limitedBrowseCards = shouldServeFullDetailedPayload
-    ? browseCards
-    : (limitBrowsePayload(browseCards, viewerTier) as TBrowseCards);
-  const limitedBrowseFilterIndex = browseFilterIndex
-    ? shouldServeFullDetailedPayload
-      ? browseFilterIndex
-      : (limitBrowsePayload(browseFilterIndex, viewerTier) as TBrowseFilterIndex)
-    : null;
-
   return {
     dict,
     categories,
     tagGroups,
     tagI18n,
-    browseCards: limitedBrowseCards,
-    browseFilterIndex: shouldLoadDetailedIndex ? limitedBrowseFilterIndex : null,
-    initialFolderClipIds: buildInitialFolderClipIds(limitedBrowseFilterIndex),
+    browseCards,
+    browseFilterIndex: shouldLoadDetailedIndex ? browseFilterIndex : null,
+    initialFolderClipIds: buildInitialFolderClipIds(browseFilterIndex),
   };
 }

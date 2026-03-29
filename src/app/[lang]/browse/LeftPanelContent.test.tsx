@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LeftPanelContent } from "./LeftPanelContent";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import { useAuthStore } from "@/stores/authStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
+import { resetViewHistoryStoreForTests, useViewHistoryStore } from "@/stores/viewHistoryStore";
 import type { BrowseSummaryRecord, CategoryTree } from "@/lib/types";
 
 const updateURL = vi.fn((updates: Partial<ReturnType<typeof useFilterStore.getState>>) => {
@@ -87,6 +88,7 @@ describe("LeftPanelContent", () => {
   const scrollIntoViewMock = vi.fn();
 
   beforeEach(() => {
+    resetViewHistoryStoreForTests();
     mockClips = [
       {
         id: "clip-1",
@@ -246,6 +248,84 @@ describe("LeftPanelContent", () => {
       kind: "auth-required",
       source: "history",
       nextPath: "/ko/browse?q=arcane",
+    });
+  });
+
+  it("shows the signed-in account history count in the recent history shortcut", async () => {
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
+      isLoading: false,
+    });
+    useViewHistoryStore.setState({
+      userId: "user-1",
+      entries: [
+        { clipId: "clip-2", viewedAt: "2026-03-29T10:00:00.000Z" },
+        { clipId: "clip-1", viewedAt: "2026-03-29T09:00:00.000Z" },
+      ],
+      isLoading: false,
+      hasLoaded: true,
+    });
+
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", {
+          name: new RegExp(`${dict.browse.recentlyUsed}\\s*2`),
+        })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("refreshes the recent history count from shared store updates", async () => {
+    useAuthStore.setState({
+      user: { id: "user-1" } as never,
+      tier: "free",
+      planTier: "free",
+      accessSource: "free",
+      betaEndsAt: null,
+      isLoading: false,
+    });
+    useViewHistoryStore.setState({
+      userId: "user-1",
+      entries: [{ clipId: "clip-1", viewedAt: "2026-03-29T09:00:00.000Z" }],
+      isLoading: false,
+      hasLoaded: true,
+    });
+
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    act(() => {
+      useViewHistoryStore.setState({
+        entries: [
+          { clipId: "clip-2", viewedAt: "2026-03-29T10:00:00.000Z" },
+          { clipId: "clip-1", viewedAt: "2026-03-29T09:00:00.000Z" },
+        ],
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", {
+          name: new RegExp(`${dict.browse.recentlyUsed}\\s*2`),
+        })
+      ).toBeInTheDocument();
     });
   });
 

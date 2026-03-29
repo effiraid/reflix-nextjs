@@ -11,6 +11,17 @@ import type {
 } from "./types";
 import { buildBrowseArtifactsFromClipIndex } from "./browse-data";
 
+function stripCardsLqip(cards: BrowseCardRecord[]): BrowseCardRecord[] {
+  return cards.map((card) =>
+    card.lqipBase64
+      ? {
+          ...card,
+          lqipBase64: "",
+        }
+      : card
+  );
+}
+
 export function getDeploymentOrigin(): string | null {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -80,14 +91,15 @@ export async function loadBrowseProjection(): Promise<BrowseProjectionRecord[]> 
 
 export async function loadBrowseCards(): Promise<BrowseCardRecord[]> {
   try {
-    return await readPublicJson<BrowseCardRecord[]>(
+    const cards = await readPublicJson<BrowseCardRecord[]>(
       "data",
       "browse",
       "cards.json"
     );
+    return stripCardsLqip(cards);
   } catch {
     // Fallback: cards and summary share the same lightweight media fields.
-    return loadBrowseSummary();
+    return stripCardsLqip(await loadBrowseSummary());
   }
 }
 
