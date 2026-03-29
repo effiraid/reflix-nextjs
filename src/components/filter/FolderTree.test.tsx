@@ -90,4 +90,32 @@ describe("FolderTree", () => {
 
     expect(commits).toEqual(["mount"]);
   });
+
+  it("avoids randomizing folder order during render", () => {
+    const randomSpy = vi.spyOn(Math, "random");
+    const multiCategories: CategoryTree = {
+      movement: categories.movement,
+      dialogue: {
+        slug: "dialogue",
+        i18n: { ko: "대화", en: "Dialogue" },
+      },
+    };
+
+    render(
+      <FolderTree
+        categories={multiCategories}
+        folderClipIds={{
+          ...folderClipIds,
+          dialogue: ["clip2"],
+        }}
+        lang="ko"
+        expandedFolderIds={["movement", "dialogue"]}
+        onFolderClick={vi.fn()}
+        onFolderExpandToggle={vi.fn()}
+      />
+    );
+
+    expect(randomSpy).not.toHaveBeenCalled();
+    randomSpy.mockRestore();
+  });
 });
