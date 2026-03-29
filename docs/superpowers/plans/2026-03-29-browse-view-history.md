@@ -4,9 +4,14 @@
 
 **Goal:** 클립 조회 기록을 localStorage에 저장하고, 좌측 패널 "최근 기록" 버튼 클릭 시 최근 본 클립들을 MasonryGrid로 표시한다.
 
-**Architecture:** `recentSearches.ts`와 동일한 localStorage 패턴으로 `viewHistory.ts` 모듈을 만든다. `uiStore.browseMode`에 `"history"` 모드를 추가하고, `BrowseClient`에서 클립 선택/퀵뷰 시 기록을 저장한다. "최근 기록" 버튼은 `browseMode("history")`로 전환하며, 기존 MasonryGrid를 재사용하여 기록된 클립을 역순으로 렌더링한다.
+**Architecture:** `recentSearches.ts`와 동일한 localStorage 패턴으로 `viewHistory.ts` 모듈을 만든다. `uiStore.browseMode`에 `"history"` 모드를 추가하고, `BrowseClient`에서 클립 선택 시 기록을 저장한다. "최근 기록" 버튼은 `browseMode("history")`로 전환하며, 기존 MasonryGrid를 재사용하여 기록된 클립을 역순으로 렌더링한다.
 
 **Tech Stack:** TypeScript, localStorage, Zustand, Vitest
+
+**Design decisions:**
+- SubToolbar(썸네일 크기, 셔플 등)는 history 모드에서 의도적으로 숨김 — tags/boards 모드와 동일한 패턴
+- `browseMode`는 URL에 싱크하지 않음 — tags/boards 모드와 동일하게 새로고침 시 grid로 복귀
+- 키보드 그리드 네비게이션은 history 모드에서 미지원 — tags/boards와 동일 패턴, 추후 필요 시 추가
 
 ---
 
@@ -19,6 +24,7 @@
 | Modify | `src/stores/uiStore.ts:27` | `browseMode` 타입에 `"history"` 추가 |
 | Modify | `src/app/[lang]/browse/LeftPanelContent.tsx:214-221` | "최근 기록" 버튼 → `browseMode("history")` 전환 + 건수 표시 |
 | Modify | `src/app/[lang]/browse/BrowseClient.tsx` | 클립 선택 시 기록 저장 + history 모드 렌더링 |
+| Modify | `src/components/layout/RightPanel.tsx:11` | history 모드에서도 우측 패널 표시 |
 | Modify | `src/app/[lang]/dictionaries/ko.json` | `historyEmpty`, `clearHistory` 키 추가 |
 | Modify | `src/app/[lang]/dictionaries/en.json` | 동일 키 영어 추가 |
 
@@ -203,7 +209,7 @@ git commit -m "feat: add history to browseMode union type"
 
 - [ ] **Step 1: ko.json에 키 추가**
 
-`browse` 섹션에 다음 키 추가 (93번째 줄 `"myBoards"` 뒤):
+`browse` 섹션의 `"myBoards": "내 보드"` 뒤, `}` 닫기 전에 추가:
 
 ```json
 "historyEmpty": "아직 본 클립이 없어요",
@@ -238,18 +244,22 @@ git commit -m "feat: add view history i18n strings"
 파일 상단에 추가:
 ```typescript
 import { getViewHistory } from "@/lib/viewHistory";
+import { useClipStore } from "@/stores/clipStore";
 ```
 
 - [ ] **Step 2: 기록 건수 state 추가**
 
 `LeftPanelContent` 컴포넌트 내부, 기존 state 선언부 근처에:
 ```typescript
+const selectedClipId = useClipStore((s) => s.selectedClipId);
 const [historyCount, setHistoryCount] = useState(0);
 
 useEffect(() => {
   setHistoryCount(getViewHistory().length);
-}, [browseMode]);
+}, [browseMode, selectedClipId]);
 ```
+
+`selectedClipId`를 dependency에 포함하여 클립 선택할 때마다 건수가 갱신된다.
 
 - [ ] **Step 3: 버튼 onClick 및 활성 상태 수정**
 
@@ -273,7 +283,7 @@ useEffect(() => {
 </button>
 ```
 
-- [ ] **Step 4: 빌드 확인**
+- [ ] **Step 4: 기존 테스트 통과 확인**
 
 Run: `npx vitest run src/app/[lang]/browse/LeftPanelContent.test.tsx`
 Expected: PASS
@@ -315,20 +325,36 @@ useEffect(() => {
 
 - [ ] **Step 3: history 모드 렌더링 블록 추가**
 
-`BrowseClient`의 `browseMode === "boards"` 블록 뒤 (614번째 줄 뒤)에 추가:
+`BrowseClient`의 `browseMode === "boards"` 블록 뒤 (614번째 줄 뒤)에 추가. `selectedClipId`를 prop으로 전달하여 HistoryView가 새 선택 시 목록을 갱신한다:
 
 ```tsx
 if (browseMode === "history") {
   return (
-    <HistoryView
-      initialClips={initialClips}
-      projectionClips={projectionClips}
-      projectionStatus={projectionStatus}
-      lang={lang}
-      tagI18n={tagI18n}
-      dict={dict}
-      onOpenQuickView={openQuickViewForClip}
-    />
+    <>
+      {splashOverlay}
+      <HistoryView
+        initialClips={initialClips}
+        projectionClips={projectionClips}
+        projectionStatus={projectionStatus}
+        selectedClipId={selectedClipId}
+        lang={lang}
+        tagI18n={tagI18n}
+        dict={dict}
+        onOpenQuickView={openQuickViewForClip}
+      />
+      {quickViewOpen && selectedClip ? (
+        <QuickViewModal
+          clip={selectedClip}
+          categories={categories}
+          lang={lang}
+          tagI18n={tagI18n}
+          dict={dict}
+          onClose={handleCloseQuickView}
+        />
+      ) : null}
+      <KeyboardHelpOverlay dict={dict} />
+      <ToastContainer />
+    </>
   );
 }
 ```
@@ -340,6 +366,7 @@ function HistoryView({
   initialClips,
   projectionClips,
   projectionStatus,
+  selectedClipId,
   lang,
   tagI18n,
   dict,
@@ -348,17 +375,18 @@ function HistoryView({
   initialClips: BrowseClipRecord[];
   projectionClips: BrowseClipRecord[] | null;
   projectionStatus: string;
+  selectedClipId: string | null;
   lang: Locale;
   tagI18n: Record<string, string>;
   dict: Dictionary;
   onOpenQuickView: (clipId: string) => void;
 }) {
   const [historyIds, setHistoryIds] = useState<string[]>([]);
-  const setBrowseMode = useUIStore((s) => s.setBrowseMode);
 
+  // Re-read history when clip selection changes (new entry added)
   useEffect(() => {
     setHistoryIds(getViewHistory());
-  }, []);
+  }, [selectedClipId]);
 
   const clips = useMemo(() => {
     const sourceClips = projectionClips && projectionStatus === "ready"
@@ -419,47 +447,12 @@ function HistoryView({
 }
 ```
 
-- [ ] **Step 5: QuickViewModal과 KeyboardHelpOverlay를 history 모드에서도 렌더링**
-
-history 블록 return을 다음과 같이 감싸기:
-
-```tsx
-if (browseMode === "history") {
-  return (
-    <>
-      {splashOverlay}
-      <HistoryView
-        initialClips={initialClips}
-        projectionClips={projectionClips}
-        projectionStatus={projectionStatus}
-        lang={lang}
-        tagI18n={tagI18n}
-        dict={dict}
-        onOpenQuickView={openQuickViewForClip}
-      />
-      {quickViewOpen && selectedClip ? (
-        <QuickViewModal
-          clip={selectedClip}
-          categories={categories}
-          lang={lang}
-          tagI18n={tagI18n}
-          dict={dict}
-          onClose={handleCloseQuickView}
-        />
-      ) : null}
-      <KeyboardHelpOverlay dict={dict} />
-      <ToastContainer />
-    </>
-  );
-}
-```
-
-- [ ] **Step 6: 빌드 확인**
+- [ ] **Step 5: 빌드 확인**
 
 Run: `npx vitest run`
 Expected: 모든 테스트 PASS
 
-- [ ] **Step 7: 커밋**
+- [ ] **Step 6: 커밋**
 
 ```bash
 git add src/app/[lang]/browse/BrowseClient.tsx
@@ -511,25 +504,30 @@ Run: `npm run dev`
 2. 아무 클립 3-4개 클릭 (우측 패널에 상세 표시 확인)
 3. 좌측 패널 "최근 기록" 버튼 클릭
 4. 방금 본 클립들이 역순(최신 먼저)으로 MasonryGrid에 표시되는지 확인
-5. 건수 표시가 정확한지 확인
+5. 좌측 패널 건수 표시가 정확한지 확인
 
 - [ ] **Step 3: 퀵뷰 동작 확인**
 
 1. history 모드에서 클립 더블클릭 → 퀵뷰 열림 확인
 2. 퀵뷰 닫기 후 history 그리드 유지 확인
 
-- [ ] **Step 4: 기록 삭제 확인**
+- [ ] **Step 4: history 모드에서 새 클립 선택 시 목록 갱신 확인**
+
+1. history 모드에서 클립 클릭
+2. 해당 클립이 기록 목록 맨 앞으로 이동하는지 확인
+
+- [ ] **Step 5: 기록 삭제 확인**
 
 1. "기록 삭제" 버튼 클릭
 2. 빈 상태 ("아직 본 클립이 없어요") 표시 확인
 3. 건수가 0으로 업데이트 확인
 
-- [ ] **Step 5: 모드 전환 확인**
+- [ ] **Step 6: 모드 전환 확인**
 
 1. "둘러보기" 클릭 → grid 모드 정상 복귀
 2. "모든 태그" 클릭 → tags 모드 정상 동작
 3. 다시 "최근 기록" → 이전 기록 유지 확인 (localStorage 영속)
 
-- [ ] **Step 6: 콘솔 에러 확인**
+- [ ] **Step 7: 콘솔 에러 확인**
 
 브라우저 콘솔에 errors 0 / warnings 0 확인
