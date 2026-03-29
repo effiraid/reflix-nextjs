@@ -90,7 +90,9 @@
     "shortcutToggleLeftPanel": "Toggle left sidebar",
     "shortcutToggleRightPanel": "Toggle right sidebar",
     "shortcutToggleHelp": "Toggle this help",
-    "myBoards": "My Boards"
+    "myBoards": "My Boards",
+    "historyEmpty": "No clips viewed yet",
+    "clearHistory": "Clear History"
   },
   "clip": {
     "play": "Play",

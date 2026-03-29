@@ -90,7 +90,9 @@
     "shortcutToggleLeftPanel": "좌측 사이드바 토글",
     "shortcutToggleRightPanel": "우측 사이드바 토글",
     "shortcutToggleHelp": "이 도움말 토글",
-    "myBoards": "내 보드"
+    "myBoards": "내 보드",
+    "historyEmpty": "아직 본 클립이 없어요",
+    "clearHistory": "기록 삭제"
   },
   "clip": {
     "play": "재생",

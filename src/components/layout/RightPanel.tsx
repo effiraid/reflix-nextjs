@@ -8,7 +8,7 @@ interface RightPanelProps {
 
 export function RightPanel({ children }: RightPanelProps) {
   const { rightPanelOpen, browseMode } = useUIStore();
-  const isVisible = rightPanelOpen && browseMode === "grid";
+  const isVisible = rightPanelOpen && (browseMode === "grid" || browseMode === "history");
 
   return (
     <aside
