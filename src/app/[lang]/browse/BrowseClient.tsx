@@ -34,6 +34,7 @@ import {
   hasProAccess,
 } from "@/lib/accessPolicy";
 import { clearGuestResumeParams, readGuestResume } from "@/lib/guestResume";
+import { addViewHistory, getViewHistory, clearViewHistory } from "@/lib/viewHistory";
 
 const QuickViewModal = dynamic(
   () =>
@@ -202,6 +203,15 @@ export function BrowseClient({
 
   // Sync URL → Zustand filters
   useFilterSync();
+
+  // Record clip selection to view history
+  const prevSelectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedClipId && selectedClipId !== prevSelectedRef.current) {
+      addViewHistory(selectedClipId);
+    }
+    prevSelectedRef.current = selectedClipId;
+  }, [selectedClipId]);
 
   // Tab → jump to SearchBar; block all other Tab focus cycling
   useEffect(() => {
@@ -613,6 +623,36 @@ export function BrowseClient({
     );
   }
 
+  if (browseMode === "history") {
+    return (
+      <>
+        {splashOverlay}
+        <HistoryView
+          initialClips={initialClips}
+          projectionClips={projectionClips}
+          projectionStatus={projectionStatus}
+          selectedClipId={selectedClipId}
+          lang={lang}
+          tagI18n={tagI18n}
+          dict={dict}
+          onOpenQuickView={openQuickViewForClip}
+        />
+        {quickViewOpen && selectedClip ? (
+          <QuickViewModal
+            clip={selectedClip}
+            categories={categories}
+            lang={lang}
+            tagI18n={tagI18n}
+            dict={dict}
+            onClose={handleCloseQuickView}
+          />
+        ) : null}
+        <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
+      </>
+    );
+  }
+
   // Board filter loading: boardId is set but clip IDs haven't loaded yet
   if (filters.boardId && !activeBoardClipIds) {
     return (
@@ -719,6 +759,90 @@ export function BrowseClient({
       ) : null}
       <KeyboardHelpOverlay dict={dict} />
       <ToastContainer />
+    </>
+  );
+}
+
+function HistoryView({
+  initialClips,
+  projectionClips,
+  projectionStatus,
+  selectedClipId,
+  lang,
+  tagI18n,
+  dict,
+  onOpenQuickView,
+}: {
+  initialClips: BrowseClipRecord[];
+  projectionClips: BrowseClipRecord[] | null;
+  projectionStatus: string;
+  selectedClipId: string | null;
+  lang: Locale;
+  tagI18n: Record<string, string>;
+  dict: Dictionary;
+  onOpenQuickView: (clipId: string) => void;
+}) {
+  const [historyIds, setHistoryIds] = useState<string[]>([]);
+
+  // Re-read history when clip selection changes (new entry added)
+  useEffect(() => {
+    setHistoryIds(getViewHistory());
+  }, [selectedClipId]);
+
+  const clips = useMemo(() => {
+    const sourceClips = projectionClips && projectionStatus === "ready"
+      ? projectionClips
+      : initialClips;
+    const clipMap = new Map(sourceClips.map((c) => [c.id, c]));
+    // Merge initial media fields into projection records
+    if (projectionClips && projectionStatus === "ready") {
+      const summaryById = new Map(initialClips.map((c) => [c.id, c]));
+      for (const [id, clip] of clipMap) {
+        const summary = summaryById.get(id);
+        if (summary) {
+          clipMap.set(id, { ...summary, ...clip });
+        }
+      }
+    }
+    return historyIds
+      .map((id) => clipMap.get(id))
+      .filter((c): c is BrowseClipRecord => c != null);
+  }, [historyIds, initialClips, projectionClips, projectionStatus]);
+
+  if (historyIds.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-muted">
+        {dict.browse.historyEmpty}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-border px-4 py-2">
+        <p className="text-xs text-muted">
+          {lang === "ko"
+            ? `${clips.length}개 클립`
+            : `${clips.length} clips`}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            clearViewHistory();
+            setHistoryIds([]);
+          }}
+          className="text-xs text-muted hover:text-foreground transition-colors"
+        >
+          {dict.browse.clearHistory}
+        </button>
+      </div>
+      <MasonryGrid
+        clips={clips}
+        lang={lang}
+        tagI18n={tagI18n}
+        lockedClipIds={new Set<string>()}
+        onOpenQuickView={onOpenQuickView}
+      />
     </>
   );
 }
