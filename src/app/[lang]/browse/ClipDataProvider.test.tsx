@@ -1,10 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClipDataProvider, useBrowseData } from "./ClipDataProvider";
 import type {
   BrowseCardRecord,
   BrowseFilterIndexRecord,
-  BrowseProjectionRecord,
   BrowseSummaryRecord,
 } from "@/lib/types";
 import { useFilterStore } from "@/stores/filterStore";
@@ -27,6 +26,18 @@ function Probe() {
       <div data-testid="total">{initialTotalCount}</div>
       <div data-testid="library-total">{totalClipCount}</div>
     </div>
+  );
+}
+
+function DemandProbe() {
+  const browseData = useBrowseData() as ReturnType<typeof useBrowseData> & {
+    requestDetailedIndex?: () => void;
+  };
+
+  return (
+    <button type="button" onClick={() => browseData.requestDetailedIndex?.()}>
+      demand
+    </button>
   );
 }
 
@@ -80,14 +91,6 @@ const filterIndex: BrowseFilterIndexRecord[] = [
   },
 ];
 
-const projectionClips: BrowseProjectionRecord[] = filterIndex.map((record) => ({
-  ...(cards.find((clip) => clip.id === record.id) as BrowseCardRecord),
-  tags: record.tags,
-  aiStructuredTags: record.aiStructuredTags,
-  folders: record.folders,
-  searchTokens: record.searchTokens,
-}));
-
 describe("ClipDataProvider", () => {
   afterEach(() => {
     useFilterStore.getState().clearFilters();
@@ -130,6 +133,54 @@ describe("ClipDataProvider", () => {
       expect(screen.getByTestId("projection-count")).toHaveTextContent("2");
     });
     expect(screen.getByTestId("status")).toHaveTextContent("ready");
+  });
+
+  it("does not auto-fetch detailed data on mount or idle when no detailed filter is active", async () => {
+    const fetchMock = vi.fn();
+    const requestIdleCallbackMock = vi.fn((callback: IdleRequestCallback) => {
+      callback({ didTimeout: false, timeRemaining: () => 50 } as IdleDeadline);
+      return 1;
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("requestIdleCallback", requestIdleCallbackMock);
+    vi.stubGlobal("cancelIdleCallback", vi.fn());
+
+    render(
+      <ClipDataProvider clips={initialClips} initialTotalCount={42}>
+        <Probe />
+      </ClipDataProvider>
+    );
+
+    await Promise.resolve();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("fetches detailed data exactly once after an explicit request", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => cards,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => filterIndex,
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <ClipDataProvider clips={initialClips} initialTotalCount={42}>
+        <DemandProbe />
+      </ClipDataProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "demand" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
   });
 
   it("does not fetch detailed data until a detailed filter is activated", async () => {

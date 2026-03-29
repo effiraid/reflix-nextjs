@@ -13,14 +13,22 @@ import {
   SearchSuggestions,
   getSuggestionCount,
 } from "./SearchSuggestions";
-import { matchTags } from "@/lib/tagSuggestions";
+import {
+  matchTagsWithMeta,
+  buildTagGroupLookup,
+  buildClientAliasMap,
+  diversifyPopularTags,
+  type TagSuggestionItem,
+} from "@/lib/tagSuggestions";
 import {
   addRecentSearch,
   clearRecentSearches,
   getRecentSearches,
+  migrateRecentSearches,
   removeRecentSearch,
 } from "@/lib/recentSearches";
-import type { Locale } from "@/lib/types";
+import type { TagAliasConfig } from "@/lib/data";
+import type { Locale, TagGroupData } from "@/lib/types";
 import { useUIStore } from "@/stores/uiStore";
 
 interface SearchBarProps {
@@ -35,6 +43,12 @@ interface SearchBarProps {
   allTags?: string[];
   /** Popular tags shown when input is empty */
   popularTags?: string[];
+  /** Per-tag clip counts */
+  tagCounts?: Record<string, number>;
+  /** Tag group data for color dots */
+  tagGroups?: TagGroupData;
+  /** Alias config for merge captions */
+  aliasConfig?: TagAliasConfig | null;
   /** Locale for tag matching (choseong, fuzzy) */
   lang?: Locale;
   /** i18n labels */
@@ -42,6 +56,7 @@ interface SearchBarProps {
   popularLabel?: string;
   suggestionsLabel?: string;
   clearLabel?: string;
+  onActivate?: () => void;
 }
 
 export function SearchBar({
@@ -54,11 +69,15 @@ export function SearchBar({
   autoFocus = false,
   allTags = [],
   popularTags = [],
+  tagCounts = {},
+  tagGroups,
+  aliasConfig = null,
   lang = "ko",
   recentLabel,
   popularLabel,
   suggestionsLabel,
   clearLabel,
+  onActivate,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(false);
@@ -68,15 +87,39 @@ export function SearchBar({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Precompute tag group lookup (stable across renders)
+  const tagGroupLookup = useMemo(
+    () => (tagGroups ? buildTagGroupLookup(tagGroups, lang) : undefined),
+    [tagGroups, lang]
+  );
+
+  // Precompute alias map
+  const aliasMap = useMemo(
+    () => buildClientAliasMap(aliasConfig),
+    [aliasConfig]
+  );
+
+  // Diversify popular tags: max 2 per parent group for variety
+  const diversifiedPopularTags = useMemo(
+    () =>
+      tagGroups && tagGroupLookup
+        ? diversifyPopularTags(popularTags, tagCounts, tagGroupLookup, tagGroups)
+        : popularTags,
+    [popularTags, tagCounts, tagGroupLookup, tagGroups]
+  );
+
   // Sync external initialQuery
   useEffect(() => {
     setQuery(initialQuery);
   }, [initialQuery]);
 
-  // Load recent searches on mount (client only)
+  // Load recent searches on mount + migrate aliases
   useEffect(() => {
+    if (aliasConfig?.aliases) {
+      migrateRecentSearches(aliasConfig.aliases, aliasConfig.version);
+    }
     setRecentSearches(getRecentSearches());
-  }, []);
+  }, [aliasConfig]);
 
   // Debounced search
   useEffect(() => {
@@ -116,18 +159,28 @@ export function SearchBar({
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open]);
 
-  // Matched tags for autocomplete
-  const matchedTags = useMemo(
-    () => (allTags.length > 0 ? matchTags(allTags, query, lang) : []),
-    [allTags, query, lang]
+  // Rich matched tags for autocomplete
+  const matchedTags: TagSuggestionItem[] = useMemo(
+    () =>
+      allTags.length > 0
+        ? matchTagsWithMeta(allTags, query, lang, {
+            tagCounts,
+            tagGroupLookup,
+            aliasMap,
+          })
+        : [],
+    [allTags, query, lang, tagCounts, tagGroupLookup, aliasMap]
   );
 
   const suggestionCount = useMemo(
-    () => getSuggestionCount(recentSearches, popularTags, matchedTags, query),
-    [recentSearches, popularTags, matchedTags, query]
+    () => getSuggestionCount(recentSearches, diversifiedPopularTags, matchedTags, query),
+    [recentSearches, diversifiedPopularTags, matchedTags, query]
   );
 
   const hasSuggestions = suggestionCount > 0;
+  // Also show dropdown when query has input but no matches (empty state)
+  const hasQuery = query.trim().length > 0;
+  const showDropdown = open && (hasSuggestions || hasQuery);
 
   const executeSearch = useCallback(
     (value: string) => {
@@ -150,18 +203,17 @@ export function SearchBar({
     [onSearch]
   );
 
-  // Build flat items list for highlight resolution
+  // Build flat items list for highlight resolution (tag strings only)
   const flatItems = useMemo(() => {
     const items: string[] = [];
-    const hasQuery = query.trim().length > 0;
     if (!hasQuery) {
       items.push(...recentSearches);
-      items.push(...popularTags);
+      items.push(...diversifiedPopularTags);
     } else {
-      items.push(...matchedTags);
+      items.push(...matchedTags.map((t) => t.tag));
     }
     return items;
-  }, [query, recentSearches, popularTags, matchedTags]);
+  }, [hasQuery, recentSearches, diversifiedPopularTags, matchedTags]);
 
   function handleKeyDown(e: React.KeyboardEvent) {
     if (!open || !hasSuggestions) {
@@ -218,6 +270,7 @@ export function SearchBar({
   }
 
   function handleFocus() {
+    onActivate?.();
     setOpen(true);
     useUIStore.getState().setSearchFocused(true);
   }
@@ -258,7 +311,6 @@ export function SearchBar({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-label={placeholder}
-          aria-expanded={open && hasSuggestions}
           aria-activedescendant={
             highlightIndex !== null ? `suggestion-${highlightIndex}` : undefined
           }
@@ -275,10 +327,10 @@ export function SearchBar({
           />
         ) : null}
 
-        {open && hasSuggestions ? (
+        {showDropdown ? (
           <SearchSuggestions
             recentSearches={recentSearches}
-            popularTags={popularTags}
+            popularTags={diversifiedPopularTags}
             matchedTags={matchedTags}
             query={query}
             highlightIndex={highlightIndex}
@@ -289,6 +341,7 @@ export function SearchBar({
             popularLabel={popularLabel}
             suggestionsLabel={suggestionsLabel}
             clearLabel={clearLabel}
+            lang={lang}
           />
         ) : null}
       </div>

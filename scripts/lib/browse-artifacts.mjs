@@ -50,11 +50,31 @@ function tokenizeText(value) {
     ?.filter(Boolean) ?? [];
 }
 
+/** @type {Map<string, string[]>} canonical → alias names */
+let _reverseAliasMap = new Map();
+
+/**
+ * Set the reverse alias map for search token enrichment.
+ * Call once at pipeline startup.
+ */
+export function setReverseAliasMap(reverseMap) {
+  _reverseAliasMap = reverseMap;
+}
+
 function buildSearchTokens(entry, aiStructuredTags) {
   const manualTags = Array.isArray(entry.tags) ? entry.tags : [];
   const descriptions = entry.aiTags
     ? [entry.aiTags.description?.ko, entry.aiTags.description?.en]
     : [];
+
+  // Collect alias names for any canonical tags present on this clip
+  const aliasNames = [];
+  for (const tag of manualTags) {
+    const aliases = _reverseAliasMap.get(tag);
+    if (aliases) {
+      aliasNames.push(...aliases);
+    }
+  }
 
   const seen = new Set();
   const tokens = [];
@@ -62,6 +82,7 @@ function buildSearchTokens(entry, aiStructuredTags) {
     entry.name,
     ...manualTags,
     ...aiStructuredTags,
+    ...aliasNames,
     ...descriptions,
   ]) {
     for (const token of tokenizeText(value)) {

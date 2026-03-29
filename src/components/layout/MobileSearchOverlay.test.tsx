@@ -148,4 +148,27 @@ describe("MobileSearchOverlay", () => {
     expect(await screen.findByText("검색 준비 중...")).toBeInTheDocument();
     expect(screen.queryByText("결과 없음")).not.toBeInTheDocument();
   });
+
+  it("requests search preparation as soon as the overlay opens", () => {
+    const onRequestSearchReady = vi.fn();
+
+    render(
+      <MobileSearchOverlay
+        open
+        clips={clips}
+        searchReady={false}
+        lang="ko"
+        tagI18n={{}}
+        placeholder="클립 검색"
+        closeLabel="닫기"
+        noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
+        onClose={vi.fn()}
+        onRequestSearchReady={onRequestSearchReady}
+        onSelectClip={vi.fn()}
+      />
+    );
+
+    expect(onRequestSearchReady).toHaveBeenCalledTimes(1);
+  });
 });

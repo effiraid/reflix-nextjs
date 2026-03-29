@@ -91,6 +91,7 @@ export function BoardSection({ lang }: BoardSectionProps) {
           id: data.id,
           name: data.name,
           clipCount: 0,
+          coverClipIds: [],
           created_at: data.created_at,
           updated_at: data.updated_at,
         });

@@ -5,7 +5,7 @@ import koDict from "@/app/[lang]/dictionaries/ko.json";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
-import type { CategoryTree } from "@/lib/types";
+import type { BrowseSummaryRecord, CategoryTree } from "@/lib/types";
 
 const updateURL = vi.fn((updates: Partial<ReturnType<typeof useFilterStore.getState>>) => {
   useFilterStore.setState((state) => ({ ...state, ...updates }));
@@ -18,7 +18,7 @@ vi.mock("@/hooks/useFilterSync", () => ({
 }));
 
 vi.mock("./ClipDataProvider", () => ({
-  useClipData: () => clips,
+  useClipData: () => mockClips,
   useBrowseData: () => ({
     initialTotalCount: 1,
     totalClipCount: 24,
@@ -62,12 +62,11 @@ const categories: CategoryTree = {
   },
 };
 
-const clips = [
+let mockClips: BrowseSummaryRecord[] = [
   {
     id: "clip-1",
     name: "Clip 1",
     tags: ["combat"],
-    folders: ["movement"],
     category: "action",
     width: 100,
     height: 100,
@@ -87,6 +86,20 @@ describe("LeftPanelContent", () => {
   const scrollIntoViewMock = vi.fn();
 
   beforeEach(() => {
+    mockClips = [
+      {
+        id: "clip-1",
+        name: "Clip 1",
+        tags: ["combat"],
+        category: "action",
+        width: 100,
+        height: 100,
+        duration: 1,
+        previewUrl: "/preview.mp4",
+        thumbnailUrl: "/thumb.jpg",
+        lqipBase64: "",
+      },
+    ];
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
       configurable: true,
       value: scrollIntoViewMock,
@@ -197,6 +210,23 @@ describe("LeftPanelContent", () => {
       name: new RegExp(`${dict.browse.all}\\s*24`),
     });
     expect(allShortcut).toHaveTextContent("24");
+  });
+
+  it("shows folder counts on first render when an initial folder clip map is provided", () => {
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+        {...({
+          initialFolderClipIds: {
+            movement: ["clip-1"],
+          },
+        } as Record<string, unknown>)}
+      />
+    );
+
+    expect(screen.getByText("이동").parentElement).toHaveTextContent("1");
   });
 
   it("clears the active board when the all shortcut is clicked", () => {

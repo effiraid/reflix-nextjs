@@ -9,10 +9,12 @@ const setTheme = vi.fn();
 const setLeftPanelOpen = vi.fn();
 const setRightPanelOpen = vi.fn();
 const setSelectedClipId = vi.fn();
+const requestDetailedIndex = vi.fn();
 let uiState = {
   leftPanelOpen: true,
   rightPanelOpen: true,
 };
+let searchBarProps: Record<string, unknown> | null = null;
 
 vi.mock("next/link", () => ({
   default: ({
@@ -48,17 +50,17 @@ vi.mock("@/stores/uiStore", () => ({
 }));
 
 vi.mock("@/components/common/SearchBar", () => ({
-  SearchBar: ({
-    initialQuery,
-    onSearch,
-  }: {
+  SearchBar: (props: {
     initialQuery: string;
     onSearch: (value: string) => void;
-  }) => (
-    <button type="button" onClick={() => onSearch(initialQuery || "boss fight")}>
+  }) => {
+    searchBarProps = props as unknown as Record<string, unknown>;
+    return (
+      <button type="button" onClick={() => props.onSearch(props.initialQuery || "boss fight")}>
       Search mock
-    </button>
-  ),
+      </button>
+    );
+  },
 }));
 
 vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
@@ -68,6 +70,9 @@ vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
     projectionStatus: "ready",
     initialClips: [],
     initialTotalCount: 0,
+    allTags: [],
+    popularTags: [],
+    requestDetailedIndex,
   }),
 }));
 
@@ -98,6 +103,8 @@ describe("Navbar", () => {
     setLeftPanelOpen.mockReset();
     setRightPanelOpen.mockReset();
     setSelectedClipId.mockReset();
+    requestDetailedIndex.mockReset();
+    searchBarProps = null;
     useAuthStore.setState({
       user: null,
       tier: "free",
@@ -161,6 +168,17 @@ describe("Navbar", () => {
     fireEvent.click(screen.getByRole("button", { name: "Search mock" }));
 
     expect(push).toHaveBeenCalledWith("/ko/browse?q=search");
+  });
+
+  it("requests the detailed browse index when desktop search activates", () => {
+    render(<Navbar lang="ko" dict={dict} />);
+
+    const onActivate = searchBarProps?.onActivate as (() => void) | undefined;
+
+    expect(onActivate).toBeTypeOf("function");
+    onActivate?.();
+
+    expect(requestDetailedIndex).toHaveBeenCalledTimes(1);
   });
 
   it("uses a centered desktop search slot and right-aligned control group", () => {

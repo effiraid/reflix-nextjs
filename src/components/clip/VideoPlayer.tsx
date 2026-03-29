@@ -120,11 +120,12 @@ export function VideoPlayer({
 
     let cancelled = false;
     const isFullVideo = videoUrl.startsWith("/videos/");
+    const shouldSignFullVideo = isFullVideo && directVideoUrl !== videoUrl;
 
     const load = async () => {
       try {
         let fetchUrl: string;
-        if (isFullVideo) {
+        if (shouldSignFullVideo) {
           try {
             fetchUrl = await getSignedVideoUrl(videoUrl);
           } catch {

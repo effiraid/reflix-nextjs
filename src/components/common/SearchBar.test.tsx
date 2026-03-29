@@ -92,4 +92,21 @@ describe("SearchBar", () => {
       screen.getByRole("searchbox", { name: "Search clips" })
     ).toHaveValue("beta");
   });
+
+  it("calls onActivate when the input receives focus", () => {
+    const onActivate = vi.fn();
+
+    render(
+      <SearchBar
+        initialQuery=""
+        placeholder="Search clips"
+        onSearch={vi.fn()}
+        onActivate={onActivate}
+      />
+    );
+
+    fireEvent.focus(screen.getByRole("searchbox", { name: "Search clips" }));
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+  });
 });

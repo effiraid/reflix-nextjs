@@ -3,9 +3,11 @@
 import {
   createContext,
   startTransition,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -30,6 +32,8 @@ interface BrowseDataContextValue {
   totalClipCount: number;
   allTags: string[];
   popularTags: string[];
+  tagCounts: Record<string, number>;
+  requestDetailedIndex: () => void;
 }
 
 const ClipDataContext = createContext<BrowseDataContextValue>({
@@ -40,6 +44,8 @@ const ClipDataContext = createContext<BrowseDataContextValue>({
   totalClipCount: 0,
   allTags: [],
   popularTags: [],
+  tagCounts: {},
+  requestDetailedIndex: () => {},
 });
 
 export function ClipDataProvider({
@@ -59,7 +65,9 @@ export function ClipDataProvider({
     useState<BrowseProjectionRecord[] | null>(null);
   const [projectionStatus, setProjectionStatus] =
     useState<ProjectionStatus>("loading");
-  const [idlePreload, setIdlePreload] = useState(false);
+  const [detailedIndexRequested, setDetailedIndexRequested] =
+    useState(preloadDetailedIndex);
+  const inFlightRef = useRef(false);
   const filters = useFilterStore(
     useShallow((state) => ({
       selectedFolders: state.selectedFolders,
@@ -70,28 +78,21 @@ export function ClipDataProvider({
     }))
   );
 
-  // Always preload the detailed index after first paint so tag panel,
-  // search, and autocomplete are ready before the user interacts.
-  useEffect(() => {
-    if (preloadDetailedIndex || projectionClips) return;
-    if (typeof requestIdleCallback === "function") {
-      const id = requestIdleCallback(() => setIdlePreload(true));
-      return () => cancelIdleCallback(id);
-    }
-    const timer = setTimeout(() => setIdlePreload(true), 200);
-    return () => clearTimeout(timer);
-  }, [preloadDetailedIndex, projectionClips]);
+  const requestDetailedIndex = useCallback(() => {
+    setDetailedIndexRequested(true);
+  }, []);
 
   const shouldLoadDetailedIndex =
-    preloadDetailedIndex || idlePreload || requiresDetailedBrowseIndex(filters);
+    detailedIndexRequested || requiresDetailedBrowseIndex(filters);
 
   useEffect(() => {
-    if (!shouldLoadDetailedIndex || projectionClips) {
+    if (!shouldLoadDetailedIndex || projectionClips || inFlightRef.current) {
       return;
     }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    inFlightRef.current = true;
 
     async function preload() {
       try {
@@ -141,6 +142,7 @@ export function ClipDataProvider({
           setProjectionStatus("error");
         }
       } finally {
+        inFlightRef.current = false;
         clearTimeout(timeout);
       }
     }
@@ -170,26 +172,32 @@ export function ClipDataProvider({
     return Array.from(tagSet).sort((a, b) => a.localeCompare(b, "ko"));
   }, [sourceClips]);
 
-  // Top 8 tags by clip usage frequency
-  const popularTags = useMemo(() => {
-    const counts = new Map<string, number>();
+  // Tag counts: per-tag clip usage frequency (exposed via context)
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
     for (const clip of sourceClips) {
       if (clip.tags) {
-        for (const t of clip.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+        for (const t of clip.tags) counts[t] = (counts[t] ?? 0) + 1;
       }
       if ("aiStructuredTags" in clip) {
         const proj = clip as BrowseProjectionRecord;
         if (proj.aiStructuredTags) {
           for (const t of proj.aiStructuredTags)
-            counts.set(t, (counts.get(t) ?? 0) + 1);
+            counts[t] = (counts[t] ?? 0) + 1;
         }
       }
     }
-    return Array.from(counts.entries())
+    return counts;
+  }, [sourceClips]);
+
+  // Top 8 tags by frequency (min count 2 to avoid false popularity signals)
+  const popularTags = useMemo(() => {
+    return Object.entries(tagCounts)
+      .filter(([, count]) => count >= 2)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([tag]) => tag);
-  }, [sourceClips]);
+  }, [tagCounts]);
 
   return (
     <ClipDataContext.Provider
@@ -201,6 +209,8 @@ export function ClipDataProvider({
         totalClipCount,
         allTags,
         popularTags,
+        tagCounts,
+        requestDetailedIndex,
       }}
     >
       {children}

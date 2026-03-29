@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
+import { BookmarkIcon, ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
 import { BoardSection } from "@/components/board/BoardSection";
+import { useBoardStore } from "@/stores/boardStore";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -20,6 +21,7 @@ interface LeftPanelContentProps {
   categories: CategoryTree;
   tagGroups?: TagGroupData;
   tagI18n?: Record<string, string>;
+  initialFolderClipIds?: Record<string, string[]>;
   lang: Locale;
   dict: Pick<Dictionary, "browse" | "clip">;
 }
@@ -28,6 +30,7 @@ export function LeftPanelContent({
   categories,
   tagGroups = EMPTY_TAG_GROUPS,
   tagI18n = {},
+  initialFolderClipIds,
   lang,
   dict,
 }: LeftPanelContentProps) {
@@ -39,6 +42,7 @@ export function LeftPanelContent({
   const { setFilterBarOpen, setActiveFilterTab, setViewMode, setBrowseMode } = useUIStore();
   const browseMode = useUIStore((s) => s.browseMode);
   const tagData = useTagGroups(tagGroups, lang, tagI18n);
+  const boardCount = useBoardStore((s) => s.boards.length);
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
@@ -69,7 +73,7 @@ export function LeftPanelContent({
     : dict.browse.expandAllFolders;
 
   // Pre-compute folder → clip IDs for unique counting across parent folders
-  const folderClipIds = useMemo(() => {
+  const derivedFolderClipIds = useMemo(() => {
     const map: Record<string, string[]> = {};
     for (const clip of clips) {
       if (clip.folders) {
@@ -81,6 +85,14 @@ export function LeftPanelContent({
     }
     return map;
   }, [clips]);
+
+  const folderClipIds = useMemo(() => {
+    if (Object.keys(derivedFolderClipIds).length > 0) {
+      return derivedFolderClipIds;
+    }
+
+    return initialFolderClipIds ?? derivedFolderClipIds;
+  }, [derivedFolderClipIds, initialFolderClipIds]);
 
   function setAllFoldersExpanded(expanded: boolean) {
     setFoldersExpanded(true);
@@ -134,6 +146,8 @@ export function LeftPanelContent({
     return <TagGroupList tagData={tagData} lang={lang} dict={dict} />;
   }
 
+
+
   return (
     <div className="p-3 space-y-4 text-sm">
       {/* Quick filters */}
@@ -149,9 +163,12 @@ export function LeftPanelContent({
               sortBy: "newest",
               boardId: null,
             });
+            setBrowseMode("grid");
             setViewMode("feed");
           }}
-          className="flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover"
+          className={`flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover transition-colors ${
+            browseMode === "grid" ? "bg-accent/10 text-accent" : ""
+          }`}
         >
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
@@ -171,6 +188,25 @@ export function LeftPanelContent({
             {dict.browse.allTags}
           </span>
           <span className="text-muted text-xs">{totalTagCount.toLocaleString()}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setBrowseMode("boards");
+          }}
+          className={`flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover transition-colors ${
+            browseMode === "boards"
+              ? "bg-accent/10 text-accent"
+              : "text-muted"
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            <BookmarkIcon className="w-4 h-4" strokeWidth={1.5} />
+            {dict.browse.myBoards}
+          </span>
+          {boardCount > 0 ? (
+            <span className="text-muted text-xs">{boardCount}</span>
+          ) : null}
         </button>
 
         <div className="border-t border-border my-1.5" />

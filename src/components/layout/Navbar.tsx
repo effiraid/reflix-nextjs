@@ -7,7 +7,8 @@ import { useTheme } from "@/components/ThemeProvider";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SearchBar } from "@/components/common/SearchBar";
 import { useBrowseData } from "@/app/[lang]/browse/ClipDataProvider";
-import type { Locale } from "@/lib/types";
+import type { Locale, TagGroupData } from "@/lib/types";
+import type { TagAliasConfig } from "@/lib/data";
 import { useUIStore } from "@/stores/uiStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useAuthStore } from "@/stores/authStore";
@@ -20,11 +21,20 @@ interface NavbarProps {
   lang: Locale;
   dict: Pick<Dictionary, "nav"> & Partial<Pick<Dictionary, "browse" | "common">>;
   tagI18n?: Record<string, string>;
+  tagGroups?: TagGroupData;
+  tagAliases?: TagAliasConfig | null;
 }
 
-export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
+export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null }: NavbarProps) {
   const { theme, setTheme } = useTheme();
-  const { projectionClips, projectionStatus, allTags, popularTags } = useBrowseData();
+  const {
+    projectionClips,
+    projectionStatus,
+    allTags,
+    popularTags,
+    tagCounts,
+    requestDetailedIndex,
+  } = useBrowseData();
   const { setSelectedClipId } = useClipStore();
   const { user, tier, accessSource, isLoading: authLoading } = useAuthStore();
   const mounted = useSyncExternalStore(
@@ -130,11 +140,15 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
             initialQuery={currentSearchQuery}
             placeholder={dict.nav.searchPlaceholder}
             onSearch={handleSearch}
+            onActivate={requestDetailedIndex}
             allTags={allTags}
             popularTags={popularTags}
+            tagCounts={tagCounts}
+            tagGroups={tagGroups}
+            aliasConfig={tagAliases}
             lang={lang}
             recentLabel={lang === "ko" ? "최근 검색어" : "Recent searches"}
-            popularLabel={lang === "ko" ? "인기 태그" : "Popular tags"}
+            popularLabel={lang === "ko" ? "추천 태그" : "Suggested tags"}
             suggestionsLabel={lang === "ko" ? "태그 제안" : "Tag suggestions"}
             clearLabel={lang === "ko" ? "지우기" : "Clear"}
           />
@@ -227,6 +241,7 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
         noResultsLabel={dict.browse?.noResults ?? (lang === "ko" ? "검색 결과가 없습니다" : "No results found")}
         loadingLabel={dict.common?.loading ?? (lang === "ko" ? "검색 준비 중..." : "Preparing search...")}
         onClose={() => setMobileSearchOpen(false)}
+        onRequestSearchReady={requestDetailedIndex}
         onSelectClip={(clipId, query) => {
           setSelectedClipId(clipId);
           setMobileSearchOpen(false);
@@ -234,6 +249,9 @@ export function Navbar({ lang, dict, tagI18n = {} }: NavbarProps) {
         }}
         allTags={allTags}
         popularTags={popularTags}
+        tagCounts={tagCounts}
+        tagGroups={tagGroups}
+        aliasConfig={tagAliases}
       />
     </>
   );

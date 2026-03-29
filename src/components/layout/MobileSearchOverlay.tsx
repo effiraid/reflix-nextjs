@@ -7,7 +7,8 @@ import { SearchBar } from "@/components/common/SearchBar";
 import { getMediaUrl } from "@/lib/mediaUrl";
 import { searchClips } from "@/lib/clipSearch";
 import { getTagDisplayLabels } from "@/lib/tagDisplay";
-import type { BrowseClipRecord, Locale } from "@/lib/types";
+import type { BrowseClipRecord, Locale, TagGroupData } from "@/lib/types";
+import type { TagAliasConfig } from "@/lib/data";
 
 interface MobileSearchOverlayProps {
   open: boolean;
@@ -20,9 +21,13 @@ interface MobileSearchOverlayProps {
   noResultsLabel: string;
   loadingLabel: string;
   onClose: () => void;
+  onRequestSearchReady?: () => void;
   onSelectClip: (clipId: string, query: string) => void;
   allTags?: string[];
   popularTags?: string[];
+  tagCounts?: Record<string, number>;
+  tagGroups?: TagGroupData;
+  aliasConfig?: TagAliasConfig | null;
 }
 
 export function MobileSearchOverlay({
@@ -36,9 +41,13 @@ export function MobileSearchOverlay({
   noResultsLabel,
   loadingLabel,
   onClose,
+  onRequestSearchReady,
   onSelectClip,
   allTags = [],
   popularTags = [],
+  tagCounts = {},
+  tagGroups,
+  aliasConfig = null,
 }: MobileSearchOverlayProps) {
   const [query, setQuery] = useState("");
   const results = useMemo(
@@ -52,6 +61,12 @@ export function MobileSearchOverlay({
         : [],
     [clips, lang, query, tagI18n]
   );
+
+  useEffect(() => {
+    if (open) {
+      onRequestSearchReady?.();
+    }
+  }, [onRequestSearchReady, open]);
 
   useEffect(() => {
     if (!open) {
@@ -88,9 +103,12 @@ export function MobileSearchOverlay({
             autoFocus
             allTags={allTags}
             popularTags={popularTags}
+            tagCounts={tagCounts}
+            tagGroups={tagGroups}
+            aliasConfig={aliasConfig}
             lang={lang}
             recentLabel={lang === "ko" ? "최근 검색어" : "Recent searches"}
-            popularLabel={lang === "ko" ? "인기 태그" : "Popular tags"}
+            popularLabel={lang === "ko" ? "추천 태그" : "Suggested tags"}
             suggestionsLabel={lang === "ko" ? "태그 제안" : "Tag suggestions"}
             clearLabel={lang === "ko" ? "지우기" : "Clear"}
           />

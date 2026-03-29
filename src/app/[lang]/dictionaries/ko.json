@@ -89,7 +89,8 @@
     "shortcutThumbnailSize": "썸네일 크기 조절",
     "shortcutToggleLeftPanel": "좌측 사이드바 토글",
     "shortcutToggleRightPanel": "우측 사이드바 토글",
-    "shortcutToggleHelp": "이 도움말 토글"
+    "shortcutToggleHelp": "이 도움말 토글",
+    "myBoards": "내 보드"
   },
   "clip": {
     "play": "재생",
@@ -197,6 +198,50 @@
     "browseFree": "무료 클립 둘러보기",
     "subscribePro": "Pro 구독하기"
   },
+  "account": {
+    "tabProfile": "프로필",
+    "tabSubscription": "구독",
+    "tabSecurity": "보안",
+    "tabSettings": "설정",
+    "displayName": "닉네임",
+    "displayNamePlaceholder": "닉네임을 입력하세요",
+    "displayNameMax": "최대 30자",
+    "save": "저장",
+    "saved": "저장됨",
+    "saving": "저장 중...",
+    "currentPlan": "현재 플랜",
+    "manageSubscription": "구독 관리",
+    "checkoutSuccess": "결제가 완료되었습니다!",
+    "signInMethods": "로그인 방법",
+    "emailMagicLink": "매직 링크",
+    "connected": "연결됨",
+    "connectGoogle": "Google 연결",
+    "connectingGoogle": "연결 중...",
+    "googleConnected": "Google 연결이 완료되었습니다.",
+    "googleConnectFailed": "Google 연결을 완료하지 못했습니다. 다시 시도해주세요.",
+    "googleConnectDesc": "Google 계정으로 로그인을 추가합니다.",
+    "changeEmail": "이메일 변경",
+    "newEmailPlaceholder": "새 이메일 주소",
+    "changeEmailBtn": "변경",
+    "changingEmail": "변경 중...",
+    "changeEmailSent": "확인 메일이 발송되었습니다. 받은 편지함을 확인하세요.",
+    "changeEmailDesc": "변경 시 확인 메일이 발송됩니다.",
+    "dangerZone": "위험 영역",
+    "deleteAccount": "계정 삭제",
+    "deleteAccountDesc": "모든 평점, 메모, 보드가 영구 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "deleteAccountConfirmTitle": "정말 계정을 삭제하시겠습니까?",
+    "deleteAccountConfirmInput": "계정 삭제",
+    "deleteAccountConfirmPlaceholder": "\"계정 삭제\"를 입력하세요",
+    "deleting": "삭제 중...",
+    "language": "언어",
+    "languageDesc": "페이지 전체 언어를 변경합니다.",
+    "loadingMethods": "불러오는 중...",
+    "methodsLoadError": "로그인 방법을 불러오지 못했습니다.",
+    "supabaseNotConfigured": "로그인 연결 기능이 아직 설정되지 않았습니다.",
+    "googleLinkMisconfigured": "Google 연결 설정이 올바르지 않습니다.",
+    "googleLinkStartFailed": "Google 연결을 시작하지 못했습니다. 다시 시도해주세요.",
+    "cancel": "취소"
+  },
   "board": {
     "title": "보드",
     "empty": "아직 보드가 없어요. 첫 보드를 만들어보세요",
@@ -206,6 +251,8 @@
     "add": "추가",
     "remove": "제거",
     "freeLimitNotice": "무료 계정은 보드 1개까지. Pro로 업그레이드하세요.",
-    "signInNotice": "보드를 사용하려면 로그인하세요"
+    "signInNotice": "보드를 사용하려면 로그인하세요",
+    "galleryEmpty": "보드를 만들어 클립을 저장하세요",
+    "galleryNewBoard": "+ 새 보드"
   }
 }

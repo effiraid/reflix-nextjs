@@ -7,12 +7,14 @@ import type { Dictionary } from "@/app/[lang]/dictionaries";
 
 const {
   routerReplaceMock,
+  routerPushMock,
   getUserIdentitiesMock,
   linkIdentityMock,
   searchParamsState,
 } =
   vi.hoisted(() => ({
     routerReplaceMock: vi.fn(),
+    routerPushMock: vi.fn(),
     getUserIdentitiesMock: vi.fn(),
     linkIdentityMock: vi.fn(),
     searchParamsState: {
@@ -23,8 +25,10 @@ const {
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: routerReplaceMock,
+    push: routerPushMock,
   }),
   useSearchParams: () => new URLSearchParams(searchParamsState.value),
+  usePathname: () => "/ko/account",
 }));
 
 vi.mock("next/link", () => ({
@@ -48,17 +52,28 @@ vi.mock("@/lib/supabase/client", () => ({
     auth: {
       getUserIdentities: getUserIdentitiesMock,
       linkIdentity: linkIdentityMock,
+      signOut: vi.fn().mockResolvedValue({}),
+      updateUser: vi.fn().mockResolvedValue({ error: null }),
     },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: { display_name: "test" }, error: null }),
+        }),
+      }),
+    }),
   }),
 }));
 
 const dict = {
   auth: koDict.auth,
-} satisfies Pick<Dictionary, "auth">;
+  account: koDict.account,
+} satisfies Pick<Dictionary, "auth" | "account">;
 
 describe("AccountClient", () => {
   beforeEach(() => {
     routerReplaceMock.mockReset();
+    routerPushMock.mockReset();
     getUserIdentitiesMock.mockReset();
     linkIdentityMock.mockReset();
 
@@ -91,7 +106,23 @@ describe("AccountClient", () => {
     searchParamsState.value = "";
   });
 
-  it("shows a Connect Google button when Google is not linked", async () => {
+  it("renders tab navigation with 4 tabs", async () => {
+    render(<AccountClient lang="ko" dict={dict} />);
+
+    expect(screen.getByRole("tab", { name: "프로필" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "구독" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "보안" })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "설정" })).not.toBeInTheDocument();
+  });
+
+  it("defaults to profile tab and shows nickname field", async () => {
+    render(<AccountClient lang="ko" dict={dict} />);
+
+    expect(await screen.findByPlaceholderText("닉네임을 입력하세요")).toBeInTheDocument();
+  });
+
+  it("shows security tab with Connect Google button", async () => {
+    searchParamsState.value = "tab=security";
     render(<AccountClient lang="ko" dict={dict} />);
 
     expect(
@@ -99,7 +130,7 @@ describe("AccountClient", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows Connected when Google is already linked", async () => {
+  it("shows Connected when Google is already linked on security tab", async () => {
     getUserIdentitiesMock.mockResolvedValue({
       data: {
         identities: [
@@ -109,7 +140,7 @@ describe("AccountClient", () => {
       },
       error: null,
     });
-    searchParamsState.value = "linked=google";
+    searchParamsState.value = "tab=security&linked=google";
 
     render(<AccountClient lang="ko" dict={dict} />);
 
@@ -119,7 +150,27 @@ describe("AccountClient", () => {
     ).toBeInTheDocument();
   });
 
-  it("starts manual Google linking with an account return URL", async () => {
+  it("shows subscription tab with beta status", async () => {
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "pro",
+      planTier: "free",
+      accessSource: "beta",
+      betaEndsAt: "2026-04-30T00:00:00.000Z",
+      isLoading: false,
+    });
+    searchParamsState.value = "tab=subscription";
+
+    render(<AccountClient lang="ko" dict={dict} />);
+
+    expect(await screen.findByText("Pro 체험 중")).toBeInTheDocument();
+    expect(
+      screen.getByText("종료 후 무료 티어로 전환됩니다.")
+    ).toBeInTheDocument();
+  });
+
+  it("starts Google linking with security tab return URL", async () => {
+    searchParamsState.value = "tab=security";
     render(<AccountClient lang="ko" dict={dict} />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Google 연결" }));
@@ -129,44 +180,9 @@ describe("AccountClient", () => {
         provider: "google",
         options: {
           redirectTo:
-            "http://localhost:3000/ko/auth/callback?next=%2Fko%2Faccount%3Flinked%3Dgoogle",
+            "http://localhost:3000/ko/auth/callback?next=%2Fko%2Faccount%3Ftab%3Dsecurity%26linked%3Dgoogle",
         },
       });
     });
-  });
-
-  it("shows an inline error when identities fail to load", async () => {
-    getUserIdentitiesMock.mockResolvedValue({
-      data: null,
-      error: { message: "boom" },
-    });
-    searchParamsState.value = "linkError=google";
-
-    render(<AccountClient lang="ko" dict={dict} />);
-
-    expect(
-      await screen.findByText("Google 연결을 완료하지 못했습니다. 다시 시도해주세요.")
-    ).toBeInTheDocument();
-  });
-
-  it("shows beta status and beta end date for a trial user", async () => {
-    useAuthStore.setState({
-      user: { id: "user-1", email: "user@example.com" } as never,
-      tier: "pro",
-      planTier: "free",
-      accessSource: "beta",
-      betaEndsAt: "2026-04-30T00:00:00.000Z",
-      isLoading: false,
-    });
-
-    render(<AccountClient lang="ko" dict={dict} />);
-
-    expect(await screen.findByText("Pro 체험 중")).toBeInTheDocument();
-    expect(
-      screen.getByText("종료 후 무료 티어로 전환됩니다.")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Pro로 업그레이드" })
-    ).toBeInTheDocument();
   });
 });

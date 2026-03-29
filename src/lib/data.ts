@@ -126,6 +126,23 @@ export async function getTagGroups(): Promise<TagGroupData> {
   return data.default as TagGroupData;
 }
 
+export interface TagAliasConfig {
+  version: number;
+  aliases: Record<string, string[]>;
+}
+
+export async function getTagAliases(): Promise<TagAliasConfig | null> {
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const configPath = path.join(process.cwd(), "config", "tag-aliases.json");
+    if (!fs.existsSync(configPath)) return null;
+    return JSON.parse(fs.readFileSync(configPath, "utf-8")) as TagAliasConfig;
+  } catch {
+    return null;
+  }
+}
+
 export async function getTagI18n(): Promise<Record<string, string>> {
   try {
     const data = await import("@/data/tag-i18n.json");

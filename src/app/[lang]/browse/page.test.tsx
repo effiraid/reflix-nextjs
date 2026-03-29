@@ -3,7 +3,11 @@ import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowsePageShell } from "./page";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
-import type { BrowseFilterIndexRecord, BrowseSummaryRecord } from "@/lib/types";
+import type {
+  BrowseCardRecord,
+  BrowseFilterIndexRecord,
+  BrowseSummaryRecord,
+} from "@/lib/types";
 
 const dict = {
   ...koDict,
@@ -118,7 +122,7 @@ describe("BrowsePage", () => {
         categories={{}}
         tagGroups={{ groups: [], parentGroups: [] }}
         tagI18n={{}}
-        browseSummary={browseSummary}
+        browseCards={browseSummary as BrowseCardRecord[]}
         browseFilterIndex={browseFilterIndex}
         rawSearchParams={{ q: "Alpha" }}
       />
@@ -138,7 +142,7 @@ describe("BrowsePage", () => {
         categories={{}}
         tagGroups={{ groups: [], parentGroups: [] }}
         tagI18n={{}}
-        browseSummary={[]}
+        browseCards={[]}
         browseFilterIndex={[]}
         rawSearchParams={{}}
       />
@@ -182,7 +186,7 @@ describe("BrowsePage", () => {
       categories: {},
       tagGroups: { groups: [], parentGroups: [] },
       tagI18n: {},
-      browseSummary,
+      browseCards: browseSummary as BrowseCardRecord[],
       browseFilterIndex: browseSummary.map((clip) => ({
         id: clip.id,
         name: clip.name,

@@ -51,6 +51,7 @@ export function SubToolbar({
     reshuffleClips,
     viewMode,
     searchFocused,
+    browseMode,
   } = useUIStore(
     useShallow((state) => ({
       filterBarOpen: state.filterBarOpen,
@@ -62,6 +63,7 @@ export function SubToolbar({
       reshuffleClips: state.reshuffleClips,
       viewMode: state.viewMode,
       searchFocused: state.searchFocused,
+      browseMode: state.browseMode,
     }))
   );
   const { user, tier } = useAuthStore(
@@ -199,6 +201,7 @@ export function SubToolbar({
 
   const feedBlocking = useFilterStore((s) => hasFeedBlockingFilters(s));
   if (viewMode === "feed" && !feedBlocking) return null;
+  if (browseMode !== "grid") return null;
 
   return (
     <div className="shrink-0 border-b border-border">

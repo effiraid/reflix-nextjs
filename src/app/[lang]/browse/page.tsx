@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import { getDictionary } from "../dictionaries";
 import {
   getCategories,
+  getTagAliases,
   getTagGroups,
   getTagI18n,
   loadBrowseCards,
   loadBrowseFilterIndex,
-  loadBrowseSummary,
 } from "@/lib/data";
 import { Navbar } from "@/components/layout/Navbar";
 import { LeftPanel } from "@/components/layout/LeftPanel";
@@ -19,6 +19,7 @@ import { FilterPanel } from "@/components/filter/FilterPanel";
 import { SubToolbar } from "@/components/layout/SubToolbar";
 import { RightPanelContent } from "@/components/layout/RightPanelContent";
 import type { Locale } from "@/lib/types";
+import type { TagAliasConfig } from "@/lib/data";
 import {
   listBrowseResults,
   parseBrowsePageQuery,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/browse-service";
 import { BrandSplash } from "@/components/splash/BrandSplash";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { loadBrowsePageData } from "./browseBootstrap";
 
 function toURLSearchParams(
   rawSearchParams: Record<string, string | string[] | undefined>
@@ -124,26 +126,32 @@ function BrowsePageContent({
   const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
   const shouldLoadDetailedIndex = requiresDetailedBrowseIndex(filters);
   const [
-    dict,
-    categories,
-    tagGroups,
-    tagI18n,
-    browseCards,
-    browseSummary,
-    browseFilterIndex,
+    {
+      dict,
+      categories,
+      tagGroups,
+      tagI18n,
+      browseCards,
+      browseFilterIndex,
+      initialFolderClipIds,
+    },
     initialBoardClipIds,
+    tagAliases,
   ] = use(
     Promise.all([
-      getDictionary(lang as Locale),
-      getCategories(),
-      getTagGroups(),
-      getTagI18n(),
-      loadBrowseCards(),
-      loadBrowseSummary(),
-      shouldLoadDetailedIndex
-        ? loadBrowseFilterIndex()
-        : Promise.resolve(null),
+      loadBrowsePageData({
+        lang,
+        shouldLoadDetailedIndex,
+      }, {
+        getDictionary,
+        getCategories,
+        getTagGroups,
+        getTagI18n,
+        loadBrowseCards,
+        loadBrowseFilterIndex,
+      }),
       loadInitialBoardClipIds(filters.boardId),
+      getTagAliases(),
     ])
   );
 
@@ -154,10 +162,11 @@ function BrowsePageContent({
       categories={categories}
       tagGroups={tagGroups}
       tagI18n={tagI18n}
+      tagAliases={tagAliases}
       browseCards={browseCards}
-      browseSummary={browseSummary}
       browseFilterIndex={browseFilterIndex}
       initialBoardClipIds={initialBoardClipIds}
+      initialFolderClipIds={initialFolderClipIds}
       preloadDetailedIndex={shouldLoadDetailedIndex}
       rawSearchParams={rawSearchParams}
     />
@@ -170,10 +179,11 @@ export function BrowsePageShell({
   categories,
   tagGroups,
   tagI18n,
+  tagAliases = null,
   browseCards,
-  browseSummary,
   browseFilterIndex,
   initialBoardClipIds = null,
+  initialFolderClipIds = {},
   preloadDetailedIndex = false,
   rawSearchParams,
 }: {
@@ -182,18 +192,19 @@ export function BrowsePageShell({
   categories: Awaited<ReturnType<typeof getCategories>>;
   tagGroups: Awaited<ReturnType<typeof getTagGroups>>;
   tagI18n: Awaited<ReturnType<typeof getTagI18n>>;
-  browseCards?: Awaited<ReturnType<typeof loadBrowseCards>>;
-  browseSummary: Awaited<ReturnType<typeof loadBrowseSummary>>;
+  tagAliases?: TagAliasConfig | null;
+  browseCards: Awaited<ReturnType<typeof loadBrowseCards>>;
   browseFilterIndex: Awaited<ReturnType<typeof loadBrowseFilterIndex>> | null;
   initialBoardClipIds?: Set<string> | null;
+  initialFolderClipIds?: Record<string, string[]>;
   preloadDetailedIndex?: boolean;
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
   const filters = parseBrowsePageQuery(toURLSearchParams(rawSearchParams));
   const initialBrowseResults = listBrowseResults({
     cards: browseCards,
-    summary: browseSummary,
-    projection: browseFilterIndex ?? browseCards ?? browseSummary,
+    summary: browseCards,
+    projection: browseFilterIndex ?? browseCards,
     filters,
     boardClipIds: initialBoardClipIds,
     categories,
@@ -211,14 +222,14 @@ export function BrowsePageShell({
         : "Browse game animation references with tag-based search.",
     url: `${BASE_URL}/${lang}/browse`,
     isPartOf: { "@type": "WebSite", name: "Reflix", url: BASE_URL },
-    numberOfItems: browseCards?.length ?? browseSummary.length,
+    numberOfItems: browseCards.length,
   };
 
   return (
     <ClipDataProvider
       clips={initialBrowseResults.items}
       initialTotalCount={initialBrowseResults.totalCount}
-      totalClipCount={browseCards?.length ?? browseSummary.length}
+      totalClipCount={browseCards.length}
       preloadDetailedIndex={preloadDetailedIndex}
     >
       <script
@@ -227,7 +238,7 @@ export function BrowsePageShell({
       />
       <div className="h-screen flex flex-col">
         <Suspense>
-          <Navbar lang={lang} dict={dict} tagI18n={tagI18n} />
+          <Navbar lang={lang} dict={dict} tagI18n={tagI18n} tagGroups={tagGroups} tagAliases={tagAliases} />
         </Suspense>
         <div className="flex-1 flex overflow-hidden">
           <LeftPanel>
@@ -236,6 +247,7 @@ export function BrowsePageShell({
                 categories={categories}
                 tagGroups={tagGroups}
                 tagI18n={tagI18n}
+                initialFolderClipIds={initialFolderClipIds}
                 lang={lang}
                 dict={dict}
               />

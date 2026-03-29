@@ -22,6 +22,8 @@ import { BrandSplash } from "@/components/splash/BrandSplash";
 import { useSplashGate } from "@/components/splash/useSplashGate";
 import { useTagGroups } from "@/hooks/useTagGroups";
 import { TagDetailView } from "@/components/tags/TagDetailView";
+import { BoardGalleryView } from "@/components/board/BoardGalleryView";
+import { BoardContextBar } from "@/components/board/BoardContextBar";
 import { ToastContainer } from "@/components/common/Toast";
 
 const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
@@ -255,16 +257,21 @@ export function BrowseClient({
   const browseResults = useMemo(
     () => {
       if (!projectionClips || projectionStatus !== "ready" || !hasActiveBrowseFilters) {
-        const clips =
-          shuffleSeed === 0
-            ? initialDisplayClips
-            : shuffleClips(initialDisplayClips);
+        let clips = initialDisplayClips;
+        // Apply board filter even before projection is ready
+        if (filters.boardId && activeBoardClipIds) {
+          clips = clips.filter((c) => activeBoardClipIds.has(c.id));
+        }
+        clips = shuffleSeed === 0 ? clips : shuffleClips(clips);
+        const totalResultCount = filters.boardId && activeBoardClipIds
+          ? clips.length
+          : initialTotalCount;
         const lockedClipIds = isAllTabLimited
           ? new Set(clips.slice(browseVisibleResultsLimit).map((c) => c.id))
           : new Set<string>();
         return {
           clips,
-          totalResultCount: initialTotalCount,
+          totalResultCount,
           lockedClipIds,
         };
       }
@@ -306,6 +313,7 @@ export function BrowseClient({
       projectionStatus,
       hasActiveBrowseFilters,
       effectiveFilters,
+      filters.boardId,
       hasSearchOrFilter,
       isProUser,
       isAllTabLimited,
@@ -594,10 +602,37 @@ export function BrowseClient({
     );
   }
 
+  if (browseMode === "boards") {
+    return (
+      <>
+        {splashOverlay}
+        <BoardGalleryView lang={lang} dict={dict} />
+        <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
+      </>
+    );
+  }
+
+  // Board filter loading: boardId is set but clip IDs haven't loaded yet
+  if (filters.boardId && !activeBoardClipIds) {
+    return (
+      <>
+        {splashOverlay}
+        <BoardContextBar lang={lang} />
+        <div className="flex flex-1 items-center justify-center p-8">
+          <div className="size-5 animate-spin rounded-full border-2 border-muted border-t-accent" />
+        </div>
+        <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
+      </>
+    );
+  }
+
   if (filtered.length === 0) {
     return (
       <>
         {splashOverlay}
+        {filters.boardId ? <BoardContextBar lang={lang} /> : null}
         <div className="flex flex-1 items-center justify-center p-8 text-muted">
           {emptyStateLabel}
         </div>
@@ -619,6 +654,7 @@ export function BrowseClient({
         {quickViewOpen && selectedClip ? (
           <QuickViewModal
             clip={selectedClip}
+            categories={categories}
             lang={lang}
             tagI18n={tagI18n}
             dict={dict}
@@ -634,6 +670,9 @@ export function BrowseClient({
   return (
     <>
       {splashOverlay}
+      {filters.boardId ? (
+        <BoardContextBar lang={lang} />
+      ) : null}
       {hasSearchOrFilter || lockedCount > 0 || isFilterCombinationLimited ? (
         <div className="flex items-center justify-between border-b border-border px-4 py-2">
           <p className="text-xs text-muted" aria-live="polite">
@@ -671,6 +710,7 @@ export function BrowseClient({
       {quickViewOpen && selectedClip ? (
         <QuickViewModal
           clip={selectedClip}
+          categories={categories}
           lang={lang}
           tagI18n={tagI18n}
           dict={dict}

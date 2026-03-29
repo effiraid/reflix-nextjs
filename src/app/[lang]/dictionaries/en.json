@@ -89,7 +89,8 @@
     "shortcutThumbnailSize": "Thumbnail size",
     "shortcutToggleLeftPanel": "Toggle left sidebar",
     "shortcutToggleRightPanel": "Toggle right sidebar",
-    "shortcutToggleHelp": "Toggle this help"
+    "shortcutToggleHelp": "Toggle this help",
+    "myBoards": "My Boards"
   },
   "clip": {
     "play": "Play",
@@ -197,6 +198,50 @@
     "browseFree": "Browse free clips",
     "subscribePro": "Subscribe to Pro"
   },
+  "account": {
+    "tabProfile": "Profile",
+    "tabSubscription": "Subscription",
+    "tabSecurity": "Security",
+    "tabSettings": "Settings",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "Enter a display name",
+    "displayNameMax": "Max 30 characters",
+    "save": "Save",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "currentPlan": "Current plan",
+    "manageSubscription": "Manage subscription",
+    "checkoutSuccess": "Payment complete!",
+    "signInMethods": "Sign-in methods",
+    "emailMagicLink": "Magic link",
+    "connected": "Connected",
+    "connectGoogle": "Connect Google",
+    "connectingGoogle": "Connecting...",
+    "googleConnected": "Google was connected successfully.",
+    "googleConnectFailed": "Could not finish Google linking. Please try again.",
+    "googleConnectDesc": "Add Google as another sign-in method.",
+    "changeEmail": "Change email",
+    "newEmailPlaceholder": "New email address",
+    "changeEmailBtn": "Change",
+    "changingEmail": "Changing...",
+    "changeEmailSent": "Confirmation email sent. Check your inbox.",
+    "changeEmailDesc": "A confirmation email will be sent.",
+    "dangerZone": "Danger zone",
+    "deleteAccount": "Delete account",
+    "deleteAccountDesc": "All ratings, memos, and boards will be permanently deleted. This cannot be undone.",
+    "deleteAccountConfirmTitle": "Are you sure you want to delete your account?",
+    "deleteAccountConfirmInput": "delete account",
+    "deleteAccountConfirmPlaceholder": "Type \"delete account\" to confirm",
+    "deleting": "Deleting...",
+    "language": "Language",
+    "languageDesc": "Change the page language.",
+    "loadingMethods": "Loading...",
+    "methodsLoadError": "Could not load sign-in methods.",
+    "supabaseNotConfigured": "Sign-in linking is not configured yet.",
+    "googleLinkMisconfigured": "Google linking is misconfigured.",
+    "googleLinkStartFailed": "Could not start Google linking. Please try again.",
+    "cancel": "Cancel"
+  },
   "board": {
     "title": "Boards",
     "empty": "No boards yet. Create your first board",
@@ -206,6 +251,8 @@
     "add": "Add",
     "remove": "Remove",
     "freeLimitNotice": "Free accounts are limited to 1 board. Upgrade to Pro.",
-    "signInNotice": "Sign in to use boards"
+    "signInNotice": "Sign in to use boards",
+    "galleryEmpty": "Create a board to save clips",
+    "galleryNewBoard": "+ New Board"
   }
 }

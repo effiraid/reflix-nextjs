@@ -101,6 +101,7 @@ describe("VideoPlayer", () => {
   beforeEach(() => {
     getMediaUrlMock.mockClear();
     fetchBlobUrlMock.mockClear();
+    getSignedVideoUrlMock.mockClear();
   });
 
   afterEach(() => {
@@ -558,6 +559,27 @@ describe("VideoPlayer", () => {
       );
 
       expect(fetchBlobUrlMock).not.toHaveBeenCalled();
+    });
+
+    it("skips the sign API and fetches the local video directly when no media base is configured", async () => {
+      getMediaUrlMock.mockImplementation((value: string) => value);
+
+      render(
+        <VideoPlayer
+          videoUrl="/videos/clip-1.mp4"
+          thumbnailUrl="/thumbnails/clip-1.webp"
+          duration={10}
+          useBlobUrl
+        />
+      );
+
+      await waitFor(() => {
+        expect(fetchBlobUrlMock).toHaveBeenCalledWith(
+          "/videos/clip-1.mp4",
+          "/videos/clip-1.mp4"
+        );
+      });
+      expect(getSignedVideoUrlMock).not.toHaveBeenCalled();
     });
   });
 

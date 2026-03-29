@@ -19,14 +19,34 @@ export function buildCategoryTree() {
 const FOLDER_TO_CATEGORY = {};
 const REFLIX_TAG_PREFIX = "reflix:";
 
+/** @type {Map<string, string>} alias → canonical */
+let _aliasMap = new Map();
+
+/**
+ * Set the alias map used by toPublicTags() for alias resolution.
+ * Call once at pipeline startup after loading tag-aliases.json.
+ */
+export function setAliasMap(aliasMap) {
+  _aliasMap = aliasMap;
+}
+
+/** Get current alias map (for testing / downstream use). */
+export function getAliasMap() {
+  return _aliasMap;
+}
+
 function toPublicTags(tags) {
   if (!Array.isArray(tags)) {
     return [];
   }
 
-  return tags.filter(
-    (tag) => typeof tag === "string" && !tag.startsWith(REFLIX_TAG_PREFIX)
-  );
+  return [
+    ...new Set(
+      tags
+        .filter((tag) => typeof tag === "string" && !tag.startsWith(REFLIX_TAG_PREFIX))
+        .map((tag) => _aliasMap.get(tag) ?? tag)
+    ),
+  ];
 }
 
 function getOptionalAiTags(meta) {

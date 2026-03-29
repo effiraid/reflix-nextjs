@@ -1,10 +1,30 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 
+interface BoardClipRow {
+  clip_id?: string | null;
+  added_at?: string | null;
+}
+
+function getCoverClipIds(boardClips: BoardClipRow[] | null | undefined): string[] {
+  return [...(boardClips ?? [])]
+    .filter((row): row is { clip_id: string; added_at?: string | null } =>
+      typeof row?.clip_id === "string"
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.added_at ?? 0).getTime() -
+        new Date(a.added_at ?? 0).getTime()
+    )
+    .map((row) => row.clip_id)
+    .slice(0, 3);
+}
+
 export interface Board {
   id: string;
   name: string;
   clipCount: number;
+  coverClipIds: string[];
   created_at: string;
   updated_at: string;
 }
@@ -64,9 +84,14 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
   addClipToBoard: (boardId, clipId) =>
     set((state) => {
-      const boards = state.boards.map((b) =>
-        b.id === boardId ? { ...b, clipCount: b.clipCount + 1 } : b
-      );
+      const boards = state.boards.map((b) => {
+        if (b.id !== boardId) return b;
+        const coverClipIds =
+          b.coverClipIds.includes(clipId)
+            ? b.coverClipIds
+            : [clipId, ...b.coverClipIds].slice(0, 3);
+        return { ...b, clipCount: b.clipCount + 1, coverClipIds };
+      });
       // Update active set if this is the active board
       const activeBoardClipIds =
         state.activeBoardId === boardId && state.activeBoardClipIds
@@ -79,7 +104,11 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     set((state) => {
       const boards = state.boards.map((b) =>
         b.id === boardId
-          ? { ...b, clipCount: Math.max(0, b.clipCount - 1) }
+          ? {
+              ...b,
+              clipCount: Math.max(0, b.clipCount - 1),
+              coverClipIds: b.coverClipIds.filter((id) => id !== clipId),
+            }
           : b
       );
       const activeBoardClipIds =
@@ -105,7 +134,11 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
     if (data) {
       set({
         activeBoardId: boardId,
-        activeBoardClipIds: new Set(data.map((r) => r.clip_id)),
+        activeBoardClipIds: new Set(
+          data
+            .map((row) => row.clip_id)
+            .filter((clipId): clipId is string => typeof clipId === "string")
+        ),
       });
     }
   },
@@ -119,21 +152,25 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
     set({ isLoading: true });
 
-    // Fetch boards with clip count via a left join count
     const { data } = await supabase
       .from("boards")
-      .select("id, name, created_at, updated_at, board_clips(count)")
+      .select("id, name, created_at, updated_at, board_clips(clip_id, added_at)")
       .order("created_at", { ascending: false });
 
     if (data) {
-      const boards: Board[] = data.map((row) => ({
-        id: row.id,
-        name: row.name,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        clipCount:
-          (row.board_clips as unknown as { count: number }[])?.[0]?.count ?? 0,
-      }));
+      const boards: Board[] = data.map((row) => {
+        const boardClips = Array.isArray(row.board_clips)
+          ? (row.board_clips as BoardClipRow[])
+          : [];
+        return {
+          id: row.id,
+          name: row.name,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          clipCount: boardClips.length,
+          coverClipIds: getCoverClipIds(boardClips),
+        };
+      });
       set({ boards });
     }
 

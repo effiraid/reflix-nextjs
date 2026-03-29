@@ -7,9 +7,16 @@ import {
   buildClipIndex,
   buildFullClip,
   mergeClipIndexEntries,
+  setAliasMap,
 } from "./index-builder.mjs";
-import { buildBrowseArtifacts, getStructuredAiTags } from "./browse-artifacts.mjs";
+import { buildBrowseArtifacts, getStructuredAiTags, setReverseAliasMap } from "./browse-artifacts.mjs";
 import { buildRelatedInput } from "./similarity.mjs";
+import {
+  loadTagAliases,
+  validateAliasesAgainstTagGroups,
+  cleanTagGroupsAliases,
+  migrateTagI18n,
+} from "./tag-aliases.mjs";
 
 function loadOptionalJson(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -39,6 +46,29 @@ export async function runArtifactStage(items, { projectRoot, runId } = {}) {
   }
 
   ensureArtifactDirectories(projectRoot);
+
+  // --- Tag alias initialization ---
+  const configDir = path.join(projectRoot, "config");
+  const { canonicalMap, reverseMap, raw: aliasConfig } = loadTagAliases(configDir);
+  setAliasMap(canonicalMap);
+  setReverseAliasMap(reverseMap);
+
+  // Validate + clean tag-groups.json
+  const tagGroupsPath = path.join(projectRoot, "src", "data", "tag-groups.json");
+  if (fs.existsSync(tagGroupsPath)) {
+    const tagGroupsData = JSON.parse(fs.readFileSync(tagGroupsPath, "utf-8"));
+    validateAliasesAgainstTagGroups(aliasConfig, tagGroupsData);
+    const cleanedTagGroups = cleanTagGroupsAliases(tagGroupsData, canonicalMap);
+    writeAtomicJson(tagGroupsPath, cleanedTagGroups);
+  }
+
+  // Migrate tag-i18n.json
+  const tagI18nPath = path.join(projectRoot, "src", "data", "tag-i18n.json");
+  if (fs.existsSync(tagI18nPath)) {
+    const tagI18n = JSON.parse(fs.readFileSync(tagI18nPath, "utf-8"));
+    const migratedI18n = migrateTagI18n(tagI18n, reverseMap);
+    writeAtomicJson(tagI18nPath, migratedI18n);
+  }
 
   const clips = [];
   const indexEntries = [];

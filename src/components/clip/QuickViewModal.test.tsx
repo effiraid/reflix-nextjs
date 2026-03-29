@@ -6,6 +6,10 @@ import { clearClipDetailCache } from "@/lib/clip-detail-client";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 import type { ClipIndex } from "@/lib/types";
 
+const { useClipDataMock } = vi.hoisted(() => ({
+  useClipDataMock: vi.fn(() => []),
+}));
+
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -16,6 +20,14 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
+}));
+
+vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
+  useClipData: useClipDataMock,
+}));
+
+vi.mock("@/components/clip/ClipRatingPanel", () => ({
+  ClipRatingPanel: () => <section data-testid="clip-rating-panel" />,
 }));
 
 vi.mock("@/components/clip/VideoPlayer", () => ({
@@ -67,6 +79,33 @@ const clip: ClipIndex = {
   previewUrl: "/previews/clip-1.mp4",
   thumbnailUrl: "/thumbnails/clip-1.webp",
   lqipBase64: "",
+};
+
+const browseClips: ClipIndex[] = [
+  clip,
+  {
+    id: "clip-2",
+    name: "Clip Two",
+    tags: ["tag-c"],
+    folders: [],
+    category: "action",
+    width: 1280,
+    height: 720,
+    duration: 9.4,
+    previewUrl: "/previews/clip-2.mp4",
+    thumbnailUrl: "/thumbnails/clip-2.webp",
+    lqipBase64: "",
+  },
+];
+
+const categories = {
+  "folder-a": {
+    slug: "folder-a",
+    i18n: {
+      ko: "폴더 A",
+      en: "Folder A",
+    },
+  },
 };
 
 const dict = {
@@ -159,6 +198,7 @@ describe("QuickViewModal", () => {
     document.body.innerHTML = "";
     clearClipDetailCache();
     mockClipDetailResponse();
+    useClipDataMock.mockReturnValue(browseClips as never);
   });
 
   it("renders VideoPlayer with the selected clip URLs and closes on backdrop click", () => {
@@ -167,6 +207,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={onClose}
@@ -198,6 +239,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={onClose}
@@ -228,6 +270,7 @@ describe("QuickViewModal", () => {
         <button type="button">Before</button>
         <QuickViewModal
           clip={clip}
+          categories={categories}
           dict={dict}
           lang="ko"
           onClose={onClose}
@@ -250,6 +293,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={onClose}
@@ -264,6 +308,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={vi.fn()}
@@ -280,6 +325,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={vi.fn()}
@@ -306,6 +352,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={vi.fn()}
@@ -322,6 +369,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         tagI18n={{
           "tag-a": "Tag A",
           "tag-b": "Tag B",
@@ -346,6 +394,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="ko"
         onClose={vi.fn()}
@@ -361,7 +410,7 @@ describe("QuickViewModal", () => {
     expect(screen.getByText("detail-tag")).toBeInTheDocument();
   });
 
-  it("renders AI analysis from loaded detail data", async () => {
+  it("matches the inspector by keeping AI analysis collapsed until opened", async () => {
     mockClipDetailResponse({
       aiTags: {
         actionType: ["dash"],
@@ -379,6 +428,7 @@ describe("QuickViewModal", () => {
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="en"
         onClose={vi.fn()}
@@ -388,13 +438,26 @@ describe("QuickViewModal", () => {
     await waitFor(() => {
       expect(screen.getByText("AI Analysis")).toBeInTheDocument();
     });
+    expect(screen.getByRole("button", { name: "AI Analysis" })).toHaveAttribute(
+      "aria-expanded",
+      "false"
+    );
+    expect(screen.queryByText("AI summary")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "AI Analysis" }));
+
     expect(screen.getByText("AI summary")).toBeInTheDocument();
   });
 
-  it("keeps quick-view-only sidebar sections instead of detail-page cards", async () => {
+  it("renders inspector-style folders, properties, and related clips in quick view", async () => {
+    mockClipDetailResponse({
+      relatedClips: ["clip-2"],
+    });
+
     render(
       <QuickViewModal
         clip={clip}
+        categories={categories}
         dict={dict}
         lang="en"
         onClose={vi.fn()}
@@ -402,12 +465,16 @@ describe("QuickViewModal", () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText("tag-a")).toBeInTheDocument();
+      expect(screen.getByText("Folder A")).toBeInTheDocument();
     });
 
+    expect(screen.getByText("Tags")).toBeInTheDocument();
+    expect(screen.getByText("tag-a")).toBeInTheDocument();
+    expect(screen.getByText("Properties")).toBeInTheDocument();
     expect(screen.getByText("Duration")).toBeInTheDocument();
+    expect(screen.getByText("File Type")).toBeInTheDocument();
+    expect(screen.getByText("Related Clips")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clip Two" })).toBeInTheDocument();
     expect(screen.queryByText("Memo")).not.toBeInTheDocument();
-    expect(screen.queryByText("Properties")).not.toBeInTheDocument();
-    expect(screen.queryByText("1280×720")).not.toBeInTheDocument();
   });
 });

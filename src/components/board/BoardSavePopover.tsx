@@ -65,12 +65,17 @@ export function BoardSavePopover({
         return;
       }
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("board_clips")
         .select("board_id")
         .eq("clip_id", clipId);
 
       if (cancelled) {
+        return;
+      }
+
+      if (error) {
+        setIsMembershipLoading(false);
         return;
       }
 
@@ -217,6 +222,7 @@ export function BoardSavePopover({
           id: data.id,
           name: data.name,
           clipCount: 0,
+          coverClipIds: [],
           created_at: data.created_at,
           updated_at: data.updated_at,
         };

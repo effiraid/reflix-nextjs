@@ -24,7 +24,7 @@ interface UIStore {
   pricingModalIntent: PricingModalIntent | null;
   keyboardHelpOpen: boolean;
   searchFocused: boolean;
-  browseMode: "grid" | "tags";
+  browseMode: "grid" | "tags" | "boards";
   selectedTagGroupId: string | null;
   tagSearchQuery: string;
 
@@ -44,7 +44,7 @@ interface UIStore {
   closePricingModal: () => void;
   toggleKeyboardHelp: () => void;
   setSearchFocused: (focused: boolean) => void;
-  setBrowseMode: (mode: "grid" | "tags") => void;
+  setBrowseMode: (mode: "grid" | "tags" | "boards") => void;
   setSelectedTagGroupId: (id: string | null) => void;
   setTagSearchQuery: (query: string) => void;
 }

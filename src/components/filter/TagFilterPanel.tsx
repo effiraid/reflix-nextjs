@@ -25,7 +25,7 @@ export function TagFilterPanel({
   updateURL,
 }: TagFilterPanelProps) {
   const clips = useClipData();
-  const { projectionStatus } = useBrowseData();
+  const { projectionStatus, requestDetailedIndex } = useBrowseData();
   const aiTagData = useMemo(() => buildAiTagGroups(clips), [clips]);
   const mergedTagGroups = useMemo(
     () => [...tagGroups.groups, ...aiTagData.groups],
@@ -49,6 +49,10 @@ export function TagFilterPanel({
     (tag: string) => (lang === "en" ? tagI18n[tag] ?? tag : tag),
     [lang, tagI18n]
   );
+
+  useEffect(() => {
+    requestDetailedIndex();
+  }, [requestDetailedIndex]);
 
   // 태그별 클립 사용 횟수 계산
   const tagCounts = useMemo(() => {

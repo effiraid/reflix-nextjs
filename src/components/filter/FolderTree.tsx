@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useMemo, type ComponentType } from "react";
+import { memo, useMemo, useRef, type ComponentType } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { CategoryNode, CategoryTree, Locale } from "@/lib/types";
 import { useFilterStore } from "@/stores/filterStore";
@@ -141,6 +141,15 @@ interface FolderTreeProps {
   onFolderExpandToggle: (folderId: string) => void;
 }
 
+function shuffleArray<T>(arr: T[]): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 export function FolderTree({
   categories,
   folderClipIds,
@@ -149,9 +158,19 @@ export function FolderTree({
   onFolderClick,
   onFolderExpandToggle,
 }: FolderTreeProps) {
+  const shuffledRef = useRef<[string, CategoryNode][] | null>(null);
+
+  const entries = useMemo(() => {
+    const raw = Object.entries(categories);
+    if (!shuffledRef.current || shuffledRef.current.length !== raw.length) {
+      shuffledRef.current = shuffleArray(raw);
+    }
+    return shuffledRef.current;
+  }, [categories]);
+
   return (
     <div className="space-y-1">
-      {Object.entries(categories).map(([id, node]) => (
+      {entries.map(([id, node]) => (
         <FolderNode
           key={id}
           id={id}

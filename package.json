@@ -35,7 +35,8 @@
     "release:go": "node scripts/release-approval.mjs go",
     "release:status": "node scripts/release-approval.mjs status",
     "release:mark-published": "node scripts/release-approval.mjs mark-published",
-    "release:mark-failed": "node scripts/release-approval.mjs mark-failed"
+    "release:mark-failed": "node scripts/release-approval.mjs mark-failed",
+    "validate:tags": "node scripts/validate-tags.mjs"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",

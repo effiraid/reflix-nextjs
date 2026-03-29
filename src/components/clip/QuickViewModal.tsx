@@ -2,18 +2,21 @@
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ClipDetailsPanel } from "@/components/clip/ClipDetailsPanel";
+import { useClipData } from "@/app/[lang]/browse/ClipDataProvider";
+import { InspectorSidebarSections } from "@/components/clip/InspectorSidebarSections";
 import { VideoPlayer, PLAYBACK_SPEEDS } from "@/components/clip/VideoPlayer";
-import { ShareButton } from "@/components/clip/ShareButton";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useClipDetail } from "@/hooks/useClipDetail";
+import { useClipStore } from "@/stores/clipStore";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
-import type { BrowseClipRecord, Locale } from "@/lib/types";
+import type { BrowseClipRecord, CategoryTree, Clip, Locale } from "@/lib/types";
+
 const ANIMATION_DURATION = 100;
 
 interface QuickViewModalProps {
   clip: BrowseClipRecord;
+  categories: CategoryTree;
   lang: Locale;
   tagI18n?: Record<string, string>;
   dict: Pick<Dictionary, "clip">;
@@ -22,12 +25,15 @@ interface QuickViewModalProps {
 
 export function QuickViewModal({
   clip,
+  categories,
   lang,
   tagI18n = {},
   dict,
   onClose,
 }: QuickViewModalProps) {
   const { clip: detailClip } = useClipDetail(clip.id);
+  const browseClips = useClipData();
+  const { setSelectedClipId } = useClipStore();
   const [playbackState, setPlaybackState] = useState(() => ({
     clipId: clip.id,
     rate: 1,
@@ -40,6 +46,20 @@ export function QuickViewModal({
   const videoUrl = detailClip?.videoUrl ?? `/videos/${clip.id}.mp4`;
   const thumbnailUrl = detailClip?.thumbnailUrl ?? clip.thumbnailUrl;
   const duration = detailClip?.duration ?? clip.duration;
+  const sidebarClip = useMemo(
+    () => detailClip ?? buildQuickViewSidebarClip(clip),
+    [clip, detailClip]
+  );
+  const relatedClips = useMemo(() => {
+    if (!detailClip?.relatedClips?.length) {
+      return [];
+    }
+
+    const browseClipMap = new Map(browseClips.map((entry) => [entry.id, entry] as const));
+    return detailClip.relatedClips
+      .map((relatedClipId) => browseClipMap.get(relatedClipId))
+      .filter((entry): entry is BrowseClipRecord => Boolean(entry));
+  }, [browseClips, detailClip]);
   const setPlaybackRate = useCallback(
     (rate: number) => {
       setPlaybackState({ clipId: clip.id, rate });
@@ -127,31 +147,69 @@ export function QuickViewModal({
             lang={lang}
           />
 
-          <ClipDetailsPanel
-            clip={detailClip ?? clip}
-            lang={lang}
-            tagI18n={tagI18n}
-            dict={dict}
-            footer={(
-              <div className="flex gap-2">
-                <ShareButton
-                  clipId={clip.id}
-                  lang={lang}
-                  label={dict.clip.share}
-                  copiedLabel={dict.clip.copied}
-                  className="flex flex-1 items-center justify-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-surface/80"
-                />
-                <Link
-                  href={`/${lang}/clip/${clip.id}`}
-                  className="flex-1 rounded-full bg-foreground px-4 py-2 text-center text-sm font-medium text-background hover:bg-foreground/90"
-                >
-                  {dict.clip.detail}
-                </Link>
-              </div>
-            )}
-          />
+          <aside className="flex w-full flex-col gap-5 text-sm text-foreground">
+            <InspectorSidebarSections
+              clip={sidebarClip}
+              categories={categories}
+              lang={lang}
+              dict={dict}
+              tagI18n={tagI18n}
+              relatedClips={relatedClips}
+              onSelectRelatedClip={setSelectedClipId}
+            />
+            <Link
+              href={`/${lang}/clip/${clip.id}`}
+              className="rounded-xl bg-foreground px-4 py-3 text-center text-sm font-medium text-background hover:bg-foreground/90"
+            >
+              {dict.clip.detail}
+            </Link>
+          </aside>
         </div>
       </section>
     </div>
   );
+}
+
+function buildQuickViewSidebarClip(clip: BrowseClipRecord): Clip {
+  return {
+    id: clip.id,
+    name: clip.name,
+    ext: inferClipExt(clip),
+    size: 0,
+    width: clip.width,
+    height: clip.height,
+    duration: clip.duration,
+    tags: clip.tags ?? [],
+    folders: clip.folders ?? [],
+    url: "",
+    palettes: [],
+    btime: 0,
+    mtime: 0,
+    i18n: {
+      title: {
+        ko: clip.name,
+        en: clip.name,
+      },
+      description: {
+        ko: "",
+        en: "",
+      },
+    },
+    aiTags: clip.aiTags,
+    videoUrl: clip.previewUrl,
+    thumbnailUrl: clip.thumbnailUrl,
+    previewUrl: clip.previewUrl,
+    lqipBase64: clip.lqipBase64,
+    category: clip.category,
+    relatedClips: [],
+  };
+}
+
+function inferClipExt(clip: BrowseClipRecord): string {
+  return extractFileExtension(clip.previewUrl) ?? extractFileExtension(clip.thumbnailUrl) ?? "mp4";
+}
+
+function extractFileExtension(path: string): string | null {
+  const match = path.match(/\.([a-z0-9]+)(?:$|[?#])/i);
+  return match?.[1]?.toLowerCase() ?? null;
 }

@@ -35,17 +35,20 @@ const clips = [
 ];
 
 let projectionStatus: "loading" | "ready" | "error" = "ready";
+const requestDetailedIndex = vi.fn();
 
 vi.mock("@/app/[lang]/browse/ClipDataProvider", () => ({
   useClipData: () => clips,
   useBrowseData: () => ({
     projectionStatus,
+    requestDetailedIndex,
   }),
 }));
 
 describe("TagFilterPanel", () => {
   beforeEach(() => {
     projectionStatus = "ready";
+    requestDetailedIndex.mockReset();
     useFilterStore.setState({
       selectedFolders: [],
       selectedTags: [],
@@ -74,6 +77,7 @@ describe("TagFilterPanel", () => {
       />
     );
 
+    expect(requestDetailedIndex).toHaveBeenCalledTimes(1);
     expect(screen.getByText("AI 생성")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /감정/ })).toBeInTheDocument();
     expect(screen.getByText("슬픔")).toBeInTheDocument();

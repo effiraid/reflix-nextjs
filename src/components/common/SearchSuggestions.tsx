@@ -1,11 +1,13 @@
 "use client";
 
 import { X } from "lucide-react";
+import type { TagSuggestionItem } from "@/lib/tagSuggestions";
+import type { Locale } from "@/lib/types";
 
 export interface SearchSuggestionsProps {
   recentSearches: string[];
   popularTags: string[];
-  matchedTags: string[];
+  matchedTags: TagSuggestionItem[];
   query: string;
   highlightIndex: number | null;
   onSelect: (value: string) => void;
@@ -15,6 +17,7 @@ export interface SearchSuggestionsProps {
   popularLabel?: string;
   suggestionsLabel?: string;
   clearLabel?: string;
+  lang?: Locale;
 }
 
 export function SearchSuggestions({
@@ -27,24 +30,27 @@ export function SearchSuggestions({
   onClearRecent,
   onRemoveRecent,
   recentLabel = "최근 검색어",
-  popularLabel = "인기 태그",
+  popularLabel = "추천 태그",
   suggestionsLabel = "태그 제안",
   clearLabel = "지우기",
+  lang = "ko",
 }: SearchSuggestionsProps) {
   const hasQuery = query.trim().length > 0;
   const showRecent = !hasQuery && recentSearches.length > 0;
   const showPopular = !hasQuery && popularTags.length > 0;
   const showMatched = hasQuery && matchedTags.length > 0;
+  const showEmpty = hasQuery && matchedTags.length === 0;
+  const formatCountLabel = (count: number) =>
+    lang === "ko" ? `${count}개 클립` : `${count} clips`;
+  const aliasSuffix = lang === "ko" ? "포함" : "included";
+  const emptyMessage =
+    lang === "ko"
+      ? `‘${query.trim()}’와 일치하는 태그 없음`
+      : `No tags match '${query.trim()}'`;
 
-  if (!showRecent && !showPopular && !showMatched) {
+  if (!showRecent && !showPopular && !showMatched && !showEmpty) {
     return null;
   }
-
-  // Build flat list of selectable items for highlight index mapping
-  const items: string[] = [];
-  if (showRecent) items.push(...recentSearches);
-  if (showPopular) items.push(...popularTags);
-  if (showMatched) items.push(...matchedTags);
 
   let flatIndex = 0;
 
@@ -145,23 +151,60 @@ export function SearchSuggestions({
               {suggestionsLabel}
             </span>
           </div>
-          {matchedTags.map((tag) => {
+          {matchedTags.map((item) => {
             const idx = flatIndex++;
             return (
               <div
-                key={`match-${tag}`}
+                key={`match-${item.tag}`}
                 role="option"
                 id={`suggestion-${idx}`}
                 aria-selected={highlightIndex === idx}
-                onClick={() => onSelect(tag)}
-                className={`cursor-pointer px-3 py-2 text-sm ${
+                aria-label={`${item.tag} - ${formatCountLabel(item.count)}`}
+                onClick={() => onSelect(item.tag)}
+                className={`cursor-pointer px-3 py-2 ${
                   highlightIndex === idx ? "bg-accent/10" : "hover:bg-surface-hover"
                 }`}
               >
-                {tag}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {item.isAi ? (
+                      <span
+                        aria-hidden="true"
+                        className="inline-flex shrink-0 items-center rounded px-1 py-px text-[10px] font-semibold leading-none text-accent/70 bg-accent/10"
+                      >
+                        AI
+                      </span>
+                    ) : item.groupColor ? (
+                      <span
+                        aria-hidden="true"
+                        className="inline-block size-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: item.groupColor }}
+                      />
+                    ) : null}
+                    <span className="truncate text-sm font-medium">
+                      {item.tag}
+                    </span>
+                  </div>
+                  {item.count > 0 ? (
+                    <span className="ml-2 shrink-0 text-xs tabular-nums text-muted">
+                      {item.count}
+                    </span>
+                  ) : null}
+                </div>
+                {item.aliases ? (
+                  <p className="mt-0.5 text-[11px] text-muted pl-4">
+                    {item.aliases.join(", ")} {aliasSuffix}
+                  </p>
+                ) : null}
               </div>
             );
           })}
+        </div>
+      ) : null}
+
+      {showEmpty ? (
+        <div className="px-3 py-4 text-center text-sm text-muted">
+          {emptyMessage}
         </div>
       ) : null}
     </div>
@@ -172,7 +215,7 @@ export function SearchSuggestions({
 export function getSuggestionCount(
   recentSearches: string[],
   popularTags: string[],
-  matchedTags: string[],
+  matchedTags: TagSuggestionItem[],
   query: string
 ): number {
   const hasQuery = query.trim().length > 0;
