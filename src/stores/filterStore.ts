@@ -10,11 +10,13 @@ interface FilterStore {
   sortBy: SortBy;
   category: string | null;
   contentMode: ContentMode | null;
+  boardId: string | null;
 
   setCategory: (category: string | null) => void;
   setContentMode: (mode: ContentMode | null) => void;
   setSearchQuery: (query: string) => void;
   setSortBy: (sort: SortBy) => void;
+  setBoardId: (id: string | null) => void;
   clearFilters: () => void;
   removeTag: (tag: string) => void;
   removeExcludeTag: (tag: string) => void;
@@ -30,12 +32,14 @@ export const useFilterStore = create<FilterStore>((set) => ({
   sortBy: "newest",
   category: null,
   contentMode: null,
+  boardId: null,
 
   setCategory: (category) => set({ category }),
   setContentMode: (mode) => set({ contentMode: mode }),
 
   setSearchQuery: (query) => set({ searchQuery: query }),
   setSortBy: (sort) => set({ sortBy: sort }),
+  setBoardId: (boardId) => set({ boardId }),
 
   clearFilters: () =>
     set({
@@ -47,6 +51,7 @@ export const useFilterStore = create<FilterStore>((set) => ({
       sortBy: "newest",
       category: null,
       contentMode: null,
+      boardId: null,
     }),
 
   removeTag: (tag) =>

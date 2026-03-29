@@ -12,6 +12,7 @@ export interface FilterState {
   sortBy: SortBy;
   category: string | null;
   contentMode: ContentMode | null;
+  boardId: string | null;
 }
 
 /** True when any filter is active that makes feed mode inappropriate (excludes contentMode/sortBy). */
@@ -22,7 +23,8 @@ export function hasFeedBlockingFilters(state: FilterState): boolean {
     state.excludedFolders.length > 0 ||
     state.selectedTags.length > 0 ||
     state.excludedTags.length > 0 ||
-    state.searchQuery.length > 0
+    state.searchQuery.length > 0 ||
+    state.boardId !== null
   );
 }
 
@@ -41,9 +43,15 @@ export function filterClips<T extends FilterableClipRecord>(
   filters: FilterState,
   categories?: CategoryTree,
   tagI18n: Record<string, string> = {},
-  lang: Locale = "ko"
+  lang: Locale = "ko",
+  boardClipIds?: Set<string> | null
 ): T[] {
   let result = clips;
+
+  // Board filter: intersect with board clip IDs (AND with other filters)
+  if (filters.boardId && boardClipIds) {
+    result = result.filter((c) => boardClipIds.has(c.id));
+  }
 
   if (filters.category) {
     result = result.filter((c) => c.category === filters.category);

@@ -25,6 +25,7 @@ import {
   requiresDetailedBrowseIndex,
 } from "@/lib/browse-service";
 import { BrandSplash } from "@/components/splash/BrandSplash";
+import { createServerSupabase } from "@/lib/supabase/server";
 
 function toURLSearchParams(
   rawSearchParams: Record<string, string | string[] | undefined>
@@ -48,6 +49,20 @@ function toURLSearchParams(
 }
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://reflix.dev";
+
+async function loadInitialBoardClipIds(boardId: string | null) {
+  if (!boardId) {
+    return null;
+  }
+
+  const supabase = await createServerSupabase();
+  const { data } = await supabase
+    .from("board_clips")
+    .select("clip_id")
+    .eq("board_id", boardId);
+
+  return new Set((data ?? []).map((row) => row.clip_id));
+}
 
 export async function generateMetadata({
   params,
@@ -116,6 +131,7 @@ function BrowsePageContent({
     browseCards,
     browseSummary,
     browseFilterIndex,
+    initialBoardClipIds,
   ] = use(
     Promise.all([
       getDictionary(lang as Locale),
@@ -127,6 +143,7 @@ function BrowsePageContent({
       shouldLoadDetailedIndex
         ? loadBrowseFilterIndex()
         : Promise.resolve(null),
+      loadInitialBoardClipIds(filters.boardId),
     ])
   );
 
@@ -140,6 +157,7 @@ function BrowsePageContent({
       browseCards={browseCards}
       browseSummary={browseSummary}
       browseFilterIndex={browseFilterIndex}
+      initialBoardClipIds={initialBoardClipIds}
       preloadDetailedIndex={shouldLoadDetailedIndex}
       rawSearchParams={rawSearchParams}
     />
@@ -155,6 +173,7 @@ export function BrowsePageShell({
   browseCards,
   browseSummary,
   browseFilterIndex,
+  initialBoardClipIds = null,
   preloadDetailedIndex = false,
   rawSearchParams,
 }: {
@@ -166,6 +185,7 @@ export function BrowsePageShell({
   browseCards?: Awaited<ReturnType<typeof loadBrowseCards>>;
   browseSummary: Awaited<ReturnType<typeof loadBrowseSummary>>;
   browseFilterIndex: Awaited<ReturnType<typeof loadBrowseFilterIndex>> | null;
+  initialBoardClipIds?: Set<string> | null;
   preloadDetailedIndex?: boolean;
   rawSearchParams: Record<string, string | string[] | undefined>;
 }) {
@@ -175,6 +195,7 @@ export function BrowsePageShell({
     summary: browseSummary,
     projection: browseFilterIndex ?? browseCards ?? browseSummary,
     filters,
+    boardClipIds: initialBoardClipIds,
     categories,
     tagI18n,
     lang,
@@ -242,13 +263,14 @@ export function BrowsePageShell({
             </div>
             <main className="flex-1 overflow-y-auto" data-masonry-scroll>
               <Suspense fallback={<div className="flex flex-1 items-center justify-center p-4"><span className="text-sm font-bold tracking-tight"><span className="text-brand">Ref</span><span className="text-foreground">lix</span></span></div>}>
-                <BrowseClient
-                  categories={categories}
-                  tagGroups={tagGroups}
-                  tagI18n={tagI18n}
-                  lang={lang}
-                  dict={dict}
-                />
+            <BrowseClient
+              categories={categories}
+              tagGroups={tagGroups}
+              tagI18n={tagI18n}
+              lang={lang}
+              dict={dict}
+              initialBoardClipIds={initialBoardClipIds}
+            />
               </Suspense>
             </main>
           </div>

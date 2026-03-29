@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, FoldVertical, UnfoldVertical } from "lucide-react";
+import { BoardSection } from "@/components/board/BoardSection";
 import { FolderTree } from "@/components/filter/FolderTree";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -146,6 +147,7 @@ export function LeftPanelContent({
               selectedFolders: [],
               excludedFolders: [],
               sortBy: "newest",
+              boardId: null,
             });
             setViewMode("feed");
           }}
@@ -272,6 +274,11 @@ export function LeftPanelContent({
             />
           </div>
         ) : null}
+      </div>
+
+      {/* Board section */}
+      <div className="border-t border-border">
+        <BoardSection lang={lang} />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import type { Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { filterClips, hasFeedBlockingFilters, shuffleClips, type FilterState } from "@/lib/filter";
 import { useAuthStore } from "@/stores/authStore";
+import { useBoardStore } from "@/stores/boardStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -21,6 +22,7 @@ import { BrandSplash } from "@/components/splash/BrandSplash";
 import { useSplashGate } from "@/components/splash/useSplashGate";
 import { useTagGroups } from "@/hooks/useTagGroups";
 import { TagDetailView } from "@/components/tags/TagDetailView";
+import { ToastContainer } from "@/components/common/Toast";
 
 const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 import {
@@ -70,6 +72,7 @@ function limitFiltersToSingleAxis(filters: FilterState): FilterState {
     excludedFolders: [],
     selectedTags: [],
     excludedTags: [],
+    // boardId is preserved — not subject to filter axis limits
   };
 
   if (filters.category !== null) {
@@ -103,6 +106,7 @@ interface BrowseClientProps {
   tagI18n?: Record<string, string>;
   lang: Locale;
   dict: Dictionary;
+  initialBoardClipIds?: Set<string> | null;
 }
 
 export function BrowseClient({
@@ -111,6 +115,7 @@ export function BrowseClient({
   tagI18n = {},
   lang,
   dict,
+  initialBoardClipIds = null,
 }: BrowseClientProps) {
   const {
     initialClips,
@@ -129,8 +134,11 @@ export function BrowseClient({
       sortBy: s.sortBy,
       category: s.category,
       contentMode: s.contentMode,
+      boardId: s.boardId,
     }))
   );
+  const storedBoardClipIds = useBoardStore((s) => s.activeBoardClipIds);
+  const activeBoardClipIds = storedBoardClipIds ?? initialBoardClipIds;
   const { user, tier, isLoading: authLoading } = useAuthStore(
     useShallow((s) => ({
       user: s.user,
@@ -217,13 +225,17 @@ export function BrowseClient({
     filters.selectedTags.length > 0 ||
     filters.excludedTags.length > 0 ||
     filters.searchQuery.length > 0 ||
-    filters.sortBy !== "newest";
+    filters.sortBy !== "newest" ||
+    filters.boardId !== null;
 
   // 전체 탭(contentMode === null)에서 무료 유저는 5개까지만 노출
   const isAllTabLimited = filters.contentMode === null && !isProUser;
 
   const showFeed = viewMode === "feed" && !hasFeedBlockingFilters(filters);
-  const hasSearchOrFilter = filters.searchQuery.length > 0 || activeFilterAxes > 0;
+  const hasSearchOrFilter =
+    filters.searchQuery.length > 0 ||
+    activeFilterAxes > 0 ||
+    filters.boardId !== null;
   const initialDisplayClips = useMemo(() => {
     if (!projectionClips || projectionStatus !== "ready" || columnCount > 3) {
       return initialClips;
@@ -271,7 +283,8 @@ export function BrowseClient({
         effectiveFilters,
         categories,
         tagI18n,
-        lang
+        lang,
+        activeBoardClipIds
       );
       const isLimited = (hasSearchOrFilter || isAllTabLimited) && !isProUser;
       const orderedResults =
@@ -301,6 +314,7 @@ export function BrowseClient({
       tagI18n,
       shuffleSeed,
       lang,
+      activeBoardClipIds,
     ]
   );
 
@@ -575,6 +589,7 @@ export function BrowseClient({
         {splashOverlay}
         <TagDetailView tagData={tagData} lang={lang} tagI18n={tagI18n} dict={dict} />
         <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
       </>
     );
   }
@@ -587,6 +602,7 @@ export function BrowseClient({
           {emptyStateLabel}
         </div>
         <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
       </>
     );
   }
@@ -610,6 +626,7 @@ export function BrowseClient({
           />
         ) : null}
         <KeyboardHelpOverlay dict={dict} />
+        <ToastContainer />
       </>
     );
   }
@@ -661,6 +678,7 @@ export function BrowseClient({
         />
       ) : null}
       <KeyboardHelpOverlay dict={dict} />
+      <ToastContainer />
     </>
   );
 }

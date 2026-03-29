@@ -101,6 +101,7 @@ describe("LeftPanelContent", () => {
       excludedTags: [],
       searchQuery: "",
       sortBy: "newest",
+      boardId: null,
     });
     useUIStore.setState({
       filterBarOpen: false,
@@ -196,6 +197,32 @@ describe("LeftPanelContent", () => {
       name: new RegExp(`${dict.browse.all}\\s*24`),
     });
     expect(allShortcut).toHaveTextContent("24");
+  });
+
+  it("clears the active board when the all shortcut is clicked", () => {
+    useFilterStore.setState({
+      boardId: "board-1",
+      selectedFolders: ["movement"],
+    });
+
+    render(
+      <LeftPanelContent
+        categories={categories}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: new RegExp(`${dict.browse.all}\\s*24`),
+      })
+    );
+
+    expect(updateURL).toHaveBeenLastCalledWith(
+      expect.objectContaining({ boardId: null })
+    );
+    expect(useFilterStore.getState().boardId).toBeNull();
   });
 
   it("does not render the tag filter section", () => {

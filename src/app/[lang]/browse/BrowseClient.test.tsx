@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BrowseClient } from "./BrowseClient";
 import { useAuthStore } from "@/stores/authStore";
+import { useBoardStore } from "@/stores/boardStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useFilterStore } from "@/stores/filterStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -239,6 +240,13 @@ describe("BrowseClient", () => {
       sortBy: "newest",
 
       contentMode: null,
+      boardId: null,
+    });
+    useBoardStore.setState({
+      boards: [],
+      isLoading: false,
+      activeBoardId: null,
+      activeBoardClipIds: null,
     });
     useClipStore.setState({
       selectedClipId: null,
@@ -433,6 +441,69 @@ describe("BrowseClient", () => {
     expect(statusBar).toHaveTextContent(/7개 클립/);
     expect(statusBar).toHaveTextContent(/2개 결과는 Pro 전용/);
     expect(screen.getByRole("button", { name: "Pro로 잠금 해제" })).toBeInTheDocument();
+  });
+
+  it("locks board-only direction results after the first five for free users", () => {
+    const manyClips = Array.from({ length: 7 }, (_, index) => ({
+      id: `clip-${index + 1}`,
+      name: `연출 Match ${index + 1}`,
+      tags: [],
+      folders: [],
+      category: "action",
+      width: 100,
+      height: 100,
+      duration: 1,
+      previewUrl: `/${index + 1}.mp4`,
+      thumbnailUrl: `/${index + 1}.jpg`,
+      lqipBase64: "",
+    }));
+
+    browseDataState = {
+      initialClips: manyClips,
+      projectionClips: manyClips.map((clip) => ({
+        ...clip,
+        aiStructuredTags: [],
+        searchTokens: ["match"],
+      })),
+      projectionStatus: "ready",
+      initialTotalCount: manyClips.length,
+    };
+
+    useFilterStore.setState({
+      category: null,
+      selectedFolders: [],
+      excludedFolders: [],
+      selectedTags: [],
+      excludedTags: [],
+      searchQuery: "",
+      sortBy: "newest",
+      contentMode: "direction",
+      boardId: "board-1",
+    });
+
+    useBoardStore.setState({
+      activeBoardId: "board-1",
+      activeBoardClipIds: new Set(manyClips.map((clip) => clip.id)),
+    });
+
+    useAuthStore.setState({
+      user: { id: "user-1", email: "user@example.com" } as never,
+      tier: "free",
+      isLoading: false,
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    expect(screen.getByTestId("clip-order")).toHaveTextContent(
+      "clip-1,clip-2,clip-3,clip-4,clip-5,clip-6,clip-7"
+    );
+    expect(screen.getByTestId("locked-order")).toHaveTextContent("clip-6,clip-7");
   });
 
   it("re-opens the requested clip after login when the free tier can now access it", async () => {

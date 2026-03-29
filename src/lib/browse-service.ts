@@ -19,6 +19,7 @@ interface ListBrowseResultsOptions {
   summary: BrowseSummaryRecord[];
   projection: BrowseFilterableRecord[];
   filters: FilterState;
+  boardClipIds?: Set<string> | null;
   categories?: CategoryTree;
   tagI18n?: Record<string, string>;
   lang?: Locale;
@@ -50,6 +51,7 @@ export function parseBrowsePageQuery(
     searchQuery: searchParams.get("q") ?? "",
     sortBy,
     contentMode: null,
+    boardId: searchParams.get("board"),
   };
 }
 
@@ -70,6 +72,7 @@ export function listBrowseResults({
   summary,
   projection,
   filters,
+  boardClipIds,
   categories,
   tagI18n = {},
   lang = "ko",
@@ -81,7 +84,8 @@ export function listBrowseResults({
     filters,
     categories,
     tagI18n,
-    lang
+    lang,
+    boardClipIds
   );
 
   // When cards are provided, use them for output (lighter weight)

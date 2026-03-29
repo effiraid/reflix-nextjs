@@ -12,6 +12,7 @@ import { THUMBNAIL_ASPECT_RATIO } from "@/lib/thumbnailSize";
 import { useAuthStore } from "@/stores/authStore";
 import { useClipStore } from "@/stores/clipStore";
 import { useUIStore } from "@/stores/uiStore";
+import { BoardSaveButton } from "@/components/board/BoardSaveButton";
 import type { BrowseClipRecord, Locale } from "@/lib/types";
 
 interface ClipCardProps {
@@ -205,6 +206,10 @@ export function ClipCard({
           onError={() => setFailedPreviewUrl(previewUrl)}
         />
       )}
+
+      {!locked ? (
+        <BoardSaveButton clipId={clip.id} isVisible={isHovered} />
+      ) : null}
 
       {locked ? (
         <div

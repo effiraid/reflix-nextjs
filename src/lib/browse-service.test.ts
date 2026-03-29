@@ -67,6 +67,7 @@ describe("browse-service", () => {
       searchQuery: "arcane",
       sortBy: "name",
       contentMode: null,
+      boardId: null,
     });
   });
 
@@ -83,6 +84,7 @@ describe("browse-service", () => {
         searchQuery: "",
         sortBy: "newest",
         contentMode: null,
+        boardId: null,
       },
       pageSize: 10,
     });
@@ -105,6 +107,7 @@ describe("browse-service", () => {
         searchQuery: "",
         sortBy: "newest",
         contentMode: null,
+        boardId: null,
       },
       pageSize: 10,
     });

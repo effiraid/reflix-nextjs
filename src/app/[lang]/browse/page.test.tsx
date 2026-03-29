@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowsePageShell } from "./page";
 import koDict from "@/app/[lang]/dictionaries/ko.json";
@@ -145,5 +146,62 @@ describe("BrowsePage", () => {
 
     expect(screen.getByTestId("right-panel")).toBeInTheDocument();
     expect(screen.getByText("로딩 중...")).toBeInTheDocument();
+  });
+
+  it("filters the initial payload when a board deep link provides clip ids", () => {
+    const browseSummary: BrowseSummaryRecord[] = [
+      {
+        id: "clip-a",
+        name: "Alpha",
+        thumbnailUrl: "/a.jpg",
+        previewUrl: "/a.mp4",
+        lqipBase64: "",
+        width: 100,
+        height: 100,
+        duration: 1,
+        category: "action",
+      },
+      {
+        id: "clip-b",
+        name: "Beta",
+        thumbnailUrl: "/b.jpg",
+        previewUrl: "/b.mp4",
+        lqipBase64: "",
+        width: 100,
+        height: 100,
+        duration: 1,
+        category: "action",
+      },
+    ];
+
+    clipDataProviderProps = null;
+
+    const props = {
+      lang: "ko",
+      dict: dict as never,
+      categories: {},
+      tagGroups: { groups: [], parentGroups: [] },
+      tagI18n: {},
+      browseSummary,
+      browseFilterIndex: browseSummary.map((clip) => ({
+        id: clip.id,
+        name: clip.name,
+        category: clip.category,
+        tags: [],
+        folders: [],
+        aiStructuredTags: [],
+        searchTokens: [clip.name.toLowerCase()],
+      })),
+      rawSearchParams: { board: "board-1" },
+      initialBoardClipIds: new Set(["clip-b"]),
+    } as unknown as ComponentProps<typeof BrowsePageShell>;
+
+    render(<BrowsePageShell {...props} />);
+
+    expect(clipDataProviderProps).toMatchObject({
+      clips: [expect.objectContaining({ id: "clip-b" })],
+      initialTotalCount: 1,
+      totalClipCount: 2,
+    });
   });
 });

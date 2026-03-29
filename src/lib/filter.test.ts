@@ -80,6 +80,7 @@ const baseFilters = {
   searchQuery: "",
   sortBy: "newest" as const,
   contentMode: null,
+  boardId: null,
 };
 
 const categories = {

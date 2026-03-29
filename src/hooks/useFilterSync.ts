@@ -14,11 +14,10 @@ export type FilterURLUpdates = Partial<{
   selectedFolders: string[];
   sortBy: SortBy;
   searchQuery: string;
+  boardId: string | null;
 }>;
 
-export function updateFilterURL(pathname: string, updates: FilterURLUpdates) {
-  useFilterStore.setState(updates);
-
+function buildFilterURL(pathname: string): string {
   const state = useFilterStore.getState();
   const params = new URLSearchParams();
 
@@ -30,10 +29,25 @@ export function updateFilterURL(pathname: string, updates: FilterURLUpdates) {
   state.selectedFolders.forEach((f) => params.append("folder", f));
   if (state.sortBy !== "newest") params.set("sort", state.sortBy);
   if (state.searchQuery) params.set("q", state.searchQuery);
+  if (state.boardId) params.set("board", state.boardId);
 
   const qs = params.toString();
-  const newPath = qs ? `${pathname}?${qs}` : pathname;
-  window.history.replaceState(null, "", newPath);
+  return qs ? `${pathname}?${qs}` : pathname;
+}
+
+export function updateFilterURL(pathname: string, updates: FilterURLUpdates) {
+  // Board transitions use pushState (enables browser back), others use replaceState
+  const isBoardTransition = "boardId" in updates;
+
+  useFilterStore.setState(updates);
+
+  const newPath = buildFilterURL(pathname);
+
+  if (isBoardTransition) {
+    window.history.pushState(null, "", newPath);
+  } else {
+    window.history.replaceState(null, "", newPath);
+  }
 }
 
 /**
@@ -65,6 +79,7 @@ export function useFilterSync() {
       rawMode && ["direction", "game"].includes(rawMode)
         ? (rawMode as ContentMode)
         : null;
+    const boardId = searchParams.get("board");
 
     useFilterStore.setState({
       category: category || null,
@@ -75,6 +90,7 @@ export function useFilterSync() {
       selectedFolders: folders,
       searchQuery: searchQuery || "",
       contentMode,
+      boardId: boardId || null,
     });
   }, [searchParams]);
 
