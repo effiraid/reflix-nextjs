@@ -14,6 +14,8 @@ import { useBrowseData, useClipData } from "./ClipDataProvider";
 import { collectExpandableFolderIds, filterCategoriesByMode, findNode } from "@/lib/categories";
 import type { CategoryTree, ContentMode, Locale, TagGroupData } from "@/lib/types";
 import type { Dictionary } from "../dictionaries";
+import { getViewHistory } from "@/lib/viewHistory";
+import { useClipStore } from "@/stores/clipStore";
 
 const EMPTY_TAG_GROUPS: TagGroupData = { groups: [], parentGroups: [] };
 
@@ -43,6 +45,13 @@ export function LeftPanelContent({
   const browseMode = useUIStore((s) => s.browseMode);
   const tagData = useTagGroups(tagGroups, lang, tagI18n);
   const boardCount = useBoardStore((s) => s.boards.length);
+  const selectedClipId = useClipStore((s) => s.selectedClipId);
+  const [historyCount, setHistoryCount] = useState(0);
+
+  useEffect(() => {
+    setHistoryCount(getViewHistory().length);
+  }, [browseMode, selectedClipId]);
+
   const [foldersExpanded, setFoldersExpanded] = useState(true);
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
     getDefaultExpandedFolderIds(categories)
@@ -213,11 +222,18 @@ export function LeftPanelContent({
 
         <button
           type="button"
-          onClick={() => updateURL({ sortBy: "newest" })}
-          className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover text-muted"
+          onClick={() => setBrowseMode("history")}
+          className={`flex items-center justify-between w-full text-left px-2 py-1.5 rounded hover:bg-surface-hover transition-colors ${
+            browseMode === "history" ? "bg-accent/10 text-accent" : "text-muted"
+          }`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          {dict.browse.recentlyUsed}
+          <span className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {dict.browse.recentlyUsed}
+          </span>
+          {historyCount > 0 ? (
+            <span className="text-muted text-xs">{historyCount}</span>
+          ) : null}
         </button>
       </div>
 
