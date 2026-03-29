@@ -20,7 +20,7 @@ describe("boardStore", () => {
     createClientMock.mockReset();
   });
 
-  it("loads boards and derives clip counts and covers from board_clips rows", async () => {
+  it("loads boards and derives clip counts and covers from separate board_clips rows", async () => {
     const orderMock = vi.fn().mockResolvedValue({
       data: [
         {
@@ -28,45 +28,54 @@ describe("boardStore", () => {
           name: "Favorites",
           created_at: "2026-03-29T00:00:00.000Z",
           updated_at: "2026-03-29T00:00:00.000Z",
-          board_clips: [
-            {
-              clip_id: "clip-a",
-              added_at: "2026-03-29T01:00:00.000Z",
-            },
-            {
-              clip_id: "clip-b",
-              added_at: "2026-03-29T02:00:00.000Z",
-            },
-          ],
         },
         {
           id: "board-2",
           name: "Combat",
           created_at: "2026-03-28T00:00:00.000Z",
           updated_at: "2026-03-28T00:00:00.000Z",
-          board_clips: [
-            {
-              clip_id: "clip-c",
-              added_at: "2026-03-28T01:00:00.000Z",
-            },
-            {
-              clip_id: "clip-d",
-              added_at: "2026-03-28T02:00:00.000Z",
-            },
-            {
-              clip_id: "clip-e",
-              added_at: "2026-03-28T03:00:00.000Z",
-            },
-            {
-              clip_id: "clip-f",
-              added_at: "2026-03-28T04:00:00.000Z",
-            },
-          ],
         },
       ],
     });
     const selectBoardsMock = vi.fn(() => ({
       order: orderMock,
+    }));
+    const inMock = vi.fn().mockResolvedValue({
+      data: [
+        {
+          board_id: "board-1",
+          clip_id: "clip-a",
+          added_at: "2026-03-29T01:00:00.000Z",
+        },
+        {
+          board_id: "board-1",
+          clip_id: "clip-b",
+          added_at: "2026-03-29T02:00:00.000Z",
+        },
+        {
+          board_id: "board-2",
+          clip_id: "clip-c",
+          added_at: "2026-03-28T01:00:00.000Z",
+        },
+        {
+          board_id: "board-2",
+          clip_id: "clip-d",
+          added_at: "2026-03-28T02:00:00.000Z",
+        },
+        {
+          board_id: "board-2",
+          clip_id: "clip-e",
+          added_at: "2026-03-28T03:00:00.000Z",
+        },
+        {
+          board_id: "board-2",
+          clip_id: "clip-f",
+          added_at: "2026-03-28T04:00:00.000Z",
+        },
+      ],
+    });
+    const selectBoardClipsMock = vi.fn(() => ({
+      in: inMock,
     }));
 
     createClientMock.mockReturnValue({
@@ -77,15 +86,23 @@ describe("boardStore", () => {
           };
         }
 
+        if (table === "board_clips") {
+          return {
+            select: selectBoardClipsMock,
+          };
+        }
+
         throw new Error(`Unexpected table: ${table}`);
       }),
     });
 
     await useBoardStore.getState().fetchBoards();
 
-    expect(selectBoardsMock).toHaveBeenCalledWith(
-      "id, name, created_at, updated_at, board_clips(clip_id, added_at)"
+    expect(selectBoardsMock).toHaveBeenCalledWith("id, name, created_at, updated_at");
+    expect(selectBoardClipsMock).toHaveBeenCalledWith(
+      "board_id, clip_id, added_at"
     );
+    expect(inMock).toHaveBeenCalledWith("board_id", ["board-1", "board-2"]);
     expect(useBoardStore.getState().boards).toEqual([
       {
         id: "board-1",

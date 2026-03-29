@@ -6,6 +6,10 @@ interface BoardClipRow {
   added_at?: string | null;
 }
 
+interface BoardClipMembershipRow extends BoardClipRow {
+  board_id?: string | null;
+}
+
 function getCoverClipIds(boardClips: BoardClipRow[] | null | undefined): string[] {
   return [...(boardClips ?? [])]
     .filter((row): row is { clip_id: string; added_at?: string | null } =>
@@ -152,16 +156,34 @@ export const useBoardStore = create<BoardState>()((set, get) => ({
 
     set({ isLoading: true });
 
-    const { data } = await supabase
+    const { data: boardRows } = await supabase
       .from("boards")
-      .select("id, name, created_at, updated_at, board_clips(clip_id, added_at)")
+      .select("id, name, created_at, updated_at")
       .order("created_at", { ascending: false });
 
-    if (data) {
-      const boards: Board[] = data.map((row) => {
-        const boardClips = Array.isArray(row.board_clips)
-          ? (row.board_clips as BoardClipRow[])
-          : [];
+    if (boardRows) {
+      const boardIds = boardRows
+        .map((row) => row.id)
+        .filter((boardId): boardId is string => typeof boardId === "string");
+      const boardClipsByBoardId = new Map<string, BoardClipRow[]>();
+
+      if (boardIds.length > 0) {
+        const { data: boardClipRows } = await supabase
+          .from("board_clips")
+          .select("board_id, clip_id, added_at")
+          .in("board_id", boardIds);
+
+        for (const row of (boardClipRows ?? []) as BoardClipMembershipRow[]) {
+          if (typeof row.board_id !== "string") continue;
+
+          const boardClips = boardClipsByBoardId.get(row.board_id) ?? [];
+          boardClips.push(row);
+          boardClipsByBoardId.set(row.board_id, boardClips);
+        }
+      }
+
+      const boards: Board[] = boardRows.map((row) => {
+        const boardClips = boardClipsByBoardId.get(row.id) ?? [];
         return {
           id: row.id,
           name: row.name,
