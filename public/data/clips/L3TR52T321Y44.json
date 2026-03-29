@@ -1,0 +1,143 @@
+{
+  "id": "L3TR52T321Y44",
+  "name": "연출 호라이즌 대화 제스처22",
+  "ext": "mp4",
+  "size": 5196805,
+  "width": 1280,
+  "height": 720,
+  "duration": 18.2,
+  "tags": [
+    "호라이즌",
+    "대화",
+    "제스처",
+    "연출",
+    "시네마틱"
+  ],
+  "folders": [
+    "MDDWHMJN8180H",
+    "L475K68YP1NH3"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        109,
+        70,
+        49
+      ],
+      "ratio": 41
+    },
+    {
+      "color": [
+        51,
+        21,
+        15
+      ],
+      "ratio": 21
+    },
+    {
+      "color": [
+        30,
+        8,
+        7
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        152,
+        99,
+        65
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        72,
+        43,
+        31
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        194,
+        129,
+        84
+      ],
+      "ratio": 2.71
+    },
+    {
+      "color": [
+        72,
+        25,
+        16
+      ],
+      "ratio": 2.7
+    },
+    {
+      "color": [
+        128,
+        100,
+        78
+      ],
+      "ratio": 0.58
+    },
+    {
+      "color": [
+        124,
+        90,
+        78
+      ],
+      "ratio": 0.48
+    }
+  ],
+  "btime": 1653975939606,
+  "mtime": 1649240639342,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 대화 제스처22",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "제스처",
+      "서 있음"
+    ],
+    "emotion": [
+      "진지함",
+      "평온함"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "오버더숄더 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "주인공",
+      "NPC"
+    ],
+    "effects": [
+      "라이팅 효과",
+      "피사계 심도"
+    ],
+    "description": {
+      "ko": "호라이즌의 주인공 에일로이가 NPC와 야외에서 대화를 나누는 장면입니다. 전반적으로 따뜻한 노을빛 조명이 캐릭터를 비추고 있으며, 배경에는 피사계 심도 효과가 적용되어 캐릭터의 인물 표현에 집중하고 있습니다.",
+      "en": "This scene depicts Aloy from Horizon engaging in a conversation with an NPC in an outdoor setting. The scene is illuminated by warm, sunset-hued lighting, and a depth-of-field effect is applied to the background to focus the viewer's attention on the characters."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:12.927Z"
+  },
+  "videoUrl": "/videos/L3TR52T321Y44.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T321Y44.webp",
+  "previewUrl": "/previews/L3TR52T321Y44.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEBAQEBAQAAAAAAAAAAAAAFBgMBBAcBAQEBAQEAAAAAAAAAAAAAAAIAAwUEEAACAQQDAQAAAAAAAAAAAAAAAQIyESGRMVFBAxEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APldJTLKuSLyysj0eB03JN2NEw/6MnU2SYj0QEdiIQ86hDzYfOo9642aC//Z",
+  "category": "dialogue-cinematic",
+  "relatedClips": []
+}

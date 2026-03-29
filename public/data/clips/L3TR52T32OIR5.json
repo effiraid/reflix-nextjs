@@ -1,0 +1,158 @@
+{
+  "id": "L3TR52T32OIR5",
+  "name": "연출 원신 피하기 달리기 피해달리기  회피",
+  "ext": "mp4",
+  "size": 1024819,
+  "width": 1280,
+  "height": 700,
+  "duration": 2.834,
+  "tags": [
+    "원신",
+    "달리기",
+    "회피",
+    "피하기",
+    "연출",
+    "시네마틱"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "L951Y2DCQ8GH0"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        39,
+        50,
+        50
+      ],
+      "ratio": 68
+    },
+    {
+      "color": [
+        199,
+        203,
+        198
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        65,
+        84,
+        88
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        7,
+        8,
+        10
+      ],
+      "ratio": 4.34
+    },
+    {
+      "color": [
+        83,
+        107,
+        121
+      ],
+      "ratio": 4.28
+    },
+    {
+      "color": [
+        95,
+        107,
+        94
+      ],
+      "ratio": 3.23
+    },
+    {
+      "color": [
+        158,
+        160,
+        133
+      ],
+      "ratio": 2.51
+    },
+    {
+      "color": [
+        71,
+        74,
+        65
+      ],
+      "ratio": 1.97
+    },
+    {
+      "color": [
+        98,
+        79,
+        65
+      ],
+      "ratio": 0.47
+    },
+    {
+      "color": [
+        62,
+        105,
+        187
+      ],
+      "ratio": 0.45
+    }
+  ],
+  "btime": 1653976777222,
+  "mtime": 1653976777752,
+  "i18n": {
+    "title": {
+      "ko": "연출 원신 피하기 달리기 피해달리기  회피",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "달리기",
+      "회피",
+      "질주",
+      "액션"
+    ],
+    "emotion": [
+      "긴박함",
+      "역동적",
+      "강인함"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "추적 샷",
+      "로우 앵글"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "게임 캐릭터",
+      "남성 캐릭터",
+      "판타지 캐릭터"
+    ],
+    "effects": [
+      "카메라 흔들림",
+      "모션 블러",
+      "먼지 파티클",
+      "파편 이펙트"
+    ],
+    "description": {
+      "ko": "아라타키 이토가 무너지는 돌덩이들을 피해 긴박하게 질주하는 모습을 역동적인 로우 앵글로 포착했습니다. 카메라 흔들림과 모션 블러 효과가 더해져 긴박한 추격전의 생동감을 극대화하고 있습니다.",
+      "en": "The clip captures Arataki Itto sprinting intensely to dodge falling rocks, framed in a dynamic low-angle shot. The addition of camera shake and motion blur effects maximizes the vividness of the urgent chase sequence."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:27.490Z"
+  },
+  "videoUrl": "/videos/L3TR52T32OIR5.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32OIR5.webp",
+  "previewUrl": "/previews/L3TR52T32OIR5.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAJAAjAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEBAQEAAAAAAAAAAAAAAAAHBQQGAQEBAQEAAAAAAAAAAAAAAAADAQIAEAACAQIFBQEAAAAAAAAAAAABAAIRITFCcSKBA0ESUbEyEQEBAAAAAAAAAAAAAAAAAAAAAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/ADirlJdfiY4h1C8vjoLdKJhYmtbsAvc9SEyQfYHdOCxzu5HcWVXby0T+iysvLqIRZ5dCi5xWaeXQowcUSP/Z",
+  "category": "direction-video",
+  "relatedClips": []
+}

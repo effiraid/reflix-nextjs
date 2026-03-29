@@ -1,0 +1,154 @@
+{
+  "id": "L3TR52T31DNOL",
+  "name": "연출 아케인 피드백 대화 제스처",
+  "ext": "mp4",
+  "size": 946669,
+  "width": 1280,
+  "height": 720,
+  "duration": 9.92,
+  "tags": [
+    "아케인",
+    "대화",
+    "제스처",
+    "연출",
+    "애니메이션"
+  ],
+  "folders": [
+    "MDDWHMJN8180H",
+    "L475K68YP1NH3"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        14,
+        16,
+        19
+      ],
+      "ratio": 57
+    },
+    {
+      "color": [
+        81,
+        90,
+        93
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        118,
+        134,
+        139
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        102,
+        101,
+        99
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        113,
+        119,
+        110
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        44,
+        52,
+        58
+      ],
+      "ratio": 4.85
+    },
+    {
+      "color": [
+        75,
+        70,
+        65
+      ],
+      "ratio": 2.08
+    },
+    {
+      "color": [
+        67,
+        56,
+        58
+      ],
+      "ratio": 1.76
+    },
+    {
+      "color": [
+        37,
+        44,
+        43
+      ],
+      "ratio": 1.1
+    },
+    {
+      "color": [
+        92,
+        114,
+        124
+      ],
+      "ratio": 0.84
+    }
+  ],
+  "btime": 1653975937613,
+  "mtime": 1654612114727,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 피드백 대화 제스처",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "제스처",
+      "서 있음",
+      "바라봄"
+    ],
+    "emotion": [
+      "진지함",
+      "자신감",
+      "분석적"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "로우 앵글",
+      "오버더숄더 샷"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "요들",
+      "인간 남성"
+    ],
+    "effects": [
+      "그림자 효과",
+      "실루엣 효과"
+    ],
+    "description": {
+      "ko": "애니메이션 '아케인'의 한 장면으로, 피험체인 요들 캐릭터가 연구 결과를 설명하며 제스처를 취하고 있습니다. 로우 앵글을 통해 캐릭터의 권위와 실험실의 분위기를 강조하며, 대비가 강한 조명으로 캐릭터의 실루엣을 부각합니다.",
+      "en": "In this scene from the animation 'Arcane', a yordle character explains his research findings through expressive gestures. The low-angle shot emphasizes the character's authority and the laboratory environment, while high-contrast lighting accentuates the character's silhouette."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:12.925Z"
+  },
+  "videoUrl": "/videos/L3TR52T31DNOL.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T31DNOL.webp",
+  "previewUrl": "/previews/L3TR52T31DNOL.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABZAAEBAQEBAQAAAAAAAAAAAAAABwUGAQQBAQEBAAAAAAAAAAAAAAAAAAECABAAAwEBAAMBAAAAAAAAAAAAAAECEVEhoUExEQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AiWI25hUacLP3D6KrOFIc1UpGf44UVY0m8PWpfxegCSgAFgAMz//Z",
+  "category": "dialogue-cinematic",
+  "relatedClips": []
+}

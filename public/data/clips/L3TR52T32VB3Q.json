@@ -1,0 +1,144 @@
+{
+  "id": "L3TR52T32VB3Q",
+  "name": "연출 아케인 회상 고뇌 해명 헤드 애니메이션",
+  "ext": "mp4",
+  "size": 549893,
+  "width": 1280,
+  "height": 720,
+  "duration": 7.168,
+  "tags": [
+    "머리",
+    "아케인",
+    "고뇌",
+    "해명",
+    "회상",
+    "걱정",
+    "고민",
+    "연출",
+    "무기",
+    "한숨",
+    "불안",
+    "두려움",
+    "무서움",
+    "공포",
+    "겁먹음",
+    "애니메이션"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "MN34RZ0O4BJF5"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        9,
+        4,
+        8
+      ],
+      "ratio": 58
+    },
+    {
+      "color": [
+        53,
+        7,
+        26
+      ],
+      "ratio": 18
+    },
+    {
+      "color": [
+        31,
+        4,
+        14
+      ],
+      "ratio": 10
+    },
+    {
+      "color": [
+        94,
+        40,
+        63
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        23,
+        10,
+        28
+      ],
+      "ratio": 1.88
+    },
+    {
+      "color": [
+        118,
+        52,
+        83
+      ],
+      "ratio": 1.4
+    },
+    {
+      "color": [
+        67,
+        34,
+        52
+      ],
+      "ratio": 0.43
+    }
+  ],
+  "btime": 1653975942932,
+  "mtime": 1654612115657,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 회상 고뇌 해명 헤드 애니메이션",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "묶여있음",
+      "말하기",
+      "응시"
+    ],
+    "emotion": [
+      "고뇌",
+      "불안",
+      "두려움",
+      "회한",
+      "고통"
+    ],
+    "composition": [
+      "클로즈업",
+      "익스트림 클로즈업",
+      "아이 레벨 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "여성",
+      "전사",
+      "주인공"
+    ],
+    "effects": [
+      "보라색 오라",
+      "어두운 분위기",
+      "그림자 효과"
+    ],
+    "description": {
+      "ko": "밧줄에 묶인 채 고통스러운 과거를 회상하는 캐릭터의 내면 심리가 강조되는 장면입니다. 어두운 배경과 보라색 이펙트가 캐릭터의 불안한 감정을 시각적으로 잘 나타내고 있습니다.",
+      "en": "The scene emphasizes the character's internal turmoil as she reflects on a painful past while tied up. The dark background and purple effects effectively visualize the character's deep anxiety and distress."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:29.165Z"
+  },
+  "videoUrl": "/videos/L3TR52T32VB3Q.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32VB3Q.webp",
+  "previewUrl": "/previews/L3TR52T32VB3Q.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABWAAEBAQEBAAAAAAAAAAAAAAAABQQHAgEAAwEBAAAAAAAAAAAAAAAAAAQBAgMQAQEBAQAAAAAAAAAAAAAAAAARAgERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A4K0R5V8xTsYJxPX9RGVyrKAyXAAH/9k=",
+  "category": "direction-video",
+  "relatedClips": []
+}

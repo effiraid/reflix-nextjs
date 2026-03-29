@@ -424,5 +424,218 @@
       "연출",
       "시네마틱"
     ]
+  },
+  {
+    "id": "L3TR52T31DNOL",
+    "name": "연출 아케인 피드백 대화 제스처",
+    "thumbnailUrl": "/thumbnails/L3TR52T31DNOL.webp",
+    "previewUrl": "/previews/L3TR52T31DNOL.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABZAAEBAQEBAQAAAAAAAAAAAAAABwUGAQQBAQEBAAAAAAAAAAAAAAAAAAECABAAAwEBAAMBAAAAAAAAAAAAAAECEVEhoUExEQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AiWI25hUacLP3D6KrOFIc1UpGf44UVY0m8PWpfxegCSgAFgAMz//Z",
+    "width": 1280,
+    "height": 720,
+    "duration": 9.92,
+    "category": "dialogue-cinematic",
+    "tags": [
+      "아케인",
+      "대화",
+      "제스처",
+      "연출",
+      "애니메이션"
+    ]
+  },
+  {
+    "id": "L3TR52T31ER7Z",
+    "name": "연출 포트나이트 한심 팔짱 무빙홀드",
+    "thumbnailUrl": "/thumbnails/L3TR52T31ER7Z.webp",
+    "previewUrl": "/previews/L3TR52T31ER7Z.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABhAAADAQEBAAAAAAAAAAAAAAAFAgEEBgMBAQEBAQAAAAAAAAAAAAAAAAMFAQQQAAIBBAIDAQAAAAAAAAAAAAEAAhExIUGBcWEDURIRAQEBAQAAAAAAAAAAAAAAAAABMUH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD1A/N5AhL1Gnj8EUJuOE/AY65Y2dV2czPSMlEjeXVKMfvl5X2TrZXWNQVbHSibmoHVVjVR1//Z",
+    "width": 1920,
+    "height": 1080,
+    "duration": 3.111474,
+    "category": "direction-video",
+    "tags": [
+      "포트나이트",
+      "무빙홀드",
+      "팔짱",
+      "연출",
+      "시네마틱"
+    ]
+  },
+  {
+    "id": "L3TR52T31UOHP",
+    "name": "연출 아케인 호흡 충격 가쁜 숨을 가쁘게 쉴 지침 힘듦",
+    "thumbnailUrl": "/thumbnails/L3TR52T31UOHP.webp",
+    "previewUrl": "/previews/L3TR52T31UOHP.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEAAwEBAAAAAAAAAAAAAAAABgUHBAMBAQEBAQAAAAAAAAAAAAAAAAEDBAIQAAICAgMBAQAAAAAAAAAAAAEAAhEhElETYUEDEQEBAAAAAAAAAAAAAAAAAAAAEf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AMa1evRnJj1jOfQxCRsuyLSPUQiTTaH8QJDgtRA0b4Zd2A5Px5TY+knMBJIH/9k=",
+    "width": 1280,
+    "height": 720,
+    "duration": 4.054,
+    "category": "direction-video",
+    "tags": [
+      "아케인",
+      "힘듦",
+      "호흡",
+      "지침",
+      "숨",
+      "연출",
+      "애니메이션"
+    ]
+  },
+  {
+    "id": "L3TR52T321Y44",
+    "name": "연출 호라이즌 대화 제스처22",
+    "thumbnailUrl": "/thumbnails/L3TR52T321Y44.webp",
+    "previewUrl": "/previews/L3TR52T321Y44.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEBAQEBAQAAAAAAAAAAAAAFBgMBBAcBAQEBAQEAAAAAAAAAAAAAAAIAAwUEEAACAQQDAQAAAAAAAAAAAAAAAQIyESGRMVFBAxEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APldJTLKuSLyysj0eB03JN2NEw/6MnU2SYj0QEdiIQ86hDzYfOo9642aC//Z",
+    "width": 1280,
+    "height": 720,
+    "duration": 18.2,
+    "category": "dialogue-cinematic",
+    "tags": [
+      "호라이즌",
+      "대화",
+      "제스처",
+      "연출",
+      "시네마틱"
+    ]
+  },
+  {
+    "id": "L3TR52T32OIR5",
+    "name": "연출 원신 피하기 달리기 피해달리기  회피",
+    "thumbnailUrl": "/thumbnails/L3TR52T32OIR5.webp",
+    "previewUrl": "/previews/L3TR52T32OIR5.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAJAAjAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEBAQEAAAAAAAAAAAAAAAAHBQQGAQEBAQEAAAAAAAAAAAAAAAADAQIAEAACAQIFBQEAAAAAAAAAAAABAAIRITFCcSKBA0ESUbEyEQEBAAAAAAAAAAAAAAAAAAAAAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/ADirlJdfiY4h1C8vjoLdKJhYmtbsAvc9SEyQfYHdOCxzu5HcWVXby0T+iysvLqIRZ5dCi5xWaeXQowcUSP/Z",
+    "width": 1280,
+    "height": 700,
+    "duration": 2.834,
+    "category": "direction-video",
+    "tags": [
+      "원신",
+      "달리기",
+      "회피",
+      "피하기",
+      "연출",
+      "시네마틱"
+    ]
+  },
+  {
+    "id": "L3TR52T32QX17",
+    "name": "연출 호라이즌 요리 음식 썰기",
+    "thumbnailUrl": "/thumbnails/L3TR52T32QX17.webp",
+    "previewUrl": "/previews/L3TR52T32QX17.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAACAgMBAAAAAAAAAAAAAAAFBgQBAgADBwEBAQEBAQAAAAAAAAAAAAAAAwQCAQUQAAICAgMBAAAAAAAAAAAAAAABAhFhIRIxUTIRAQEBAAAAAAAAAAAAAAAAAABBAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APNFJ08jB9RE47KyF6WGyHbrwETVvSMuTaoht5MOooICwGGAMxNZUSwKpj//2Q==",
+    "width": 1280,
+    "height": 720,
+    "duration": 4.179773,
+    "category": "direction-video",
+    "tags": [
+      "호라이즌",
+      "음식",
+      "요리",
+      "썰기",
+      "연출",
+      "씹기",
+      "먹기",
+      "시네마틱"
+    ]
+  },
+  {
+    "id": "L3TR52T32UGSF",
+    "name": "연출 호라이즌 전쟁 전투 칼싸움 교전",
+    "thumbnailUrl": "/thumbnails/L3TR52T32UGSF.webp",
+    "previewUrl": "/previews/L3TR52T32UGSF.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABfAAADAQEAAAAAAAAAAAAAAAAGAQQFAgEBAQEBAQAAAAAAAAAAAAAAAgMBBgUQAAIBAwUBAQAAAAAAAAAAAAABEQLhQUJRcWEiIbERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AAoUrqAySTAR/AvR5Tp5Cq8tdmm6TFbU/pTMgMM78F+lEO/BbpRpO7iwK48El3//Z",
+    "width": 1280,
+    "height": 720,
+    "duration": 5.967,
+    "category": "combat-ready",
+    "tags": [
+      "호라이즌",
+      "싸움",
+      "전쟁",
+      "연출",
+      "전투",
+      "교전",
+      "일대일",
+      "공격",
+      "시네마틱"
+    ]
+  },
+  {
+    "id": "L3TR52T32VB3Q",
+    "name": "연출 아케인 회상 고뇌 해명 헤드 애니메이션",
+    "thumbnailUrl": "/thumbnails/L3TR52T32VB3Q.webp",
+    "previewUrl": "/previews/L3TR52T32VB3Q.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABWAAEBAQEBAAAAAAAAAAAAAAAABQQHAgEAAwEBAAAAAAAAAAAAAAAAAAQBAgMQAQEBAQAAAAAAAAAAAAAAAAARAgERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A4K0R5V8xTsYJxPX9RGVyrKAyXAAH/9k=",
+    "width": 1280,
+    "height": 720,
+    "duration": 7.168,
+    "category": "direction-video",
+    "tags": [
+      "머리",
+      "아케인",
+      "고뇌",
+      "해명",
+      "회상",
+      "걱정",
+      "고민",
+      "연출",
+      "무기",
+      "한숨",
+      "불안",
+      "두려움",
+      "무서움",
+      "공포",
+      "겁먹음",
+      "애니메이션"
+    ]
+  },
+  {
+    "id": "L3TR52T32WAXW",
+    "name": "연출 아케인 한숨 달갑지 않음 짜증 별로",
+    "thumbnailUrl": "/thumbnails/L3TR52T32WAXW.webp",
+    "previewUrl": "/previews/L3TR52T32WAXW.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABbAAEBAQEBAAAAAAAAAAAAAAAABQcGAwEBAQEBAQAAAAAAAAAAAAAAAwEAAgQQAAICAwEBAQAAAAAAAAAAAAABAiEDEjFREWERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDLljK7xRSTK20a5+2QuJ39AM8NInQrDAhRsuKXtEdMnAA7zgAMr//Z",
+    "width": 1280,
+    "height": 720,
+    "duration": 4.375,
+    "category": "direction-video",
+    "tags": [
+      "아케인",
+      "짜증",
+      "한숨",
+      "연출",
+      "걱정",
+      "고민",
+      "불안",
+      "두려움",
+      "무서움",
+      "공포",
+      "겁먹음",
+      "애니메이션"
+    ]
+  },
+  {
+    "id": "L3TR52T32XPDK",
+    "name": "연출 호라이즌 깸 깨기 깨어나기 일어나기 무릎 꿇기",
+    "thumbnailUrl": "/thumbnails/L3TR52T32XPDK.webp",
+    "previewUrl": "/previews/L3TR52T32XPDK.mp4",
+    "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABcAAEAAwEBAAAAAAAAAAAAAAAGAwQFAgcBAQEBAQEAAAAAAAAAAAAAAAMCAQAEEAACAgIDAQAAAAAAAAAAAAAAAQIxESGBQWGREQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A8+ODIUi/rHoD3LzWDHYgU04KNvPwMSvRQlFUQk3RAjRkUKYZFEKfIWOW/9k=",
+    "width": 1280,
+    "height": 720,
+    "duration": 7.567,
+    "category": "direction-video",
+    "tags": [
+      "호라이즌",
+      "일어나기",
+      "무릎",
+      "꿇기",
+      "깸",
+      "깨기",
+      "깨어남",
+      "연출",
+      "무기",
+      "시네마틱"
+    ]
   }
 ]

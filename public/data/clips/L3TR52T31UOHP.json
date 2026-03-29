@@ -1,0 +1,159 @@
+{
+  "id": "L3TR52T31UOHP",
+  "name": "연출 아케인 호흡 충격 가쁜 숨을 가쁘게 쉴 지침 힘듦",
+  "ext": "mp4",
+  "size": 551365,
+  "width": 1280,
+  "height": 720,
+  "duration": 4.054,
+  "tags": [
+    "아케인",
+    "힘듦",
+    "호흡",
+    "지침",
+    "숨",
+    "연출",
+    "애니메이션"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "MN34S0ZRPT5WD"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        24,
+        19,
+        30
+      ],
+      "ratio": 56
+    },
+    {
+      "color": [
+        69,
+        53,
+        84
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        104,
+        75,
+        131
+      ],
+      "ratio": 10
+    },
+    {
+      "color": [
+        135,
+        130,
+        167
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        120,
+        126,
+        150
+      ],
+      "ratio": 3.55
+    },
+    {
+      "color": [
+        217,
+        123,
+        232
+      ],
+      "ratio": 3.37
+    },
+    {
+      "color": [
+        73,
+        40,
+        63
+      ],
+      "ratio": 1.75
+    },
+    {
+      "color": [
+        50,
+        53,
+        66
+      ],
+      "ratio": 1.58
+    },
+    {
+      "color": [
+        100,
+        70,
+        92
+      ],
+      "ratio": 1.05
+    },
+    {
+      "color": [
+        77,
+        77,
+        95
+      ],
+      "ratio": 0.84
+    }
+  ],
+  "btime": 1653975942446,
+  "mtime": 1654612115290,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 호흡 충격 가쁜 숨을 가쁘게 쉴 지침 힘듦",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "호흡",
+      "고통",
+      "몸부림",
+      "지침"
+    ],
+    "emotion": [
+      "고통스러운",
+      "힘겨움",
+      "절망",
+      "혼란"
+    ],
+    "composition": [
+      "클로즈업",
+      "로우 앵글",
+      "미디엄 샷"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "애니메이션 캐릭터",
+      "전사"
+    ],
+    "effects": [
+      "파티클",
+      "빛 효과",
+      "보라색 안개",
+      "모션 블러"
+    ],
+    "description": {
+      "ko": "캐릭터가 극심한 고통 속에서 가쁘게 숨을 몰아쉬며 힘겨워하는 모습을 로우 앵글로 포착했습니다. 주변을 감싸는 보라색 파티클과 빛 효과가 캐릭터의 위태로운 상황과 심리적 압박감을 강조합니다.",
+      "en": "The character is captured in a low-angle shot, gasping for breath amidst intense physical and emotional agony. The surrounding purple particles and glowing light effects emphasize the character's precarious situation and psychological distress."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:12.633Z"
+  },
+  "videoUrl": "/videos/L3TR52T31UOHP.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T31UOHP.webp",
+  "previewUrl": "/previews/L3TR52T31UOHP.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEAAwEBAAAAAAAAAAAAAAAABgUHBAMBAQEBAQAAAAAAAAAAAAAAAAEDBAIQAAICAgMBAQAAAAAAAAAAAAEAAhEhElETYUEDEQEBAAAAAAAAAAAAAAAAAAAAEf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AMa1evRnJj1jOfQxCRsuyLSPUQiTTaH8QJDgtRA0b4Zd2A5Px5TY+knMBJIH/9k=",
+  "category": "direction-video",
+  "relatedClips": []
+}

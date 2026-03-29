@@ -1,0 +1,149 @@
+{
+  "id": "L3TR52T32WAXW",
+  "name": "연출 아케인 한숨 달갑지 않음 짜증 별로",
+  "ext": "mp4",
+  "size": 378714,
+  "width": 1280,
+  "height": 720,
+  "duration": 4.375,
+  "tags": [
+    "아케인",
+    "짜증",
+    "한숨",
+    "연출",
+    "걱정",
+    "고민",
+    "불안",
+    "두려움",
+    "무서움",
+    "공포",
+    "겁먹음",
+    "애니메이션"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "MN34RZ0O4BJF5"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        29,
+        24,
+        21
+      ],
+      "ratio": 53
+    },
+    {
+      "color": [
+        130,
+        108,
+        90
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        92,
+        73,
+        61
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        192,
+        170,
+        145
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        72,
+        69,
+        57
+      ],
+      "ratio": 5
+    },
+    {
+      "color": [
+        105,
+        101,
+        85
+      ],
+      "ratio": 2.02
+    },
+    {
+      "color": [
+        154,
+        148,
+        126
+      ],
+      "ratio": 1.39
+    },
+    {
+      "color": [
+        66,
+        60,
+        60
+      ],
+      "ratio": 0.32
+    }
+  ],
+  "btime": 1653975937681,
+  "mtime": 1654612114817,
+  "i18n": {
+    "title": {
+      "ko": "연출 아케인 한숨 달갑지 않음 짜증 별로",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "대화",
+      "쳐다보기",
+      "질문하기",
+      "한숨"
+    ],
+    "emotion": [
+      "짜증",
+      "경계",
+      "불안",
+      "의구심",
+      "냉소"
+    ],
+    "composition": [
+      "로우 앵글",
+      "풀 샷",
+      "클로즈업",
+      "역방향 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "전사",
+      "정치인",
+      "지배자"
+    ],
+    "effects": [
+      "라이팅 효과",
+      "그림자 강조"
+    ],
+    "description": {
+      "ko": "계단 위 높은 곳에 위치한 인물을 로우 앵글로 비추어 권위적인 분위기를 조성하며, 아래에 선 인물의 클로즈업을 통해 긴장감과 불쾌한 심리를 효과적으로 대비시켰습니다. 빛과 그림자의 대비가 강렬하게 사용되어 인물 간의 정치적 갈등과 미묘한 적대감을 시각적으로 극대화했습니다.",
+      "en": "The scene establishes an authoritative atmosphere by filming the figure on the stairs from a low angle, effectively contrasting it with a close-up of the character below, which captures her anxiety and displeasure. The strong contrast between light and shadow is used to visually heighten the political tension and subtle hostility between the characters."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:44.122Z"
+  },
+  "videoUrl": "/videos/L3TR52T32WAXW.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32WAXW.webp",
+  "previewUrl": "/previews/L3TR52T32WAXW.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABbAAEBAQEBAAAAAAAAAAAAAAAABQcGAwEBAQEBAQAAAAAAAAAAAAAAAwEAAgQQAAICAwEBAQAAAAAAAAAAAAABAiEDEjFREWERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDLljK7xRSTK20a5+2QuJ39AM8NInQrDAhRsuKXtEdMnAA7zgAMr//Z",
+  "category": "direction-video",
+  "relatedClips": []
+}

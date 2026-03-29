@@ -1292,8 +1292,607 @@
       "previewUrl": "/previews/L3TR52T31CFQ9.mp4",
       "thumbnailUrl": "/thumbnails/L3TR52T31CFQ9.webp",
       "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABkAAEBAQEAAAAAAAAAAAAAAAAFBAYHAQEBAQEAAAAAAAAAAAAAAAAEAwIFEAACAQMDBQEBAAAAAAAAAAABAAJBAxEyccFhM1HREiETEQEBAQEBAQAAAAAAAAAAAAAAEQExEkH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwC7t+2qOCPquWH+nRRFwAPG+26jT0ZCrKZDP4xxmPDUSt9b1GZHPjwE8qJ4CehYbW3pVDXdNt6VI13V7wx//9k="
+    },
+    {
+      "id": "L3TR52T31DNOL",
+      "name": "연출 아케인 피드백 대화 제스처",
+      "tags": [
+        "아케인",
+        "대화",
+        "제스처",
+        "연출",
+        "애니메이션"
+      ],
+      "aiTags": {
+        "actionType": [
+          "대화",
+          "제스처",
+          "서 있음",
+          "바라봄"
+        ],
+        "emotion": [
+          "진지함",
+          "자신감",
+          "분석적"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "로우 앵글",
+          "오버더숄더 샷"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "요들",
+          "인간 남성"
+        ],
+        "effects": [
+          "그림자 효과",
+          "실루엣 효과"
+        ],
+        "description": {
+          "ko": "애니메이션 '아케인'의 한 장면으로, 피험체인 요들 캐릭터가 연구 결과를 설명하며 제스처를 취하고 있습니다. 로우 앵글을 통해 캐릭터의 권위와 실험실의 분위기를 강조하며, 대비가 강한 조명으로 캐릭터의 실루엣을 부각합니다.",
+          "en": "In this scene from the animation 'Arcane', a yordle character explains his research findings through expressive gestures. The low-angle shot emphasizes the character's authority and the laboratory environment, while high-contrast lighting accentuates the character's silhouette."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:12.925Z"
+      },
+      "folders": [
+        "MDDWHMJN8180H",
+        "L475K68YP1NH3"
+      ],
+      "category": "dialogue-cinematic",
+      "width": 1280,
+      "height": 720,
+      "duration": 9.92,
+      "previewUrl": "/previews/L3TR52T31DNOL.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T31DNOL.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABZAAEBAQEBAQAAAAAAAAAAAAAABwUGAQQBAQEBAAAAAAAAAAAAAAAAAAECABAAAwEBAAMBAAAAAAAAAAAAAAECEVEhoUExEQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AiWI25hUacLP3D6KrOFIc1UpGf44UVY0m8PWpfxegCSgAFgAMz//Z"
+    },
+    {
+      "id": "L3TR52T31ER7Z",
+      "name": "연출 포트나이트 한심 팔짱 무빙홀드",
+      "tags": [
+        "포트나이트",
+        "무빙홀드",
+        "팔짱",
+        "연출",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "팔짱 끼기",
+          "대기",
+          "포즈 취하기",
+          "무빙홀드"
+        ],
+        "emotion": [
+          "피로",
+          "지루함",
+          "냉소",
+          "무관심"
+        ],
+        "composition": [
+          "풀 샷",
+          "아이 레벨",
+          "정면 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "게임 캐릭터",
+          "판타지 전사"
+        ],
+        "effects": [
+          "바닥 발광 이펙트",
+          "앰비언트 오클루전",
+          "실시간 렌더링 효과"
+        ],
+        "description": {
+          "ko": "포트나이트 게임 내 캐릭터들이 무대 위에 서서 지루한 듯 팔짱을 끼고 대기하는 모습을 보여줍니다. 캐릭터 발밑에서 은은한 금빛 이펙트가 솟아오르며 고정된 자세로 주변을 관조하는 연출이 돋보입니다.",
+          "en": "Characters from the game Fortnite stand on a stage, crossing their arms and waiting as if bored. A subtle golden glow emits from beneath their feet, creating a cinematic moment where they observe their surroundings in a static pose."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:13.254Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "LNVQ99G8WEACR"
+      ],
+      "category": "direction-video",
+      "width": 1920,
+      "height": 1080,
+      "duration": 3.111474,
+      "previewUrl": "/previews/L3TR52T31ER7Z.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T31ER7Z.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABhAAADAQEBAAAAAAAAAAAAAAAFAgEEBgMBAQEBAQAAAAAAAAAAAAAAAAMFAQQQAAIBBAIDAQAAAAAAAAAAAAEAAhExIUGBcWEDURIRAQEBAQAAAAAAAAAAAAAAAAABMUH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD1A/N5AhL1Gnj8EUJuOE/AY65Y2dV2czPSMlEjeXVKMfvl5X2TrZXWNQVbHSibmoHVVjVR1//Z"
+    },
+    {
+      "id": "L3TR52T31UOHP",
+      "name": "연출 아케인 호흡 충격 가쁜 숨을 가쁘게 쉴 지침 힘듦",
+      "tags": [
+        "아케인",
+        "힘듦",
+        "호흡",
+        "지침",
+        "숨",
+        "연출",
+        "애니메이션"
+      ],
+      "aiTags": {
+        "actionType": [
+          "호흡",
+          "고통",
+          "몸부림",
+          "지침"
+        ],
+        "emotion": [
+          "고통스러운",
+          "힘겨움",
+          "절망",
+          "혼란"
+        ],
+        "composition": [
+          "클로즈업",
+          "로우 앵글",
+          "미디엄 샷"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "애니메이션 캐릭터",
+          "전사"
+        ],
+        "effects": [
+          "파티클",
+          "빛 효과",
+          "보라색 안개",
+          "모션 블러"
+        ],
+        "description": {
+          "ko": "캐릭터가 극심한 고통 속에서 가쁘게 숨을 몰아쉬며 힘겨워하는 모습을 로우 앵글로 포착했습니다. 주변을 감싸는 보라색 파티클과 빛 효과가 캐릭터의 위태로운 상황과 심리적 압박감을 강조합니다.",
+          "en": "The character is captured in a low-angle shot, gasping for breath amidst intense physical and emotional agony. The surrounding purple particles and glowing light effects emphasize the character's precarious situation and psychological distress."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:12.633Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 720,
+      "duration": 4.054,
+      "previewUrl": "/previews/L3TR52T31UOHP.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T31UOHP.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEAAwEBAAAAAAAAAAAAAAAABgUHBAMBAQEBAQAAAAAAAAAAAAAAAAEDBAIQAAICAgMBAQAAAAAAAAAAAAEAAhEhElETYUEDEQEBAAAAAAAAAAAAAAAAAAAAEf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/AMa1evRnJj1jOfQxCRsuyLSPUQiTTaH8QJDgtRA0b4Zd2A5Px5TY+knMBJIH/9k="
+    },
+    {
+      "id": "L3TR52T321Y44",
+      "name": "연출 호라이즌 대화 제스처22",
+      "tags": [
+        "호라이즌",
+        "대화",
+        "제스처",
+        "연출",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "대화",
+          "제스처",
+          "서 있음"
+        ],
+        "emotion": [
+          "진지함",
+          "평온함"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "오버더숄더 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "주인공",
+          "NPC"
+        ],
+        "effects": [
+          "라이팅 효과",
+          "피사계 심도"
+        ],
+        "description": {
+          "ko": "호라이즌의 주인공 에일로이가 NPC와 야외에서 대화를 나누는 장면입니다. 전반적으로 따뜻한 노을빛 조명이 캐릭터를 비추고 있으며, 배경에는 피사계 심도 효과가 적용되어 캐릭터의 인물 표현에 집중하고 있습니다.",
+          "en": "This scene depicts Aloy from Horizon engaging in a conversation with an NPC in an outdoor setting. The scene is illuminated by warm, sunset-hued lighting, and a depth-of-field effect is applied to the background to focus the viewer's attention on the characters."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:12.927Z"
+      },
+      "folders": [
+        "MDDWHMJN8180H",
+        "L475K68YP1NH3"
+      ],
+      "category": "dialogue-cinematic",
+      "width": 1280,
+      "height": 720,
+      "duration": 18.2,
+      "previewUrl": "/previews/L3TR52T321Y44.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T321Y44.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABdAAEBAQEBAQAAAAAAAAAAAAAFBgMBBAcBAQEBAQEAAAAAAAAAAAAAAAIAAwUEEAACAQQDAQAAAAAAAAAAAAAAAQIyESGRMVFBAxEBAAAAAAAAAAAAAAAAAAAAAP/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APldJTLKuSLyysj0eB03JN2NEw/6MnU2SYj0QEdiIQ86hDzYfOo9642aC//Z"
+    },
+    {
+      "id": "L3TR52T32OIR5",
+      "name": "연출 원신 피하기 달리기 피해달리기  회피",
+      "tags": [
+        "원신",
+        "달리기",
+        "회피",
+        "피하기",
+        "연출",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "달리기",
+          "회피",
+          "질주",
+          "액션"
+        ],
+        "emotion": [
+          "긴박함",
+          "역동적",
+          "강인함"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "추적 샷",
+          "로우 앵글"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "게임 캐릭터",
+          "남성 캐릭터",
+          "판타지 캐릭터"
+        ],
+        "effects": [
+          "카메라 흔들림",
+          "모션 블러",
+          "먼지 파티클",
+          "파편 이펙트"
+        ],
+        "description": {
+          "ko": "아라타키 이토가 무너지는 돌덩이들을 피해 긴박하게 질주하는 모습을 역동적인 로우 앵글로 포착했습니다. 카메라 흔들림과 모션 블러 효과가 더해져 긴박한 추격전의 생동감을 극대화하고 있습니다.",
+          "en": "The clip captures Arataki Itto sprinting intensely to dodge falling rocks, framed in a dynamic low-angle shot. The addition of camera shake and motion blur effects maximizes the vividness of the urgent chase sequence."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:27.490Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "L951Y2DCQ8GH0"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 700,
+      "duration": 2.834,
+      "previewUrl": "/previews/L3TR52T32OIR5.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32OIR5.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAJAAjAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAEBAQEAAAAAAAAAAAAAAAAHBQQGAQEBAQEAAAAAAAAAAAAAAAADAQIAEAACAQIFBQEAAAAAAAAAAAABAAIRITFCcSKBA0ESUbEyEQEBAAAAAAAAAAAAAAAAAAAAAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/ADirlJdfiY4h1C8vjoLdKJhYmtbsAvc9SEyQfYHdOCxzu5HcWVXby0T+iysvLqIRZ5dCi5xWaeXQowcUSP/Z"
+    },
+    {
+      "id": "L3TR52T32QX17",
+      "name": "연출 호라이즌 요리 음식 썰기",
+      "tags": [
+        "호라이즌",
+        "음식",
+        "요리",
+        "썰기",
+        "연출",
+        "씹기",
+        "먹기",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "요리하기",
+          "썰기",
+          "재료 손질하기",
+          "음식 준비"
+        ],
+        "emotion": [
+          "무심함",
+          "침착함",
+          "집중"
+        ],
+        "composition": [
+          "클로즈업",
+          "정면 샷"
+        ],
+        "pacing": "보통",
+        "characterType": [
+          "중세 요리사",
+          "노동자"
+        ],
+        "effects": [
+          "모션 블러",
+          "디테일한 질감 표현"
+        ],
+        "description": {
+          "ko": "중세 풍의 의상을 입은 요리사가 나무 도마 위에서 붉은 과일이나 채소를 칼로 능숙하게 썰어 통에 담는 모습을 보여줍니다. 클로즈업 샷을 통해 칼이 식재료를 통과하는 질감과 요리사의 숙련된 동작이 강조되었습니다.",
+          "en": "A cook in medieval attire skillfully slices a red fruit or vegetable on a wooden board and tosses the pieces into a barrel. The close-up shot emphasizes the texture of the knife passing through the ingredients and the character's practiced movements."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:29.847Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34S0ZRPT5WD"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 720,
+      "duration": 4.179773,
+      "previewUrl": "/previews/L3TR52T32QX17.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32QX17.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAACAgMBAAAAAAAAAAAAAAAFBgQBAgADBwEBAQEBAQAAAAAAAAAAAAAAAwQCAQUQAAICAgMBAAAAAAAAAAAAAAABAhFhIRIxUTIRAQEBAAAAAAAAAAAAAAAAAABBAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APNFJ08jB9RE47KyF6WGyHbrwETVvSMuTaoht5MOooICwGGAMxNZUSwKpj//2Q=="
+    },
+    {
+      "id": "L3TR52T32UGSF",
+      "name": "연출 호라이즌 전쟁 전투 칼싸움 교전",
+      "tags": [
+        "호라이즌",
+        "싸움",
+        "전쟁",
+        "연출",
+        "전투",
+        "교전",
+        "일대일",
+        "공격",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "근접 격투",
+          "검술",
+          "방어",
+          "반격",
+          "액션 시퀀스"
+        ],
+        "emotion": [
+          "긴박함",
+          "치열함",
+          "공격적"
+        ],
+        "composition": [
+          "미디엄 샷",
+          "로우 앵글",
+          "역동적인 카메라 무빙"
+        ],
+        "pacing": "빠름",
+        "characterType": [
+          "전사",
+          "부족원"
+        ],
+        "effects": [
+          "카메라 흔들림",
+          "모션 블러",
+          "파티클 이펙트",
+          "빛 번짐"
+        ],
+        "description": {
+          "ko": "붉게 물든 전장에서 두 전사가 서로의 무기를 맞대며 치열한 근접전을 펼치는 모습을 담고 있습니다. 빠른 카메라 움직임과 역동적인 타격 효과가 더해져 긴박하고 강렬한 전투 분위기를 극대화합니다.",
+          "en": "Two warriors engage in a fierce close-quarters combat on a crimson-hued battlefield, parrying each other's weapons with intensity. Fast camera movements and dynamic impact effects amplify the tense and visceral atmosphere of the fight."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:28.617Z"
+      },
+      "folders": [
+        "L951Y2DB121ZU",
+        "LNPMWX908R1NR",
+        "L475K68YP1NH3",
+        "MN34S7XS08AQ1"
+      ],
+      "category": "combat-ready",
+      "width": 1280,
+      "height": 720,
+      "duration": 5.967,
+      "previewUrl": "/previews/L3TR52T32UGSF.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32UGSF.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABfAAADAQEAAAAAAAAAAAAAAAAGAQQFAgEBAQEBAQAAAAAAAAAAAAAAAgMBBgUQAAIBAwUBAQAAAAAAAAAAAAABEQLhQUJRcWEiIbERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AAoUrqAySTAR/AvR5Tp5Cq8tdmm6TFbU/pTMgMM78F+lEO/BbpRpO7iwK48El3//Z"
+    },
+    {
+      "id": "L3TR52T32VB3Q",
+      "name": "연출 아케인 회상 고뇌 해명 헤드 애니메이션",
+      "tags": [
+        "머리",
+        "아케인",
+        "고뇌",
+        "해명",
+        "회상",
+        "걱정",
+        "고민",
+        "연출",
+        "무기",
+        "한숨",
+        "불안",
+        "두려움",
+        "무서움",
+        "공포",
+        "겁먹음",
+        "애니메이션"
+      ],
+      "aiTags": {
+        "actionType": [
+          "묶여있음",
+          "말하기",
+          "응시"
+        ],
+        "emotion": [
+          "고뇌",
+          "불안",
+          "두려움",
+          "회한",
+          "고통"
+        ],
+        "composition": [
+          "클로즈업",
+          "익스트림 클로즈업",
+          "아이 레벨 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "여성",
+          "전사",
+          "주인공"
+        ],
+        "effects": [
+          "보라색 오라",
+          "어두운 분위기",
+          "그림자 효과"
+        ],
+        "description": {
+          "ko": "밧줄에 묶인 채 고통스러운 과거를 회상하는 캐릭터의 내면 심리가 강조되는 장면입니다. 어두운 배경과 보라색 이펙트가 캐릭터의 불안한 감정을 시각적으로 잘 나타내고 있습니다.",
+          "en": "The scene emphasizes the character's internal turmoil as she reflects on a painful past while tied up. The dark background and purple effects effectively visualize the character's deep anxiety and distress."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:29.165Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34RZ0O4BJF5"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 720,
+      "duration": 7.168,
+      "previewUrl": "/previews/L3TR52T32VB3Q.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32VB3Q.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABWAAEBAQEBAAAAAAAAAAAAAAAABQQHAgEAAwEBAAAAAAAAAAAAAAAAAAQBAgMQAQEBAQAAAAAAAAAAAAAAAAARAgERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A4K0R5V8xTsYJxPX9RGVyrKAyXAAH/9k="
+    },
+    {
+      "id": "L3TR52T32WAXW",
+      "name": "연출 아케인 한숨 달갑지 않음 짜증 별로",
+      "tags": [
+        "아케인",
+        "짜증",
+        "한숨",
+        "연출",
+        "걱정",
+        "고민",
+        "불안",
+        "두려움",
+        "무서움",
+        "공포",
+        "겁먹음",
+        "애니메이션"
+      ],
+      "aiTags": {
+        "actionType": [
+          "대화",
+          "쳐다보기",
+          "질문하기",
+          "한숨"
+        ],
+        "emotion": [
+          "짜증",
+          "경계",
+          "불안",
+          "의구심",
+          "냉소"
+        ],
+        "composition": [
+          "로우 앵글",
+          "풀 샷",
+          "클로즈업",
+          "역방향 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "전사",
+          "정치인",
+          "지배자"
+        ],
+        "effects": [
+          "라이팅 효과",
+          "그림자 강조"
+        ],
+        "description": {
+          "ko": "계단 위 높은 곳에 위치한 인물을 로우 앵글로 비추어 권위적인 분위기를 조성하며, 아래에 선 인물의 클로즈업을 통해 긴장감과 불쾌한 심리를 효과적으로 대비시켰습니다. 빛과 그림자의 대비가 강렬하게 사용되어 인물 간의 정치적 갈등과 미묘한 적대감을 시각적으로 극대화했습니다.",
+          "en": "The scene establishes an authoritative atmosphere by filming the figure on the stairs from a low angle, effectively contrasting it with a close-up of the character below, which captures her anxiety and displeasure. The strong contrast between light and shadow is used to visually heighten the political tension and subtle hostility between the characters."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:44.122Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34RZ0O4BJF5"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 720,
+      "duration": 4.375,
+      "previewUrl": "/previews/L3TR52T32WAXW.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32WAXW.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABbAAEBAQEBAAAAAAAAAAAAAAAABQcGAwEBAQEBAQAAAAAAAAAAAAAAAwEAAgQQAAICAwEBAQAAAAAAAAAAAAABAiEDEjFREWERAQAAAAAAAAAAAAAAAAAAAAD/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwDLljK7xRSTK20a5+2QuJ39AM8NInQrDAhRsuKXtEdMnAA7zgAMr//Z"
+    },
+    {
+      "id": "L3TR52T32XPDK",
+      "name": "연출 호라이즌 깸 깨기 깨어나기 일어나기 무릎 꿇기",
+      "tags": [
+        "호라이즌",
+        "일어나기",
+        "무릎",
+        "꿇기",
+        "깸",
+        "깨기",
+        "깨어남",
+        "연출",
+        "무기",
+        "시네마틱"
+      ],
+      "aiTags": {
+        "actionType": [
+          "기상",
+          "무릎 꿇기",
+          "심호흡"
+        ],
+        "emotion": [
+          "고독함",
+          "피로함",
+          "평온함"
+        ],
+        "composition": [
+          "풀 샷",
+          "로우 앵글",
+          "와이드 샷"
+        ],
+        "pacing": "느림",
+        "characterType": [
+          "여성 전사",
+          "주인공"
+        ],
+        "effects": [
+          "햇살 효과",
+          "파티클",
+          "모션 블러"
+        ],
+        "description": {
+          "ko": "거대한 나무 아래에서 휴식을 취하던 주인공이 잠에서 깨어나 천천히 무릎을 꿇고 일어나는 평온한 장면입니다. 숲 사이로 비치는 햇살과 모닥불의 파티클이 어우러져 몽환적이고 감성적인 분위기를 연출합니다.",
+          "en": "The protagonist wakes up from resting under a giant tree, slowly kneeling and rising in a peaceful sequence. Sunbeams filtering through the forest canopy and dancing fire particles create a dreamy and atmospheric aesthetic."
+        },
+        "model": "gemini-3.1-flash-lite-preview",
+        "generatedAt": "2026-03-29T06:21:43.932Z"
+      },
+      "folders": [
+        "L475K68YP1NH3",
+        "MN34S0ZHF566Z"
+      ],
+      "category": "direction-video",
+      "width": 1280,
+      "height": 720,
+      "duration": 7.567,
+      "previewUrl": "/previews/L3TR52T32XPDK.mp4",
+      "thumbnailUrl": "/thumbnails/L3TR52T32XPDK.webp",
+      "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABcAAEAAwEBAAAAAAAAAAAAAAAGAwQFAgcBAQEBAQEAAAAAAAAAAAAAAAMCAQAEEAACAgIDAQAAAAAAAAAAAAAAAQIxESGBQWGREQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A8+ODIUi/rHoD3LzWDHYgU04KNvPwMSvRQlFUQk3RAjRkUKYZFEKfIWOW/9k="
     }
   ],
-  "totalCount": 20,
-  "generatedAt": "2026-03-28T17:24:58.133Z"
+  "totalCount": 30,
+  "generatedAt": "2026-03-29T06:21:55.096Z"
 }

@@ -1,0 +1,156 @@
+{
+  "id": "L3TR52T31ER7Z",
+  "name": "연출 포트나이트 한심 팔짱 무빙홀드",
+  "ext": "mp4",
+  "size": 865246,
+  "width": 1920,
+  "height": 1080,
+  "duration": 3.111474,
+  "tags": [
+    "포트나이트",
+    "무빙홀드",
+    "팔짱",
+    "연출",
+    "시네마틱"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "LNVQ99G8WEACR"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        152,
+        108,
+        84
+      ],
+      "ratio": 38
+    },
+    {
+      "color": [
+        224,
+        171,
+        115
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        49,
+        39,
+        18
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        189,
+        154,
+        144
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        90,
+        78,
+        39
+      ],
+      "ratio": 8
+    },
+    {
+      "color": [
+        91,
+        42,
+        27
+      ],
+      "ratio": 6
+    },
+    {
+      "color": [
+        137,
+        91,
+        30
+      ],
+      "ratio": 3.47
+    },
+    {
+      "color": [
+        190,
+        155,
+        88
+      ],
+      "ratio": 3.4
+    },
+    {
+      "color": [
+        217,
+        204,
+        190
+      ],
+      "ratio": 2.01
+    },
+    {
+      "color": [
+        190,
+        183,
+        137
+      ],
+      "ratio": 0.72
+    }
+  ],
+  "btime": 1653976778025,
+  "mtime": 1653976778734,
+  "i18n": {
+    "title": {
+      "ko": "연출 포트나이트 한심 팔짱 무빙홀드",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "팔짱 끼기",
+      "대기",
+      "포즈 취하기",
+      "무빙홀드"
+    ],
+    "emotion": [
+      "피로",
+      "지루함",
+      "냉소",
+      "무관심"
+    ],
+    "composition": [
+      "풀 샷",
+      "아이 레벨",
+      "정면 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "게임 캐릭터",
+      "판타지 전사"
+    ],
+    "effects": [
+      "바닥 발광 이펙트",
+      "앰비언트 오클루전",
+      "실시간 렌더링 효과"
+    ],
+    "description": {
+      "ko": "포트나이트 게임 내 캐릭터들이 무대 위에 서서 지루한 듯 팔짱을 끼고 대기하는 모습을 보여줍니다. 캐릭터 발밑에서 은은한 금빛 이펙트가 솟아오르며 고정된 자세로 주변을 관조하는 연출이 돋보입니다.",
+      "en": "Characters from the game Fortnite stand on a stage, crossing their arms and waiting as if bored. A subtle golden glow emits from beneath their feet, creating a cinematic moment where they observe their surroundings in a static pose."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:13.254Z"
+  },
+  "videoUrl": "/videos/L3TR52T31ER7Z.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T31ER7Z.webp",
+  "previewUrl": "/previews/L3TR52T31ER7Z.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABhAAADAQEBAAAAAAAAAAAAAAAFAgEEBgMBAQEBAQAAAAAAAAAAAAAAAAMFAQQQAAIBBAIDAQAAAAAAAAAAAAEAAhExIUGBcWEDURIRAQEBAQAAAAAAAAAAAAAAAAABMUH/wAARCAASACADASIAAhEAAxEA/9oADAMBAAIRAxEAPwD1A/N5AhL1Gnj8EUJuOE/AY65Y2dV2czPSMlEjeXVKMfvl5X2TrZXWNQVbHSibmoHVVjVR1//Z",
+  "category": "direction-video",
+  "relatedClips": []
+}

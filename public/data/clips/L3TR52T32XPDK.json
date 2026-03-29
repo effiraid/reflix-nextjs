@@ -1,0 +1,135 @@
+{
+  "id": "L3TR52T32XPDK",
+  "name": "연출 호라이즌 깸 깨기 깨어나기 일어나기 무릎 꿇기",
+  "ext": "mp4",
+  "size": 2106558,
+  "width": 1280,
+  "height": 720,
+  "duration": 7.567,
+  "tags": [
+    "호라이즌",
+    "일어나기",
+    "무릎",
+    "꿇기",
+    "깸",
+    "깨기",
+    "깨어남",
+    "연출",
+    "무기",
+    "시네마틱"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "MN34S0ZHF566Z"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        51,
+        33,
+        33
+      ],
+      "ratio": 54
+    },
+    {
+      "color": [
+        15,
+        12,
+        11
+      ],
+      "ratio": 13
+    },
+    {
+      "color": [
+        93,
+        56,
+        51
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        132,
+        78,
+        68
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        193,
+        145,
+        126
+      ],
+      "ratio": 4.28
+    },
+    {
+      "color": [
+        74,
+        60,
+        59
+      ],
+      "ratio": 3.73
+    },
+    {
+      "color": [
+        103,
+        84,
+        74
+      ],
+      "ratio": 0.8
+    }
+  ],
+  "btime": 1653975938601,
+  "mtime": 1649240598833,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 깸 깨기 깨어나기 일어나기 무릎 꿇기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "기상",
+      "무릎 꿇기",
+      "심호흡"
+    ],
+    "emotion": [
+      "고독함",
+      "피로함",
+      "평온함"
+    ],
+    "composition": [
+      "풀 샷",
+      "로우 앵글",
+      "와이드 샷"
+    ],
+    "pacing": "느림",
+    "characterType": [
+      "여성 전사",
+      "주인공"
+    ],
+    "effects": [
+      "햇살 효과",
+      "파티클",
+      "모션 블러"
+    ],
+    "description": {
+      "ko": "거대한 나무 아래에서 휴식을 취하던 주인공이 잠에서 깨어나 천천히 무릎을 꿇고 일어나는 평온한 장면입니다. 숲 사이로 비치는 햇살과 모닥불의 파티클이 어우러져 몽환적이고 감성적인 분위기를 연출합니다.",
+      "en": "The protagonist wakes up from resting under a giant tree, slowly kneeling and rising in a peaceful sequence. Sunbeams filtering through the forest canopy and dancing fire particles create a dreamy and atmospheric aesthetic."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:43.932Z"
+  },
+  "videoUrl": "/videos/L3TR52T32XPDK.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32XPDK.webp",
+  "previewUrl": "/previews/L3TR52T32XPDK.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABcAAEAAwEBAAAAAAAAAAAAAAAGAwQFAgcBAQEBAQEAAAAAAAAAAAAAAAMCAQAEEAACAgIDAQAAAAAAAAAAAAAAAQIxESGBQWGREQEAAAAAAAAAAAAAAAAAAAAA/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8A8+ODIUi/rHoD3LzWDHYgU04KNvPwMSvRQlFUQk3RAjRkUKYZFEKfIWOW/9k=",
+  "category": "direction-video",
+  "relatedClips": []
+}

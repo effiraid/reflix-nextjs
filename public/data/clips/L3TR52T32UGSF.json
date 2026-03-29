@@ -1,0 +1,163 @@
+{
+  "id": "L3TR52T32UGSF",
+  "name": "연출 호라이즌 전쟁 전투 칼싸움 교전",
+  "ext": "mp4",
+  "size": 1873147,
+  "width": 1280,
+  "height": 720,
+  "duration": 5.967,
+  "tags": [
+    "호라이즌",
+    "싸움",
+    "전쟁",
+    "연출",
+    "전투",
+    "교전",
+    "일대일",
+    "공격",
+    "시네마틱"
+  ],
+  "folders": [
+    "L951Y2DB121ZU",
+    "LNPMWX908R1NR",
+    "L475K68YP1NH3",
+    "MN34S7XS08AQ1"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        184,
+        81,
+        59
+      ],
+      "ratio": 41
+    },
+    {
+      "color": [
+        62,
+        26,
+        21
+      ],
+      "ratio": 15
+    },
+    {
+      "color": [
+        108,
+        49,
+        36
+      ],
+      "ratio": 13
+    },
+    {
+      "color": [
+        140,
+        65,
+        49
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        199,
+        126,
+        99
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        189,
+        112,
+        92
+      ],
+      "ratio": 7
+    },
+    {
+      "color": [
+        232,
+        107,
+        72
+      ],
+      "ratio": 2.31
+    },
+    {
+      "color": [
+        241,
+        185,
+        132
+      ],
+      "ratio": 0.88
+    },
+    {
+      "color": [
+        140,
+        34,
+        20
+      ],
+      "ratio": 0.81
+    },
+    {
+      "color": [
+        207,
+        147,
+        127
+      ],
+      "ratio": 0.43
+    }
+  ],
+  "btime": 1653976932437,
+  "mtime": 1649240685859,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 전쟁 전투 칼싸움 교전",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "근접 격투",
+      "검술",
+      "방어",
+      "반격",
+      "액션 시퀀스"
+    ],
+    "emotion": [
+      "긴박함",
+      "치열함",
+      "공격적"
+    ],
+    "composition": [
+      "미디엄 샷",
+      "로우 앵글",
+      "역동적인 카메라 무빙"
+    ],
+    "pacing": "빠름",
+    "characterType": [
+      "전사",
+      "부족원"
+    ],
+    "effects": [
+      "카메라 흔들림",
+      "모션 블러",
+      "파티클 이펙트",
+      "빛 번짐"
+    ],
+    "description": {
+      "ko": "붉게 물든 전장에서 두 전사가 서로의 무기를 맞대며 치열한 근접전을 펼치는 모습을 담고 있습니다. 빠른 카메라 움직임과 역동적인 타격 효과가 더해져 긴박하고 강렬한 전투 분위기를 극대화합니다.",
+      "en": "Two warriors engage in a fierce close-quarters combat on a crimson-hued battlefield, parrying each other's weapons with intensity. Fast camera movements and dynamic impact effects amplify the tense and visceral atmosphere of the fight."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:28.617Z"
+  },
+  "videoUrl": "/videos/L3TR52T32UGSF.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32UGSF.webp",
+  "previewUrl": "/previews/L3TR52T32UGSF.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABfAAADAQEAAAAAAAAAAAAAAAAGAQQFAgEBAQEBAQAAAAAAAAAAAAAAAgMBBgUQAAIBAwUBAQAAAAAAAAAAAAABEQLhQUJRcWEiIbERAQEAAAAAAAAAAAAAAAAAAAAB/8AAEQgAEgAgAwEiAAIRAAMRAP/aAAwDAQACEQMRAD8AAoUrqAySTAR/AvR5Tp5Cq8tdmm6TFbU/pTMgMM78F+lEO/BbpRpO7iwK48El3//Z",
+  "category": "combat-ready",
+  "relatedClips": []
+}

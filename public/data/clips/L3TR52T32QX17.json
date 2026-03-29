@@ -1,0 +1,140 @@
+{
+  "id": "L3TR52T32QX17",
+  "name": "연출 호라이즌 요리 음식 썰기",
+  "ext": "mp4",
+  "size": 1339043,
+  "width": 1280,
+  "height": 720,
+  "duration": 4.179773,
+  "tags": [
+    "호라이즌",
+    "음식",
+    "요리",
+    "썰기",
+    "연출",
+    "씹기",
+    "먹기",
+    "시네마틱"
+  ],
+  "folders": [
+    "L475K68YP1NH3",
+    "MN34S0ZRPT5WD"
+  ],
+  "url": "",
+  "palettes": [
+    {
+      "color": [
+        55,
+        32,
+        20
+      ],
+      "ratio": 59
+    },
+    {
+      "color": [
+        136,
+        78,
+        46
+      ],
+      "ratio": 12
+    },
+    {
+      "color": [
+        182,
+        110,
+        75
+      ],
+      "ratio": 11
+    },
+    {
+      "color": [
+        98,
+        57,
+        33
+      ],
+      "ratio": 9
+    },
+    {
+      "color": [
+        17,
+        11,
+        12
+      ],
+      "ratio": 3.37
+    },
+    {
+      "color": [
+        81,
+        61,
+        42
+      ],
+      "ratio": 2.64
+    },
+    {
+      "color": [
+        221,
+        176,
+        130
+      ],
+      "ratio": 0.58
+    },
+    {
+      "color": [
+        105,
+        84,
+        59
+      ],
+      "ratio": 0.44
+    }
+  ],
+  "btime": 1653976941711,
+  "mtime": 1649240680861,
+  "i18n": {
+    "title": {
+      "ko": "연출 호라이즌 요리 음식 썰기",
+      "en": ""
+    },
+    "description": {
+      "ko": "",
+      "en": ""
+    }
+  },
+  "aiTags": {
+    "actionType": [
+      "요리하기",
+      "썰기",
+      "재료 손질하기",
+      "음식 준비"
+    ],
+    "emotion": [
+      "무심함",
+      "침착함",
+      "집중"
+    ],
+    "composition": [
+      "클로즈업",
+      "정면 샷"
+    ],
+    "pacing": "보통",
+    "characterType": [
+      "중세 요리사",
+      "노동자"
+    ],
+    "effects": [
+      "모션 블러",
+      "디테일한 질감 표현"
+    ],
+    "description": {
+      "ko": "중세 풍의 의상을 입은 요리사가 나무 도마 위에서 붉은 과일이나 채소를 칼로 능숙하게 썰어 통에 담는 모습을 보여줍니다. 클로즈업 샷을 통해 칼이 식재료를 통과하는 질감과 요리사의 숙련된 동작이 강조되었습니다.",
+      "en": "A cook in medieval attire skillfully slices a red fruit or vegetable on a wooden board and tosses the pieces into a barrel. The close-up shot emphasizes the texture of the knife passing through the ingredients and the character's practiced movements."
+    },
+    "model": "gemini-3.1-flash-lite-preview",
+    "generatedAt": "2026-03-29T06:21:29.847Z"
+  },
+  "videoUrl": "/videos/L3TR52T32QX17.mp4",
+  "thumbnailUrl": "/thumbnails/L3TR52T32QX17.webp",
+  "previewUrl": "/previews/L3TR52T32QX17.mp4",
+  "lqipBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAAQABAAD//gAQTGF2YzYyLjI4LjEwMAD/2wBDAAg+Pkk+SVVVVVVVVWRdZGhoaGRkZGRoaGhwcHCDg4NwcHBoaHBwfHyDg4+Tj4eHg4eTk5ubm7q6srLZ2eD/////xABgAAACAgMBAAAAAAAAAAAAAAAFBgQBAgADBwEBAQEBAQAAAAAAAAAAAAAAAwQCAQUQAAICAgMBAAAAAAAAAAAAAAABAhFhIRIxUTIRAQEBAAAAAAAAAAAAAAAAAABBAf/AABEIABIAIAMBIgACEQADEQD/2gAMAwEAAhEDEQA/APNFJ08jB9RE47KyF6WGyHbrwETVvSMuTaoht5MOooICwGGAMxNZUSwKpj//2Q==",
+  "category": "direction-video",
+  "relatedClips": []
+}
