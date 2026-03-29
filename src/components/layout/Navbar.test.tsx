@@ -26,6 +26,7 @@ let uiState = {
 };
 let searchBarProps: Record<string, unknown> | null = null;
 let mobileSearchOverlayProps: Record<string, unknown> | null = null;
+let isMobileViewport = false;
 
 vi.mock("next/link", () => ({
   default: ({
@@ -162,6 +163,16 @@ describe("Navbar", () => {
       rightPanelOpen: true,
       mobileSearchOpen: false,
     };
+    isMobileViewport = false;
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation(() => ({
+        matches: isMobileViewport,
+        media: "(max-width: 767px)",
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    });
   });
 
   it("renders the theme toggle with an icon instead of unicode text", () => {
@@ -188,6 +199,33 @@ describe("Navbar", () => {
     );
 
     expect(setLeftPanelOpen).toHaveBeenCalledWith(false);
+    expect(setRightPanelOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("auto-collapses both panels when the mobile browse view mounts", () => {
+    isMobileViewport = true;
+
+    render(<Navbar lang="ko" dict={dict} />);
+
+    expect(setLeftPanelOpen).toHaveBeenCalledWith(false);
+    expect(setRightPanelOpen).toHaveBeenCalledWith(false);
+  });
+
+  it("uses a mobile-only panel toggle that opens the left panel without reopening the right panel", () => {
+    isMobileViewport = true;
+    uiState = {
+      leftPanelOpen: false,
+      rightPanelOpen: false,
+      mobileSearchOpen: false,
+    };
+
+    render(<Navbar lang="ko" dict={dict} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "탐색 패널 열기" })
+    );
+
+    expect(setLeftPanelOpen).toHaveBeenCalledWith(true);
     expect(setRightPanelOpen).toHaveBeenCalledWith(false);
   });
 

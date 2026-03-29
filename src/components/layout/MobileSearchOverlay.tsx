@@ -200,6 +200,7 @@ export function MobileSearchOverlay({
             popularLabel={lang === "ko" ? "추천 태그" : "Suggested tags"}
             suggestionsLabel={lang === "ko" ? "태그 제안" : "Tag suggestions"}
             clearLabel={lang === "ko" ? "지우기" : "Clear"}
+            showSuggestions={false}
           />
         </div>
         <button
@@ -213,7 +214,25 @@ export function MobileSearchOverlay({
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {hasQuery ? (
+        {!hasQuery && popularTags.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+              {lang === "ko" ? "추천 태그" : "Suggested tags"}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {popularTags.slice(0, 8).map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setQuery(tag)}
+                  className="rounded-full bg-surface-hover px-3 py-1.5 text-sm text-foreground"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : hasQuery ? (
           isSearchLoading ? (
             <p className="py-8 text-center text-sm text-muted">{loadingLabel}</p>
           ) : results.length > 0 ? (

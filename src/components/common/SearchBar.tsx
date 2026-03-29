@@ -57,6 +57,7 @@ interface SearchBarProps {
   suggestionsLabel?: string;
   clearLabel?: string;
   onActivate?: () => void;
+  showSuggestions?: boolean;
 }
 
 export function SearchBar({
@@ -78,6 +79,7 @@ export function SearchBar({
   suggestionsLabel,
   clearLabel,
   onActivate,
+  showSuggestions = true,
 }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(false);
@@ -180,7 +182,7 @@ export function SearchBar({
   const hasSuggestions = suggestionCount > 0;
   // Also show dropdown when query has input but no matches (empty state)
   const hasQuery = query.trim().length > 0;
-  const showDropdown = open && (hasSuggestions || hasQuery);
+  const showDropdown = showSuggestions && open && (hasSuggestions || hasQuery);
 
   const executeSearch = useCallback(
     (value: string) => {

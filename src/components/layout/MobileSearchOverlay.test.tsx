@@ -193,6 +193,36 @@ describe("MobileSearchOverlay", () => {
     expect(onRequestSearchReady).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps the searchbar dropdown out of the mobile overlay so result taps stay unobstructed", () => {
+    render(
+      <MobileSearchOverlay
+        open
+        clips={clips}
+        searchReady
+        lang="ko"
+        tagI18n={{}}
+        placeholder="클립 검색"
+        closeLabel="닫기"
+        noResultsLabel="결과 없음"
+        loadingLabel="검색 준비 중..."
+        onClose={vi.fn()}
+        onSelectClip={vi.fn()}
+        popularTags={["아케인"]}
+      />
+    );
+
+    const input = screen.getByRole("searchbox", { name: "클립 검색" });
+
+    fireEvent.focus(input);
+    fireEvent.change(input, {
+      target: { value: "슬픈" },
+    });
+
+    expect(
+      screen.queryByRole("listbox", { name: "태그 제안" })
+    ).not.toBeInTheDocument();
+  });
+
   it("falls back to local search results when Pagefind rejects", async () => {
     vi.mocked(searchBrowseClipIds).mockRejectedValue(new Error("pagefind down"));
     vi.mocked(searchClips).mockReturnValue([clips[0]]);

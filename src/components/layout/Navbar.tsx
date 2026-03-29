@@ -18,6 +18,19 @@ import { MobileSearchOverlay } from "./MobileSearchOverlay";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { Dictionary } from "@/app/[lang]/dictionaries";
 
+const getServerMobileSnapshot = () => false;
+
+function subscribeToMobileViewport(onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia("(max-width: 767px)");
+  const handler = () => onStoreChange();
+  mediaQuery.addEventListener("change", handler);
+  return () => mediaQuery.removeEventListener("change", handler);
+}
+
+function getMobileViewportSnapshot() {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
+
 interface NavbarProps {
   lang: Locale;
   dict: Pick<Dictionary, "nav"> & Partial<Pick<Dictionary, "browse" | "common">>;
@@ -45,6 +58,11 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
     () => true,
     () => false
   );
+  const isMobileViewport = useSyncExternalStore(
+    subscribeToMobileViewport,
+    getMobileViewportSnapshot,
+    getServerMobileSnapshot
+  );
   const {
     leftPanelOpen,
     mobileSearchOpen,
@@ -65,6 +83,7 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
   const currentSearchQuery = searchParams.get("q") ?? "";
   const switchedPath =
     pathname.replace(`/${lang}`, `/${otherLang}`) + (query ? `?${query}` : "");
+  const isBrowsePage = pathname === `/${lang}/browse`;
   const themeLabel = isDarkTheme
     ? lang === "ko"
       ? "라이트 테마로 전환"
@@ -72,19 +91,32 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
     : lang === "ko"
       ? "다크 테마로 전환"
       : "Switch to dark theme";
-  const panelLabel = allPanelsOpen
-    ? lang === "ko"
-      ? "좌우 사이드바 접기"
-      : "Collapse both sidebars"
-    : lang === "ko"
-      ? "좌우 사이드바 펼치기"
-      : "Expand both sidebars";
+  const panelLabel = isMobileViewport
+    ? leftPanelOpen
+      ? lang === "ko"
+        ? "탐색 패널 닫기"
+        : "Close browse panel"
+      : lang === "ko"
+        ? "탐색 패널 열기"
+        : "Open browse panel"
+    : allPanelsOpen
+      ? lang === "ko"
+        ? "좌우 사이드바 접기"
+        : "Collapse both sidebars"
+      : lang === "ko"
+        ? "좌우 사이드바 펼치기"
+        : "Expand both sidebars";
   const mobileSearchLabel =
     lang === "ko" ? "모바일 검색 열기" : "Open mobile search";
   const ThemeIcon = isDarkTheme ? SunMediumIcon : MoonStarIcon;
-  const isBrowsePage = pathname === `/${lang}/browse`;
 
   function handlePanelsToggle() {
+    if (isMobileViewport) {
+      setLeftPanelOpen(!leftPanelOpen);
+      setRightPanelOpen(false);
+      return;
+    }
+
     const nextPanelsOpen = !allPanelsOpen;
     setLeftPanelOpen(nextPanelsOpen);
     setRightPanelOpen(nextPanelsOpen);
@@ -124,6 +156,33 @@ export function Navbar({ lang, dict, tagI18n = {}, tagGroups, tagAliases = null 
       previousPathnameRef.current = pathname;
     }
   }, [pathname, setMobileSearchOpen]);
+
+  const hasAutoCollapsedMobilePanelsRef = useRef(false);
+  useEffect(() => {
+    if (!isBrowsePage || !isMobileViewport) {
+      hasAutoCollapsedMobilePanelsRef.current = false;
+      return;
+    }
+
+    if (hasAutoCollapsedMobilePanelsRef.current) {
+      return;
+    }
+
+    hasAutoCollapsedMobilePanelsRef.current = true;
+    if (leftPanelOpen) {
+      setLeftPanelOpen(false);
+    }
+    if (rightPanelOpen) {
+      setRightPanelOpen(false);
+    }
+  }, [
+    isBrowsePage,
+    isMobileViewport,
+    leftPanelOpen,
+    rightPanelOpen,
+    setLeftPanelOpen,
+    setRightPanelOpen,
+  ]);
 
   return (
     <>

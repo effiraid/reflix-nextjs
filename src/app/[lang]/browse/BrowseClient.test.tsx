@@ -422,6 +422,42 @@ describe("BrowseClient", () => {
     randomSpy.mockRestore();
   });
 
+  it("reshuffles search results when the shuffle seed changes", async () => {
+    browseDataState = makeFullBrowseState();
+    const randomSpy = vi.spyOn(Math, "random").mockImplementation(() => 0);
+
+    useAuthStore.setState({
+      user: { id: "pro-user", email: "pro@example.com" } as never,
+      tier: "pro",
+      isLoading: false,
+    });
+    useFilterStore.setState({
+      searchQuery: "a",
+    });
+
+    render(
+      <BrowseClient
+        categories={{}}
+        lang="ko"
+        dict={dict}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-a,clip-b,clip-c");
+    });
+
+    act(() => {
+      useUIStore.getState().reshuffleClips();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("clip-order")).toHaveTextContent("clip-b,clip-c,clip-a");
+    });
+
+    randomSpy.mockRestore();
+  });
+
   it("shows the intro splash when the visitor has not opened browse before", async () => {
     localStorage.removeItem("reflix-visited");
     useUIStore.setState({

@@ -33,14 +33,25 @@ describe("getMediaUrl", () => {
     expect(getMediaUrl("previews/clip-1.mp4")).toBe("previews/clip-1.mp4");
   });
 
-  it("prefixes relative paths with the configured media base", () => {
+  it("keeps previews and thumbnails on the same origin even when a media base is configured", () => {
     vi.stubEnv("NEXT_PUBLIC_MEDIA_URL", "https://media.reflix.app/");
 
     expect(getMediaUrl("/thumbnails/clip-1.webp")).toBe(
-      "https://media.reflix.app/thumbnails/clip-1.webp"
+      "/thumbnails/clip-1.webp"
     );
     expect(getMediaUrl("previews/clip-1.mp4")).toBe(
-      "https://media.reflix.app/previews/clip-1.mp4"
+      "previews/clip-1.mp4"
+    );
+  });
+
+  it("prefixes full video paths with the configured media base", () => {
+    vi.stubEnv("NEXT_PUBLIC_MEDIA_URL", "https://media.reflix.app/");
+
+    expect(getMediaUrl("/videos/clip-1.mp4")).toBe(
+      "https://media.reflix.app/videos/clip-1.mp4"
+    );
+    expect(getMediaUrl("videos/clip-1.mp4")).toBe(
+      "https://media.reflix.app/videos/clip-1.mp4"
     );
   });
 

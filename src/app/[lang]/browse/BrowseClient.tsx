@@ -574,9 +574,7 @@ export function BrowseClient({
           : orderClipsByIdSequence(structuralResults, effectiveSearchResultIds ?? [])
         : structuralResults;
       const orderedResults =
-        hasSearchQuery || shuffleSeed === 0
-          ? allResults
-          : shuffleClips(allResults);
+        shuffleSeed === 0 ? allResults : shuffleClips(allResults);
 
       return {
         clips: orderedResults,
